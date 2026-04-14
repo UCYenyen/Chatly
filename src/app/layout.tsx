@@ -16,6 +16,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { TransitionProvider } from "@/components/providers/TransitionProvider";
+
 export const metadata: Metadata = {
   title: "Chatly",
   description: "Chatbot AI canggih untuk bisnis Anda",
@@ -41,8 +43,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex">
         <main className="flex-1 w-full flex flex-col h-full bg-background overflow-auto relative">
-          {children}
-          <Toaster/>
+          <TransitionProvider>
+            {children}
+            <Toaster/>
+          </TransitionProvider>
         </main>
       </body>
     </html>

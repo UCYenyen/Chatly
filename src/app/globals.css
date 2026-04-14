@@ -206,3 +206,28 @@
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: var(--color-background); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 10px; }
+
+/* Page Transitions - Curtain Effect */
+.curtain-layer-1,
+.curtain-layer-2 {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
+  transform: translateY(100%);
+}
+
+.curtain-layer-1 {
+  background: var(--background);
+}
+
+.curtain-layer-2 {
+  background: var(--secondary);
+}
+
+.page-content-wrapper {
+  width: 100%;
+  min-height: 100vh;
+}
