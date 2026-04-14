@@ -73,10 +73,10 @@ export function SignUpForm() {
 
   return (
     <>
-      <Card className="w-112.5 max-w-[80%] shadow-lg">
+      <Card className="w-112.5 max-w-[80%] glass-panel border-outline-variant/15 shadow-2xl">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Buat Akun Baru</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-3xl font-headline font-bold text-on-surface">Buat Akun Baru</CardTitle>
+          <CardDescription className="text-outline">
             Lengkapi data diri untuk mulai presensi
           </CardDescription>
         </CardHeader>
@@ -175,7 +175,11 @@ export function SignUpForm() {
               <FieldError>{form.formState.errors.confirmPassword?.message}</FieldError>
             </Field>
 
-            <Button type="submit" className="w-full mt-2" disabled={isPending}>
+            <Button 
+              type="submit" 
+              className="w-full mt-2 bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold h-11 border border-[#a4d730] transition-all active:scale-95 shadow-md" 
+              disabled={isPending}
+            >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isPending ? "Memproses..." : "Daftar Sekarang"}
             </Button>
@@ -183,9 +187,9 @@ export function SignUpForm() {
         </CardContent>
         
         <CardFooter className="flex flex-col space-y-4">
-           <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-sm text-outline">
             Sudah punya akun?{" "}
-            <Link href="/sign-in" className="font-medium text-primary underline underline-offset-4 hover:text-primary/80">
+            <Link href="/sign-in" className="font-bold text-secondary-fixed underline underline-offset-4 hover:text-secondary-fixed/80 transition-colors">
               Masuk disini
             </Link>
           </div>

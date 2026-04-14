@@ -77,10 +77,10 @@ export default function SignInSection() {
   }
 
   return (
-    <Card className="w-112.5 max-w-[80%] shadow-lg"> 
+    <Card className="w-112.5 max-w-[80%] glass-panel border-outline-variant/15 shadow-2xl"> 
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Selamat Datang</CardTitle>
-        <CardDescription className="text-center">
+        <CardTitle className="text-3xl font-headline font-bold text-on-surface text-center">Selamat Datang</CardTitle>
+        <CardDescription className="text-center text-outline">
           Masuk untuk melakukan presensi
         </CardDescription>
       </CardHeader>
@@ -153,7 +153,7 @@ export default function SignInSection() {
 
           <Button
             type="submit"
-            className="w-full mt-2"
+            className="w-full mt-2 bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold h-11 border border-[#a4d730] transition-all active:scale-95 shadow-md"
             disabled={isPending}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -174,9 +174,9 @@ export default function SignInSection() {
           </div>
         </div>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-outline">
           Belum punya akun?{" "}
-          <Link href="/sign-up" className="font-medium text-primary underline underline-offset-4 hover:text-primary/80">
+          <Link href="/sign-up" className="font-bold text-secondary-fixed underline underline-offset-4 hover:text-secondary-fixed/80 transition-colors">
             Daftar sekarang
           </Link>
         </div>
