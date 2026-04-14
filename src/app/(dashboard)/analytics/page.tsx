@@ -1,5 +1,5 @@
-import { AnalyticsFooter } from "@/components/analytics/AnalyticsFooter"
-import { IntentDashboard } from "@/components/analytics/IntentDashboard"
+import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter";
+import { IntentDashboard } from "@/components/features/analytics/IntentDashboard";
 
 export default function AnalyticsPage() {
   return (
@@ -7,10 +7,10 @@ export default function AnalyticsPage() {
       <div className="flex-1 mb-8 w-full">
         <IntentDashboard />
       </div>
-      
+
       <div className="mt-auto pt-4">
         <AnalyticsFooter />
       </div>
     </div>
-  )
+  );
 }

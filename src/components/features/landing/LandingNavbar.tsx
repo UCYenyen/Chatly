@@ -10,9 +10,8 @@ export function LandingNavbar() {
       
       <div className="flex items-center gap-10">
         <div className="flex items-center gap-8 text-[13px] font-medium text-outline">
-          <Link href="#product" className="text-primary hover:text-primary-fixed border-b border-primary pb-0.5 transition-colors">Produk</Link>
           <Link href="#pricing" className="hover:text-on-surface transition-colors">Harga</Link>
-          <Link href="/login" className="hover:text-on-surface transition-colors">Masuk</Link>
+          <Link href="/sign-in" className="hover:text-on-surface transition-colors">Masuk</Link>
         </div>
         
         <button className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[12px] h-9 px-6 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">

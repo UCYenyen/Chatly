@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import CountUp from "../personal/CountUp";
-import Prism from "../Prism";
+import CountUp from "../../personal/CountUp";
+import Prism from "../../personal/Prism";
 
 export function HeroSection() {
   return (
