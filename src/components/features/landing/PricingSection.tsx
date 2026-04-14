@@ -1,3 +1,4 @@
+import SpotlightCard from "@/components/personal/SpotlightCard"
 import { CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -48,7 +49,7 @@ export function PricingSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full">
         {plans.map((plan) => (
-          <div 
+          <SpotlightCard 
             key={plan.name} 
             className={`bg-surface-container-low border flex flex-col p-8 rounded-sm shadow-xl relative ${
               plan.isPopular ? 'border-outline-variant/30 scale-[1.02] bg-surface-container-low/90 z-10' : 'border-outline-variant/15'
@@ -91,7 +92,7 @@ export function PricingSection() {
             >
               {plan.buttonText}
             </Button>
-          </div>
+          </SpotlightCard>
         ))}
       </div>
     </section>
