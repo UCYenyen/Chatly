@@ -4,16 +4,17 @@ import { AnalyticsFooter } from "@/components/analytics/AnalyticsFooter"
 
 export default function DashboardPage() {
   return (
-    <div className="p-8 lg:p-12 xl:p-14 w-full mx-auto max-w-[1600px] flex flex-col min-h-full">
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-6 md:p-8 md:pt-8 w-full mx-auto max-w-[1600px] min-h-full">
       <CumulativeAnalytics />
       
-      <div className="flex-1 mt-6">
+      <div className="flex-1 mt-2">
         <BusinessSelectorCards />
       </div>
       
-      <div className="mt-auto pt-16">
+      <div className="mt-auto pt-8">
         <AnalyticsFooter />
       </div>
     </div>
   )
 }
+
