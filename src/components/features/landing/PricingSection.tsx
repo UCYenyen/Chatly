@@ -87,7 +87,7 @@ export function PricingSection() {
               className={`relative z-10 w-full font-bold text-[12px] h-11 transition-transform active:scale-95 border rounded-sm mt-auto shadow-sm ${
                 plan.isPopular 
                   ? 'bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] border-[#a4d730]' 
-                  : 'bg-[#a4d730]/65 text-[#141f00] hover:bg-[#bff44c] border-outline-variant/20 tracking-wide'
+                  : 'bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] border-outline-variant/20 tracking-wide'
               }`}
             >
               {plan.buttonText}
