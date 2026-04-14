@@ -1,38 +1,52 @@
-import { SignUpForm } from '@/components/features/auth/SignUpASection'
-import React from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import Prism from '@/components/personal/Prism'
+import { SignUpForm } from "@/components/features/auth/SignUpASection";
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import Grainient from "@/components/personal/Grainient";
 
 export default function page() {
   return (
-    <main className='relative min-h-screen w-full flex flex-col items-center justify-center bg-background overflow-hidden p-6 py-20'>
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <Prism
-          animationType="rotate"
-          timeScale={0.5}
-          scale={3.6}
-          height={4.2}
-          baseWidth={4.4}
-          noise={0.55}
-          glow={1}
-          hueShift={0}
-          colorFrequency={1}
+    <main className="relative min-h-screen w-full flex flex-col items-center justify-center bg-background overflow-hidden p-6 py-20">
+      <div className="w-screen h-screen absolute top-0 left-0">
+        <Grainient
+          className="opacity-25"
+          color1="#87b800"
+          color2="#0013a0"
+          color3="#131214"
+          timeSpeed={0.55}
+          colorBalance={0}
+          warpStrength={1.75}
+          warpFrequency={5}
+          warpSpeed={2}
+          warpAmplitude={50}
+          blendAngle={0}
+          blendSoftness={0.05}
+          rotationAmount={580}
+          noiseScale={2}
+          grainAmount={0.1}
+          grainScale={2}
+          grainAnimated={false}
+          contrast={0.85}
+          gamma={1}
+          saturation={1}
+          centerX={0}
+          centerY={0}
+          zoom={0.9}
         />
       </div>
 
-      <div className='z-10 flex flex-col items-center gap-8 w-full max-w-md'>
+      <div className="z-10 flex flex-col items-center gap-8 w-full max-w-md">
         <Link href="/">
-          <Image 
-            src="/logos/chatly-text.svg" 
-            alt="Chatly Logo" 
-            width={180} 
-            height={60} 
-            className="h-auto w-44 hover:opacity-80 transition-opacity" 
+          <Image
+            src="/logos/chatly-text.svg"
+            alt="Chatly Logo"
+            width={180}
+            height={60}
+            className="h-auto w-44 hover:opacity-80 transition-opacity"
           />
         </Link>
         <SignUpForm />
       </div>
     </main>
-  )
+  );
 }
