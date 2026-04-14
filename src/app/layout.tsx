@@ -45,7 +45,7 @@ export default function RootLayout({
         <main className="flex-1 w-full flex flex-col h-full bg-background overflow-auto relative">
           <TransitionProvider>
             {children}
-            <Toaster/>
+            <Toaster richColors position="bottom-right" duration={3000} closeButton />
           </TransitionProvider>
         </main>
       </body>
