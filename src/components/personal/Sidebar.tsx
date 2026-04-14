@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   BarChart2, 
@@ -37,8 +37,29 @@ import {
   DropdownMenuLabel, 
 } from '@/components/ui/dropdown-menu';
 
+import { authClient } from "@/lib/utils/auth/auth-client"
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in")
+          router.refresh()
+        }
+      }
+    })
+  }
+
+  const user = session?.user
+  const initials = user?.name 
+    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) 
+    : "U"
+
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Analitik', path: '/analytics', icon: BarChart2 },
@@ -139,12 +160,12 @@ export default function Sidebar() {
                     className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground border border-outline-variant/10 hover:bg-surface-container p-2 rounded-sm h-auto"
                   >
                     <Avatar className="h-9 w-9 rounded-md bg-surface-container-high border border-outline-variant/20">
-                      <AvatarImage src="" alt="Authenticated User" />
-                      <AvatarFallback className="text-secondary-fixed text-xs font-bold rounded-md">JD</AvatarFallback>
+                      <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                      <AvatarFallback className="text-secondary-fixed text-xs font-bold rounded-md">{initials}</AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-                      <span className="truncate font-bold text-on-surface">John Doe</span>
-                      <span className="truncate text-[11px] text-outline mt-0.5">Admin</span>
+                      <span className="truncate font-bold text-on-surface">{user?.name || "User"}</span>
+                      <span className="truncate text-[11px] text-outline mt-0.5">{user?.role === "ADMIN" ? "Admin" : "Akses Personal"}</span>
                     </div>
                     <MoreHorizontal className="ml-auto size-4 text-outline" />
                   </SidebarMenuButton>
@@ -158,17 +179,21 @@ export default function Sidebar() {
                   <DropdownMenuLabel className="p-0 font-normal">
                     <div className="flex items-center gap-2 px-3 py-2.5 text-left text-sm border-b border-outline-variant/10">
                       <Avatar className="h-8 w-8 rounded-md">
-                        <AvatarImage src="" alt="Authenticated User" />
-                        <AvatarFallback className="bg-surface-container-high text-secondary-fixed">JD</AvatarFallback>
+                        <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                        <AvatarFallback className="bg-surface-container-high text-secondary-fixed">{initials}</AvatarFallback>
                       </Avatar>
                       <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-bold text-on-surface">John Doe</span>
-                        <span className="truncate text-xs text-outline">john.doe@example.com</span>
+                        <span className="truncate font-bold text-on-surface">{user?.name || "User"}</span>
+                        <span className="truncate text-xs text-outline">{user?.email || ""}</span>
                       </div>
                     </div>
                   </DropdownMenuLabel>
                   <div className="p-1">
-                    <DropdownMenuItem className="text-error focus:text-error focus:bg-error/10 cursor-pointer rounded-sm py-2">
+                    <DropdownMenuItem 
+                      onClick={handleSignOut}
+                      variant="destructive"
+                      className="cursor-pointer rounded-sm py-2"
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>

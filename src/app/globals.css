@@ -114,7 +114,7 @@
   --muted-foreground: #c5c5d7; 
   --accent: #bdc2ff; 
   --accent-foreground: #00159e; 
-  --destructive: #ffb4ab; 
+  --destructive: #ef8276; 
   --destructive-foreground: #690005; 
   --border: #8f8fa1; 
   --input: #8f8fa1;
@@ -199,7 +199,7 @@
 }
 .glass-module, .glass-panel {
   background: rgba(42, 54, 69, 0.6);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(25px);
 }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

@@ -13,8 +13,24 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
+import { authClient } from "@/lib/utils/auth/auth-client"
+import { useRouter } from "next/navigation"
+
 export function LandingNavbar() {
   const [isScrolled, setIsScrolled] = React.useState(false)
+  const { data: session } = authClient.useSession()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in")
+          router.refresh()
+        }
+      }
+    })
+  }
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -26,7 +42,10 @@ export function LandingNavbar() {
 
   const navLinks = [
     { name: "Harga", href: "/#pricing" },
-    { name: "Masuk", href: "/sign-in" },
+    ...(session 
+      ? [{ name: "Logout", href: "#", onClick: handleSignOut }] 
+      : [{ name: "Masuk", href: "/sign-in" }]
+    ),
   ]
 
   return (
@@ -52,7 +71,10 @@ export function LandingNavbar() {
                 key={link.name}
                 href={link.href} 
                 onClick={(e) => {
-                  if (link.href.startsWith("/#")) {
+                  if (link.onClick) {
+                    e.preventDefault();
+                    link.onClick();
+                  } else if (link.href.startsWith("/#")) {
                     const id = link.href.replace("/#", "");
                     const element = document.getElementById(id);
                     if (element) {
@@ -74,7 +96,9 @@ export function LandingNavbar() {
             asChild
             className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[13px] h-10 px-6 rounded-md shadow-md transition-all active:scale-95 border border-secondary-fixed-dim"
           >
-            <Link href="/sign-up">Mulai Sekarang</Link>
+            <Link href={session ? "/dashboard" : "/sign-up"}>
+              {session ? "Ke Dashboard" : "Mulai Sekarang"}
+            </Link>
           </Button>
         </div>
 
@@ -97,7 +121,10 @@ export function LandingNavbar() {
                     key={link.name}
                     href={link.href} 
                     onClick={(e) => {
-                      if (link.href.startsWith("/#")) {
+                      if (link.onClick) {
+                        e.preventDefault();
+                        link.onClick();
+                      } else if (link.href.startsWith("/#")) {
                         const id = link.href.replace("/#", "");
                         const element = document.getElementById(id);
                         if (element) {
@@ -113,12 +140,14 @@ export function LandingNavbar() {
                   </Link>
                 ))}
                 <hr className="border-border/10" />
-                <Button 
-                  asChild
-                  className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[15px] h-12 rounded-xl shadow-lg border border-secondary-fixed-dim mt-4"
-                >
-                  <Link href="/sign-up">Mulai Sekarang</Link>
-                </Button>
+                  <Button 
+                    asChild
+                    className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[15px] h-12 rounded-xl shadow-lg border border-secondary-fixed-dim mt-4"
+                  >
+                    <Link href={session ? "/dashboard" : "/sign-up"}>
+                      {session ? "Ke Dashboard" : "Mulai Sekarang"}
+                    </Link>
+                  </Button>
               </div>
             </SheetContent>
           </Sheet>
