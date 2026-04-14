@@ -52,10 +52,10 @@ export default function Sidebar() {
     <ShadcnSidebar variant="sidebar" className="border-r border-outline-variant/15 shadow-[40px_0_40px_rgba(4,15,28,0.15)] z-50 bg-surface-container-low transition-all duration-200">
       <SidebarHeader className="py-6 px-4 bg-transparent border-0">
         <div className="flex items-center gap-3 mb-6 px-2">
-          <div className="w-8 h-8 bg-primary-container rounded-sm flex items-center justify-center text-on-primary-container font-black">
+          <div className="w-8 h-8 bg-secondary-fixed rounded-sm flex items-center justify-center text-on-secondary font-black">
             <Rocket className="w-5 h-5" />
           </div>
-          <span className="text-lg font-bold text-primary-container font-headline tracking-wide">Chatly AI</span>
+          <span className="text-lg font-bold text-on-surface font-headline tracking-wide">Chatly</span>
         </div>
         
         <div className="p-3 bg-surface-container rounded-sm border border-outline-variant/10 cursor-pointer group transition-all duration-200 hover:bg-surface-container-high">

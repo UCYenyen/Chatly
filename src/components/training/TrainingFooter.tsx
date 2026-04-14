@@ -6,7 +6,7 @@ export function TrainingFooter() {
   return (
     <footer className="flex items-center justify-between py-6 border-t border-outline-variant/10 w-full shrink-0">
       <span className="text-[11px] text-outline font-mono uppercase tracking-widest font-medium">
-        © 2024 Chatly AI. Edisi Arsip Kinetik.
+        © 2024 Chatly. Edisi Arsip Kinetik.
       </span>
       <div className="flex items-center gap-8">
         {links.map(link => (

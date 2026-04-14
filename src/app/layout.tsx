@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chatly AI",
+  title: "Chatly",
   description: "Chatbot AI canggih untuk bisnis Anda",
 };
 
