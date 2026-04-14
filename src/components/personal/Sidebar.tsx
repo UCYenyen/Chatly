@@ -36,6 +36,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuLabel, 
 } from '@/components/ui/dropdown-menu';
+import { Button } from '../ui/button';
 
 import { authClient } from "@/lib/utils/auth/auth-client"
 
@@ -72,12 +73,12 @@ export default function Sidebar() {
   return (
     <ShadcnSidebar variant="sidebar" className="border-r border-outline-variant/15 shadow-[40px_0_40px_rgba(4,15,28,0.15)] z-50 bg-surface-container-low transition-all duration-200">
       <SidebarHeader className="py-6 px-4 bg-transparent border-0">
-        <div className="flex items-center gap-3 mb-6 px-2">
+        <Link href={"/"} className="cursor-pointer flex items-center gap-3 mb-6 px-2">
           <div className="w-8 h-8 bg-secondary-fixed rounded-sm flex items-center justify-center text-on-secondary font-black">
             <Rocket className="w-5 h-5" />
           </div>
           <span className="text-lg font-bold text-on-surface font-headline tracking-wide">Chatly</span>
-        </div>
+        </Link>
         
         <div className="p-3 bg-surface-container rounded-sm border border-outline-variant/10 cursor-pointer group transition-all duration-200 hover:bg-surface-container-high">
           <div className="flex items-center justify-between">
@@ -92,6 +93,10 @@ export default function Sidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3 bg-transparent custom-scrollbar">
+        <Button variant={"default"}>
+          <Plus className="w-4 h-4" />
+          <span>Buat Bisnis Baru</span>
+        </Button>
         <SidebarGroup>
           <SidebarMenu className="space-y-1">
             {navItems.map((item) => {
@@ -104,11 +109,11 @@ export default function Sidebar() {
                     className={cn(
                       "flex items-center gap-3 px-4 py-5 rounded-sm font-inter text-[15px] font-medium transition-all duration-200 group h-auto",
                       isActive 
-                        ? "bg-surface-container text-secondary-fixed border-r-[3px] border-secondary-fixed hover:bg-surface-container hover:text-secondary-fixed" 
+                        ? "bg-surface-container  text-secondary-fixed border-r-[3px] border-secondary-fixed hover:bg-surface-container hover:text-secondary-fixed" 
                         : "text-outline hover:bg-surface-container hover:text-on-surface border-r-[3px] border-transparent"
                     )}
                   >
-                    <Link href={item.path}>
+                    <Link href={item.path} data-transition-ignore>
                       <item.icon className="w-5 h-5 flex-shrink-0" />
                       <span>{item.name}</span>
                     </Link>
@@ -121,18 +126,13 @@ export default function Sidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 pt-0 bg-transparent border-0 space-y-4">
-        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-sm bg-secondary-fixed text-on-secondary font-bold text-xs uppercase tracking-widest transition-transform active:scale-95 hover:scale-[1.02]">
-          <Plus className="w-4 h-4" />
-          <span>Buat Bisnis Baru</span>
-        </button>
-
         <SidebarMenu className="space-y-1">
-          <SidebarMenuItem>
+          {/* <SidebarMenuItem>
             <SidebarMenuButton 
               asChild
               className="flex items-center gap-3 px-4 py-5 text-outline hover:bg-surface-container hover:text-on-surface rounded-sm transition-all text-sm font-medium h-auto"
             >
-              <Link href="/settings">
+              <Link href="/settings" data-transition-ignore>
                 <Settings className="w-5 h-5 flex-shrink-0" />
                 <span>Pengaturan</span>
               </Link>
@@ -143,12 +143,12 @@ export default function Sidebar() {
               asChild
               className="flex items-center gap-3 px-4 py-5 text-outline hover:bg-surface-container hover:text-on-surface rounded-sm transition-all text-sm font-medium h-auto"
             >
-              <Link href="/support">
+              <Link href="/support" data-transition-ignore>
                 <HelpCircle className="w-5 h-5 flex-shrink-0" />
                 <span>Bantuan</span>
               </Link>
             </SidebarMenuButton>
-          </SidebarMenuItem>
+          </SidebarMenuItem> */}
 
           {/* Authenticated User Section */}
           <div className="pt-4 mt-2 border-t border-outline-variant/15">
