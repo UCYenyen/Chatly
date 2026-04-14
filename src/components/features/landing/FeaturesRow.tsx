@@ -1,5 +1,5 @@
 import { Zap } from "lucide-react"
-
+import CountUp from "@/components/personal/CountUp"
 export function FeaturesRow() {
   return (
     <section className="container mx-auto px-10 xl:px-16 mt-28 lg:mt-36">
@@ -15,7 +15,7 @@ export function FeaturesRow() {
 
         {/* Box 2 */}
         <div className="bg-surface-container-low border border-outline-variant/15 p-10 rounded-sm flex flex-col justify-center min-h-[180px] shadow-xl items-start">
-          <h2 className="text-4xl font-headline font-bold text-on-surface mb-2">50+</h2>
+          <h2 className="text-4xl font-headline font-bold text-on-surface mb-2"><CountUp to={50} />+</h2>
           <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold leading-relaxed">
             Bahasa<br />Didukung
           </span>
