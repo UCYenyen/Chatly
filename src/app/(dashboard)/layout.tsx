@@ -1,4 +1,3 @@
-import "./globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/personal/Sidebar";
 
