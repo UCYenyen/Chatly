@@ -65,10 +65,6 @@ export function BusinessSelectorCards() {
             </div>
             
             <div className="mt-8 pt-4 border-t border-outline-variant/10 flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] text-outline">Beban Pesan</span>
-                <span className="font-mono text-[13px] font-bold text-on-surface">{biz.messages}</span>
-              </div>
               <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
                 <ArrowRight className="w-4 h-4 text-on-surface" />
               </div>
