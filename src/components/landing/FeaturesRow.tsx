@@ -7,9 +7,9 @@ export function FeaturesRow() {
         {/* Box 1 */}
         <div className="bg-surface-container-low border border-outline-variant/15 p-10 rounded-sm flex flex-col justify-center min-h-[180px] shadow-xl">
           <Zap className="w-6 h-6 text-secondary-fixed mb-6 fill-secondary-fixed mix-blend-plus-lighter shadow-[0_0_15px_rgba(164,215,48,0.5)]" />
-          <h3 className="text-[17px] font-headline font-bold text-on-surface mb-2 tracking-wide">Instant Response</h3>
+          <h3 className="text-[17px] font-headline font-bold text-on-surface mb-2 tracking-wide">Respons Instan</h3>
           <p className="text-[12px] text-outline leading-relaxed max-w-[250px]">
-            Under 2-second latency for all customer interactions, worldwide.
+             Latensi di bawah 2 detik untuk semua interaksi pelanggan, di seluruh dunia.
           </p>
         </div>
 
@@ -17,7 +17,7 @@ export function FeaturesRow() {
         <div className="bg-surface-container-low border border-outline-variant/15 p-10 rounded-sm flex flex-col justify-center min-h-[180px] shadow-xl items-start">
           <h2 className="text-4xl font-headline font-bold text-on-surface mb-2">50+</h2>
           <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold leading-relaxed">
-            Supported<br />Languages
+            Bahasa<br />Didukung
           </span>
         </div>
 
@@ -25,7 +25,7 @@ export function FeaturesRow() {
         <div className="bg-[#3545d6] p-10 rounded-sm flex flex-col justify-center min-h-[180px] shadow-[0_0_25px_rgba(53,69,214,0.3)] items-start">
           <h2 className="text-5xl font-headline font-bold text-white mb-2">24/7</h2>
           <span className="text-[11px] font-mono text-[#c8ccff] uppercase tracking-widest font-bold leading-relaxed">
-            Autonomous Uptime
+            Waktu Aktif Otonom
           </span>
         </div>
       </div>

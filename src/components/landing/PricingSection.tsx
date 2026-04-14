@@ -5,34 +5,34 @@ export function PricingSection() {
   const plans = [
     {
       name: "STARTER",
-      price: "Rp 149k",
-      description: "Individuals & Small Projects",
-      features: ["300 sessions", "3,000 messages", "Basic Analytics"],
-      buttonText: "Get Started",
+      price: "Rp 149rb",
+      description: "Individu & Proyek Kecil",
+      features: ["300 sesi", "3.000 pesan", "Analitik Dasar"],
+      buttonText: "Mulai Sekarang",
       isPopular: false
     },
     {
       name: "GROWTH",
-      price: "Rp 349k",
-      description: "Scaling Teams",
-      features: ["1,000 sessions", "10,000 messages", "Custom Knowledge Base"],
-      buttonText: "Scale Now",
+      price: "Rp 349rb",
+      description: "Tim yang Berkembang",
+      features: ["1.000 sesi", "10.000 pesan", "Basis Pengetahuan Kustom"],
+      buttonText: "Skala Sekarang",
       isPopular: true
     },
     {
       name: "PRO",
-      price: "Rp 749k",
-      description: "High-Volume Enterprises",
-      features: ["3,000 sessions", "30,000 messages", "API Access"],
-      buttonText: "Go Pro",
+      price: "Rp 749rb",
+      description: "Perusahaan Volume Tinggi",
+      features: ["3.000 sesi", "30.000 pesan", "Akses API"],
+      buttonText: "Jadi Pro",
       isPopular: false
     },
     {
       name: "ENTERPRISE",
-      price: "Custom",
-      description: "Global Scale",
-      features: ["Unlimited sessions", "Custom LLM Training", "Dedicated Support"],
-      buttonText: "Contact Sales",
+      price: "Kustom",
+      description: "Skala Global",
+      features: ["Sesi Tanpa Batas", "Pelatihan LLM Kustom", "Dukungan Khusus"],
+      buttonText: "Hubungi Penjualan",
       isPopular: false
     }
   ]
@@ -40,9 +40,9 @@ export function PricingSection() {
   return (
     <section className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 flex flex-col items-center">
       <div className="text-center mb-16 flex flex-col items-center">
-        <h2 className="text-3xl font-headline font-bold text-on-surface mb-4">Select Your Plan</h2>
+        <h2 className="text-3xl font-headline font-bold text-on-surface mb-4">Pilih Paket Anda</h2>
         <p className="text-[14px] text-outline max-w-lg leading-relaxed">
-          Scalable solutions for businesses of all sizes. No hidden fees, just pure kinetic performance.
+          Solusi skalabel untuk bisnis dari semua ukuran. Tanpa biaya tersembunyi, hanya performa murni.
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export function PricingSection() {
           >
             {plan.isPopular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#bff44c] text-[#141f00] text-[9px] font-bold font-mono tracking-widest uppercase px-3 py-1 rounded shadow-md border border-[#a4d730]">
-                Most Popular
+                Paling Populer
               </div>
             )}
             
@@ -66,7 +66,7 @@ export function PricingSection() {
               </span>
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-2xl font-headline font-bold text-on-surface leading-none">{plan.price}</span>
-                {plan.price !== "Custom" && <span className="text-[12px] text-outline">/mo</span>}
+                {plan.price !== "Kustom" && <span className="text-[12px] text-outline">/bln</span>}
               </div>
               <span className="text-[11px] font-bold font-mono text-[#a4d730] block">
                 {plan.description}

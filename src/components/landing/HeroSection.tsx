@@ -23,7 +23,7 @@ export function HeroSection() {
         <div className="flex items-center gap-2 bg-surface-container-high border border-outline-variant/15 w-fit rounded-full px-3 py-1 mb-2">
           <div className="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_5px_rgba(164,215,48,0.8)]"></div>
           <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
-            System Online
+            Sistem Online
           </span>
         </div>
 
@@ -33,17 +33,17 @@ export function HeroSection() {
         </h1>
 
         <p className="text-[16px] xl:text-[18px] text-outline leading-relaxed max-w-lg mt-2 mb-4">
-          Deploy autonomous AI agents that handle customer inquiries, close
-          sales, and manage support tickets with human-like precision while you
-          sleep.
+          Luncurkan agen AI otonom yang menangani pertanyaan pelanggan, menutup
+          penjualan, dan mengelola tiket bantuan dengan presisi layaknya manusia
+          saat Anda beristirahat.
         </p>
 
         <div className="flex items-center gap-4">
           <Button className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
-            Launch Your Agent
+            Luncurkan Agen Anda
           </Button>
           <Button className="bg-transparent text-outline hover:text-on-surface hover:bg-surface-container font-medium text-[13px] h-12 px-8 rounded-sm border border-outline-variant/20 transition-all active:scale-95">
-            View Documentation
+            Lihat Dokumentasi
           </Button>
         </div>
       </div>
@@ -65,7 +65,7 @@ export function HeroSection() {
             <CountUp to={98} />%
           </h2>
           <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
-            Resolution Rate
+            Tingkat Resolusi
           </span>
         </div>
       </div>

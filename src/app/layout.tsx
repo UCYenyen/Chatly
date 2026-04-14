@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Chatly AI",
-  description: "Advanced AI chatbot for your business",
+  description: "Chatbot AI canggih untuk bisnis Anda",
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={cn(
         "h-full",
         "antialiased",

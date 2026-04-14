@@ -1,13 +1,13 @@
 export function TopIntents() {
   const items = [
-    { label: "Product Inquiries", pct: "64%", val: 64 },
-    { label: "Pricing & Plans", pct: "22%", val: 22 },
-    { label: "Technical Support", pct: "14%", val: 14 }
+    { label: "Pertanyaan Produk", pct: "64%", val: 64 },
+    { label: "Harga & Paket", pct: "22%", val: 22 },
+    { label: "Dukungan Teknis", pct: "14%", val: 14 }
   ]
 
   return (
     <div className="bg-surface-container-low border border-outline-variant/15 p-8 rounded-xl flex flex-col justify-center h-full shadow-2xl min-h-[220px]">
-      <h2 className="text-[16px] font-headline font-bold text-on-surface mb-8">Top Intents Today</h2>
+      <h2 className="text-[16px] font-headline font-bold text-on-surface mb-8">Niat Teratas Hari Ini</h2>
       
       <div className="flex flex-col gap-6">
         {items.map(item => (

@@ -41,11 +41,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Analytics', path: '/analytics', icon: BarChart2 },
-    { name: 'Training', path: '/training', icon: BrainCircuit },
-    { name: 'API Management', path: '/api-management', icon: Code2 },
+    { name: 'Analitik', path: '/analytics', icon: BarChart2 },
+    { name: 'Pelatihan', path: '/training', icon: BrainCircuit },
+    { name: 'Manajemen API', path: '/api-management', icon: Code2 },
     { name: 'Billing', path: '/billing', icon: CreditCard },
-    { name: 'API Docs', path: '/api-docs', icon: FileText },
+    { name: 'Dokumentasi API', path: '/api-docs', icon: FileText },
   ];
 
   return (
@@ -61,9 +61,9 @@ export default function Sidebar() {
         <div className="p-3 bg-surface-container rounded-sm border border-outline-variant/10 cursor-pointer group transition-all duration-200 hover:bg-surface-container-high">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-outline mb-1 font-label">Business Switcher</p>
+              <p className="text-[10px] uppercase tracking-widest text-outline mb-1 font-label">Pengalih Bisnis</p>
               <p className="font-bold text-on-surface truncate text-sm">Acme Corp</p>
-              <p className="text-xs text-outline mt-0.5">Manage Enterprise</p>
+              <p className="text-xs text-outline mt-0.5">Kelola Perusahaan</p>
             </div>
             <ChevronsUpDown className="w-4 h-4 text-outline group-hover:text-secondary-fixed transition-colors" />
           </div>
@@ -102,7 +102,7 @@ export default function Sidebar() {
       <SidebarFooter className="p-4 pt-0 bg-transparent border-0 space-y-4">
         <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-sm bg-secondary-fixed text-on-secondary font-bold text-xs uppercase tracking-widest transition-transform active:scale-95 hover:scale-[1.02]">
           <Plus className="w-4 h-4" />
-          <span>Create New Business</span>
+          <span>Buat Bisnis Baru</span>
         </button>
 
         <SidebarMenu className="space-y-1">
@@ -113,7 +113,7 @@ export default function Sidebar() {
             >
               <Link href="/settings">
                 <Settings className="w-5 h-5 flex-shrink-0" />
-                <span>Settings</span>
+                <span>Pengaturan</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -124,7 +124,7 @@ export default function Sidebar() {
             >
               <Link href="/support">
                 <HelpCircle className="w-5 h-5 flex-shrink-0" />
-                <span>Support</span>
+                <span>Bantuan</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

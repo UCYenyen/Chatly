@@ -5,12 +5,12 @@ export function SecretKeysTable() {
     <div className="flex flex-col mt-12 gap-6 w-full">
       <div className="flex items-center justify-between w-full">
         <div className="flex flex-col gap-1.5">
-          <h2 className="text-xl font-headline font-bold text-on-surface">Secret Keys</h2>
-          <p className="text-[13px] text-outline">Your secret API keys are listed below. Do not share these publicly.</p>
+          <h2 className="text-xl font-headline font-bold text-on-surface">Kunci Rahasia</h2>
+          <p className="text-[13px] text-outline">Kunci API rahasia Anda tercantum di bawah ini. Jangan bagikan ini secara publik.</p>
         </div>
         <button className="flex items-center gap-2 bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-[38px] px-6 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
           <Plus className="w-4 h-4" />
-          <span>Generate New Key</span>
+          <span>Buat Kunci Baru</span>
         </button>
       </div>
 
@@ -19,9 +19,9 @@ export function SecretKeysTable() {
           <thead>
             <tr className="border-b border-outline-variant/10 text-[10px] font-mono text-outline uppercase tracking-widest bg-surface-container/30">
               <th className="px-8 py-5 font-bold whitespace-nowrap">Label</th>
-              <th className="px-4 py-5 font-bold">Key (Masked)</th>
-              <th className="px-4 py-5 font-bold">Created</th>
-              <th className="px-8 py-5 font-bold text-right">Actions</th>
+              <th className="px-4 py-5 font-bold">Kunci (Disamarkan)</th>
+              <th className="px-4 py-5 font-bold">Dibuat</th>
+              <th className="px-8 py-5 font-bold text-right">Tindakan</th>
             </tr>
           </thead>
           <tbody className="text-[13px]">
@@ -32,13 +32,13 @@ export function SecretKeysTable() {
                     <Monitor className="w-[18px] h-[18px] text-[#8b9dff]" />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="font-bold text-on-surface tracking-wide">Production Desktop App</span>
-                    <span className="text-[11.5px] text-outline">Used for main customer dashboard</span>
+                    <span className="font-bold text-on-surface tracking-wide">Aplikasi Desktop Produksi</span>
+                    <span className="text-[11.5px] text-outline">Digunakan untuk dasbor pelanggan utama</span>
                   </div>
                 </div>
               </td>
               <td className="px-4 py-7 font-mono text-outline tracking-wider">ch_live_<span className="opacity-50">••••••••</span>3x9r</td>
-              <td className="px-4 py-7 text-outline font-medium tracking-wide">Oct 12, 2023</td>
+              <td className="px-4 py-7 text-outline font-medium tracking-wide">12 Okt, 2023</td>
               <td className="px-8 py-7">
                 <div className="flex items-center justify-end gap-3.5">
                   <button className="text-outline hover:text-on-surface transition-colors active:scale-95"><Copy className="w-[18px] h-[18px]" /></button>
@@ -54,13 +54,13 @@ export function SecretKeysTable() {
                     <Smartphone className="w-[18px] h-[18px] text-[#8b9dff]" />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="font-bold text-on-surface tracking-wide">iOS SDK Mobile</span>
-                    <span className="text-[11.5px] text-outline">Internal mobile team development</span>
+                    <span className="font-bold text-on-surface tracking-wide">SDK Mobile iOS</span>
+                    <span className="text-[11.5px] text-outline">Pengembangan tim mobile internal</span>
                   </div>
                 </div>
               </td>
               <td className="px-4 py-7 font-mono text-outline tracking-wider">ch_test_<span className="opacity-50">••••••••</span>m0k8</td>
-              <td className="px-4 py-7 text-outline font-medium tracking-wide">Jan 04, 2024</td>
+              <td className="px-4 py-7 text-outline font-medium tracking-wide">04 Jan, 2024</td>
               <td className="px-8 py-7">
                 <div className="flex items-center justify-end gap-3.5">
                   <button className="text-outline hover:text-on-surface transition-colors active:scale-95"><Copy className="w-[18px] h-[18px]" /></button>

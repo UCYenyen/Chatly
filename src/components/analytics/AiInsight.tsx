@@ -6,9 +6,9 @@ export function AiInsight() {
       <div className="flex gap-4">
         <Sparkles className="w-5 h-5 text-secondary-fixed flex-shrink-0 mt-1 fill-secondary-fixed" />
         <div className="flex flex-col gap-2">
-          <h2 className="text-[15px] font-headline font-bold text-on-surface">AI Insight</h2>
+          <h2 className="text-[15px] font-headline font-bold text-on-surface">Wawasan AI</h2>
           <p className="text-[13px] text-outline leading-relaxed max-w-[240px]">
-            High correlation detected between &quot;Product X&quot; inquiries and weekend tr...
+            Korelasi tinggi terdeteksi antara pertanyaan &quot;Produk X&quot; dan tr...
           </p>
         </div>
       </div>
@@ -18,7 +18,7 @@ export function AiInsight() {
           <Zap className="w-4 h-4 text-white fill-white" />
         </div>
         <div className="flex flex-col">
-          <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">Active Model</span>
+          <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">Model Aktif</span>
           <span className="text-[13px] font-bold text-secondary-fixed mt-0.5">Kinetic-Engine v2.4</span>
         </div>
       </div>

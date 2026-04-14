@@ -4,8 +4,8 @@ export function ActiveWebhooks() {
   return (
     <div className="flex flex-col mt-14 gap-6 w-full relative mb-12">
       <div className="flex flex-col gap-1.5 w-full">
-        <h2 className="text-xl font-headline font-bold text-on-surface">Active Webhooks</h2>
-        <p className="text-[13px] text-outline">Receive real-time notifications when events happen in your account.</p>
+        <h2 className="text-xl font-headline font-bold text-on-surface">Webhook Aktif</h2>
+        <p className="text-[13px] text-outline">Terima pemberitahuan waktu nyata saat peristiwa terjadi di akun Anda.</p>
       </div>
 
       <div className="flex flex-col gap-5 mt-2 relative">
@@ -16,18 +16,18 @@ export function ActiveWebhooks() {
                 https://api.acme.co/v1/webhooks/chatly
               </span>
               <div className="bg-[#143600] border border-[#304400] text-[#bff44c] rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest font-mono">
-                Active
+                Aktif
               </div>
             </div>
             <div className="flex items-center gap-2 text-[12px]">
-              <span className="text-outline">Events:</span>
-              <span className="text-outline-variant font-medium tracking-wide">message.sent, user.onboarding_completed, payment.success</span>
+              <span className="text-outline">Peristiwa:</span>
+              <span className="text-outline-variant font-medium tracking-wide">pesan.terkirim, pengguna.onboarding_selesai, pembayaran.berhasil</span>
             </div>
           </div>
           <div className="flex items-center gap-8">
             <div className="flex flex-col items-end gap-1">
-              <span className="text-[9px] font-mono text-outline uppercase tracking-widest font-bold">Last Delivery</span>
-              <span className="text-[12.5px] font-medium text-outline-variant">2 mins ago (200 OK)</span>
+              <span className="text-[9px] font-mono text-outline uppercase tracking-widest font-bold">Pengiriman Terakhir</span>
+              <span className="text-[12.5px] font-medium text-outline-variant">2 menit yang lalu (200 OK)</span>
             </div>
             <button className="bg-surface-container-high border border-outline-variant/15 hover:bg-surface-variant transition-colors p-2.5 rounded shadow-sm text-outline hover:text-on-surface active:scale-95">
               <Settings className="w-5 h-5" />
@@ -42,18 +42,18 @@ export function ActiveWebhooks() {
                 https://dev-hook.acme.corp/test
               </span>
               <div className="bg-surface-container border border-outline-variant/15 text-outline rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest font-mono">
-                Disabled
+                Dinonaktifkan
               </div>
             </div>
             <div className="flex items-center gap-2 text-[12px]">
-              <span className="text-outline">Events:</span>
-              <span className="text-outline-variant font-medium tracking-wide">system.alert</span>
+              <span className="text-outline">Peristiwa:</span>
+              <span className="text-outline-variant font-medium tracking-wide">sistem.peringatan</span>
             </div>
           </div>
           <div className="flex items-center gap-8">
             <div className="flex flex-col items-end gap-1">
-              <span className="text-[9px] font-mono text-outline uppercase tracking-widest font-bold">Last Delivery</span>
-              <span className="text-[12.5px] italic text-[#5c687e]">No deliveries recorded</span>
+              <span className="text-[9px] font-mono text-outline uppercase tracking-widest font-bold">Pengiriman Terakhir</span>
+              <span className="text-[12.5px] italic text-[#5c687e]">Tidak ada pengiriman tercatat</span>
             </div>
             <button className="bg-surface-container-high border border-outline-variant/15 hover:bg-surface-variant transition-colors p-2.5 rounded shadow-sm text-outline hover:text-on-surface active:scale-95 pl-3">
               <Play className="w-5 h-5 fill-current" />
@@ -69,7 +69,7 @@ export function ActiveWebhooks() {
 
       <div className="w-full flex items-center justify-center mt-8 relative z-10">
         <button className="text-[11px] font-mono text-outline hover:text-on-surface uppercase tracking-widest font-bold border-b border-outline-variant/30 pb-0.5 transition-colors">
-          Configure New Endpoint
+          Konfigurasi Endpoint Baru
         </button>
       </div>
     </div>

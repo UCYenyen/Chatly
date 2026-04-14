@@ -7,13 +7,13 @@ export function CtaSection() {
       <div className="bg-[#3545d6] rounded-sm w-full p-12 lg:p-16 flex flex-col md:flex-row items-center justify-between gap-12 shadow-[0_0_40px_rgba(53,69,214,0.2)] overflow-hidden relative">
         <div className="flex flex-col w-full md:w-[50%] z-10 relative">
           <h2 className="text-4xl lg:text-5xl font-headline font-bold text-white leading-tight mb-6 tracking-tight">
-            Ready to automate <br /> your excellence?
+            Siap untuk mengotomatisasi <br /> keunggulan Anda?
           </h2>
           <p className="text-[15px] text-[#c8ccff] leading-relaxed max-w-sm mb-8">
-            Join 2,000+ businesses using Chatly AI to deliver premium customer experiences around the clock.
+            Bergabunglah dengan 2.000+ bisnis yang menggunakan Chatly AI untuk memberikan pengalaman pelanggan premium sepanjang waktu.
           </p>
           <Button className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 w-fit rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
-            Create Account Free
+            Buat Akun Gratis
           </Button>
         </div>
 
@@ -24,12 +24,12 @@ export function CtaSection() {
                 <BotMessageSquare className="w-5 h-5 text-[#141f00]" />
               </div>
               <p className="text-[13px] text-outline leading-relaxed bg-[#08111d] p-3.5 rounded-md border border-outline-variant/10">
-                Hello! I&apos;ve analyzed your sales funnel. Ready to optimize your response time by 40%?
+                Halo! Saya telah menganalisis corong penjualan Anda. Siap untuk mengoptimalkan waktu respons Anda sebesar 40%?
               </p>
             </div>
             <div className="flex justify-end pt-1">
               <Button className="bg-[#c8ccff] text-[#000865] hover:bg-white font-bold text-[12px] h-9 px-5 rounded-sm shadow-sm transition-transform active:scale-95">
-                Launch Optimization
+                Luncurkan Optimalisasi
               </Button>
             </div>
           </div>
