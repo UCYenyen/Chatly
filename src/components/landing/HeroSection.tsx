@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-
+import CountUp from "../personal/CountUp"
 export function HeroSection() {
   return (
     <section className="flex flex-col lg:flex-row items-center justify-between container mx-auto px-10 xl:px-16 mt-16 lg:mt-24 gap-16 lg:gap-8">
@@ -42,7 +42,7 @@ export function HeroSection() {
         
         {/* Floating resolution rate badge */}
         <div className="absolute left-0 bottom-4 lg:-left-8 lg:bottom-12 bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/20 p-6 rounded-lg shadow-2xl z-10 w-[180px]">
-          <h2 className="text-3xl font-headline font-bold text-secondary-fixed mb-1">98%</h2>
+          <h2 className="text-3xl font-headline font-bold text-secondary-fixed mb-1"><CountUp to={98} />%</h2>
           <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">Resolution Rate</span>
         </div>
       </div>
