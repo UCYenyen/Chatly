@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -20,7 +20,7 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -98,28 +98,29 @@
   --font-label: var(--font-label);
 }
 
-:root, .dark {
+:root,
+.dark {
   /* Shadcn unified mappings backed by user provided hex colors */
-  --background: #081422; 
-  --foreground: #d7e3f7; 
-  --card: #081422; 
-  --card-foreground: #d7e3f7; 
+  --background: #081422;
+  --foreground: #d7e3f7;
+  --card: #081422;
+  --card-foreground: #d7e3f7;
   --popover: #081422;
   --popover-foreground: #d7e3f7;
-  --primary: #bdc2ff; 
-  --primary-foreground: #0013a0; 
-  --secondary: #a4d730; 
-  --secondary-foreground: #253600; 
-  --muted: #2a3645; 
-  --muted-foreground: #c5c5d7; 
-  --accent: #bdc2ff; 
-  --accent-foreground: #00159e; 
-  --destructive: #ef8276; 
-  --destructive-foreground: #690005; 
-  --border: #8f8fa1; 
+  --primary: #bdc2ff;
+  --primary-foreground: #0013a0;
+  --secondary: #a4d730;
+  --secondary-foreground: #253600;
+  --muted: #2a3645;
+  --muted-foreground: #c5c5d7;
+  --accent: #bdc2ff;
+  --accent-foreground: #00159e;
+  --destructive: #ef8276;
+  --destructive-foreground: #690005;
+  --border: #8f8fa1;
   --input: #8f8fa1;
-  --ring: #bdc2ff; 
-  --radius: 0.5rem; 
+  --ring: #bdc2ff;
+  --radius: 0.5rem;
 
   /* Sidebar fallback mapping (kept from old theme equivalent) */
   --sidebar: #081422;
@@ -195,17 +196,34 @@
 }
 
 .kinetic-gradient {
-  background: linear-gradient(135deg, var(--color-primary-container) 0%, var(--color-on-primary-fixed-variant) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-container) 0%,
+    var(--color-on-primary-fixed-variant) 100%
+  );
 }
-.glass-module, .glass-panel {
+.glass-module,
+.glass-panel {
   background: rgba(42, 54, 69, 0.6);
   backdrop-filter: blur(25px);
 }
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: var(--color-background); }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 10px; }
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 10px;
+}
 
 /* Page Transitions - Curtain Effect */
 .curtain-layer-1,
