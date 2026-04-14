@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import CountUp from "../personal/CountUp"
+import Prism from "../Prism"
+
 export function HeroSection() {
   return (
     <section className="flex flex-col lg:flex-row items-center justify-between container mx-auto px-10 xl:px-16 mt-16 lg:mt-24 gap-16 lg:gap-8">
@@ -31,12 +33,16 @@ export function HeroSection() {
       
       <div className="w-full lg:w-[50%] flex justify-end relative">
         <div className="relative w-full max-w-[550px] aspect-square rounded-xl overflow-hidden border border-outline-variant/10 shadow-[0_0_40px_rgba(53,69,214,0.1)]">
-          <Image 
-            src="/ai_face.png" 
-            alt="AI Face" 
-            fill 
-            className="object-cover"
-            priority
+          <Prism 
+            animationType="rotate"
+            timeScale={0.5}
+            scale={3.6}
+            height={4.2}
+            baseWidth={4.4}
+            noise={0.55}
+            glow={1}
+            hueShift={0}
+            colorFrequency={1}
           />
         </div>
         
