@@ -11,6 +11,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 import { signInSchema, type SignInValues } from "@/validations/authValidation.md"; 
 import { authClient } from "@/lib/utils/auth/auth-client";
+import { getAuthErrorMessage } from "@/lib/utils/auth/get-auth-error-message";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -54,10 +55,11 @@ export default function SignInSection() {
       });
 
       if (error) {
+        const message = getAuthErrorMessage(error, "Email atau password salah.");
         toast.error("Login Gagal", {
-          description: error.message || "Email atau password salah.",
+          description: message,
         });
-        form.setError("root", { message: error.message });
+        form.setError("root", { message });
       } else {
         toast.success("Login Berhasil", {
           description: "Mohon tunggu sebentar...",

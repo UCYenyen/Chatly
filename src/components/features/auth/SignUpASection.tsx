@@ -9,6 +9,7 @@ import Link from "next/link";
 
 import { signUpSchema, type SignUpValues } from "@/validations/authValidation.md";
 import { authClient } from "@/lib/utils/auth/auth-client";
+import { getAuthErrorMessage } from "@/lib/utils/auth/get-auth-error-message";
 
 import { Button } from "@/components/ui//button";
 import {
@@ -53,10 +54,11 @@ export function SignUpForm() {
       });
 
       if (error) {
+        const message = getAuthErrorMessage(error, "Gagal membuat akun.");
         toast.error("Registrasi Gagal", {
-          description: error.message || "Gagal membuat akun.",
+          description: message,
         });
-        form.setError("root", { message: error.message });
+        form.setError("root", { message });
       } else {
         toast.success("Link Verifikasi Terkirim", {
           description: "Silakan cek email anda untuk verifikasi.",
