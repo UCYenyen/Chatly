@@ -38,6 +38,7 @@ export default function page() {
       <div className="z-10 flex flex-col items-center gap-8 w-full max-w-md">
         <Link href="/">
           <Image
+            draggable={false}
             src="/logos/chatly-text.svg"
             alt="Chatly Logo"
             width={180}

@@ -47,6 +47,7 @@ export function HeroSection() {
       <div className="w-full lg:w-[50%] flex justify-end relative">
         <div className="relative w-full max-w-[550px] aspect-square rounded-xl overflow-hidden border border-outline-variant/10 shadow-[0_0_40px_rgba(53,69,214,0.1)]">
           <Image
+            draggable={false}
             src="/ai_face.png"
             alt="AI Face"
             fill

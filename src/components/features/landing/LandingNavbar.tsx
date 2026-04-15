@@ -59,7 +59,7 @@ export function LandingNavbar() {
       <nav className="container mx-auto px-6 lg:px-10 xl:px-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="flex items-center justify-center">
-            <Image src="/logos/chatly-text.svg" alt="Chatly Logo" width={200} className="h-auto w-32" height={100} />
+            <Image src="/logos/chatly-text.svg" draggable={false} alt="Chatly Logo" width={200} className="h-auto w-32" height={100} />
           </div>
         </Link>
         
