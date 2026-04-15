@@ -1,4 +1,5 @@
 import { Building2, Plus, ArrowRight, Settings2 } from "lucide-react"
+import { CreateBusinessModal } from "@/components/personal/CreateBusinessModal"
 
 export function BusinessSelectorCards() {
   const businesses = [
@@ -72,14 +73,18 @@ export function BusinessSelectorCards() {
           </div>
         ))}
 
-        {/* Add New Business Card */}
-        <div className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 hover:bg-surface-container/50 hover:border-secondary-fixed/50 p-6 rounded-xl flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 min-h-[220px]">
-          <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-[#bff44c] group-hover:border-[#a4d730] transition-colors shadow-sm">
-            <Plus className="w-6 h-6 text-outline group-hover:text-[#141f00] transition-colors" />
-          </div>
-          <span className="font-bold text-[15px] text-on-surface mb-1 text-center">Tambahkan Bisnis Baru</span>
-          <span className="text-[12px] text-outline text-center max-w-[160px]">Buka instans baru untuk divisi atau merek lain.</span>
-        </div>
+        <CreateBusinessModal>
+          <button
+            type="button"
+            className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 hover:bg-surface-container/50 hover:border-secondary-fixed/50 p-6 rounded-xl flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 min-h-[220px]"
+          >
+            <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-[#bff44c] group-hover:border-[#a4d730] transition-colors shadow-sm">
+              <Plus className="w-6 h-6 text-outline group-hover:text-[#141f00] transition-colors" />
+            </div>
+            <span className="font-bold text-[15px] text-on-surface mb-1 text-center">Tambahkan Bisnis Baru</span>
+            <span className="text-[12px] text-outline text-center max-w-[160px]">Buka instans baru untuk divisi atau merek lain.</span>
+          </button>
+        </CreateBusinessModal>
       </div>
     </div>
   )
