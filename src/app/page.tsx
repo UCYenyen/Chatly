@@ -11,17 +11,6 @@ export default function LandingPage() {
     <div className="relative w-full flex flex-col min-h-screen bg-background overflow-x-hidden selection:bg-secondary-fixed selection:text-on-secondary-fixed">
       <LandingNavbar />
       <div className="w-screen h-screen absolute top-0 left-0">
-        {/* <Prism
-          animationType="rotate"
-          timeScale={0.25}
-          height={5.5}
-          baseWidth={7.5}
-          scale={3.6}
-          hueShift={0.75}
-          colorFrequency={1}
-          noise={0.35}
-          glow={0.3}
-        /> */}
         <Grainient
           className="opacity-25"
           color1="#87b800"

@@ -1,24 +1,20 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useRef } from "react";
 import CountUp from "../../personal/CountUp";
-import Prism from "../../personal/Prism";
+import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal";
 
 export function HeroSection() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  useGsapScrollReveal(sectionRef, { start: "top 86%", y: 36, fade: false });
+
   return (
-    <section className="relative flex flex-col lg:flex-row items-center justify-between container mx-auto px-10 xl:px-16 mt-24 lg:mt-24 gap-16 lg:gap-8">
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <Prism
-          animationType="rotate"
-          timeScale={0.5}
-          scale={3.6}
-          height={4.2}
-          baseWidth={4.4}
-          noise={0.55}
-          glow={1}
-          hueShift={0}
-          colorFrequency={1}
-        />
-      </div>
+    <section
+      ref={sectionRef}
+      className="relative flex flex-col lg:flex-row items-center justify-between container mx-auto px-10 xl:px-16 mt-24 lg:mt-24 gap-16 lg:gap-8"
+    >
       <div className="flex flex-col gap-6 w-full lg:w-[45%]">
         <div className="flex items-center gap-2 bg-surface-container-high border border-outline-variant/15 w-fit rounded-full px-3 py-1 mb-2">
           <div className="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_5px_rgba(164,215,48,0.8)]"></div>
@@ -59,7 +55,6 @@ export function HeroSection() {
           />
         </div>
 
-        {/* Floating resolution rate badge */}
         <div className="absolute left-0 bottom-4 lg:-left-8 lg:bottom-12 bg-surface-container-low/80 backdrop-blur-xl border border-outline-variant/20 p-6 rounded-lg shadow-2xl z-10 w-[180px]">
           <h2 className="text-3xl font-headline font-bold text-secondary-fixed mb-1">
             <CountUp to={98} />%

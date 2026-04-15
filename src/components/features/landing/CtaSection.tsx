@@ -1,9 +1,20 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { BotMessageSquare } from "lucide-react"
+import { useRef } from "react"
+import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal"
 
 export function CtaSection() {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  useGsapScrollReveal(sectionRef, {
+    start: "top 86%",
+    y: 10,
+    fade: true,
+  })
+
   return (
-    <section className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 mb-24">
+    <section ref={sectionRef} className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 mb-24">
       <div className="bg-[#3545d6] rounded-sm w-full p-12 lg:p-16 flex flex-col md:flex-row items-center justify-between gap-12 shadow-[0_0_40px_rgba(53,69,214,0.2)] overflow-hidden relative">
         <div className="flex flex-col w-full md:w-[50%] z-10 relative">
           <h2 className="text-4xl lg:text-5xl font-headline font-bold text-white leading-tight mb-6 tracking-tight">
@@ -35,7 +46,6 @@ export function CtaSection() {
           </div>
         </div>
 
-        {/* Decorative background vectors */}
         <div className="absolute right-0 top-0 opacity-10 text-white translate-x-1/4 -translate-y-1/4 pointer-events-none">
           <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 24 24" fill="currentColor" stroke="none">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>

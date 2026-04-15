@@ -1,8 +1,19 @@
+"use client"
+
 import SpotlightCard from "@/components/personal/SpotlightCard"
 import { CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useRef } from "react"
+import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal"
 
 export function PricingSection() {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  useGsapScrollReveal(sectionRef, {
+    start: "top 84%",
+    y: 10,
+    fade: true,
+  })
+
   const plans = [
     {
       name: "STARTER",
@@ -39,7 +50,7 @@ export function PricingSection() {
   ]
 
   return (
-    <section id="pricing" className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 flex flex-col items-center scroll-mt-32">
+    <section ref={sectionRef} id="pricing" className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 flex flex-col items-center scroll-mt-32">
       <div className="text-center mb-16 flex flex-col items-center">
         <h2 className="text-3xl font-headline font-bold text-on-surface mb-4">Pilih Paket Anda</h2>
         <p className="text-[14px] text-outline max-w-lg leading-relaxed">
