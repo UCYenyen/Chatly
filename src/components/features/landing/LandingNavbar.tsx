@@ -15,17 +15,25 @@ import {
 
 import { authClient } from "@/lib/utils/auth/auth-client"
 import { useRouter } from "next/navigation"
+import { useTransitionRouter } from "next-transition-router"
+
+type NavLink = {
+  name: string
+  href: string
+  onClick?: () => Promise<void> | void
+}
 
 export function LandingNavbar() {
   const [isScrolled, setIsScrolled] = React.useState(false)
   const { data: session } = authClient.useSession()
   const router = useRouter()
+  const transitionRouter = useTransitionRouter()
 
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/sign-in")
+          transitionRouter.push("/sign-in")
           router.refresh()
         }
       }
@@ -40,13 +48,35 @@ export function LandingNavbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { name: "Harga", href: "/#pricing" },
     ...(session 
       ? [{ name: "Logout", href: "#", onClick: handleSignOut }] 
       : [{ name: "Masuk", href: "/sign-in" }]
     ),
   ]
+
+  const handleNavLinkClick = async (link: NavLink, e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (link.onClick) {
+      e.preventDefault()
+      await link.onClick()
+      return
+    }
+
+    if (link.href.startsWith("/#")) {
+      const id = link.href.replace("/#", "")
+      const element = document.getElementById(id)
+      if (element) {
+        e.preventDefault()
+        element.scrollIntoView({ behavior: "smooth" })
+        window.history.pushState(null, "", link.href)
+      }
+      return
+    }
+
+    e.preventDefault()
+    transitionRouter.push(link.href)
+  }
 
   return (
     <header 
@@ -70,20 +100,7 @@ export function LandingNavbar() {
               <Link 
                 key={link.name}
                 href={link.href} 
-                onClick={(e) => {
-                  if (link.onClick) {
-                    e.preventDefault();
-                    link.onClick();
-                  } else if (link.href.startsWith("/#")) {
-                    const id = link.href.replace("/#", "");
-                    const element = document.getElementById(id);
-                    if (element) {
-                      e.preventDefault();
-                      element.scrollIntoView({ behavior: "smooth" });
-                      window.history.pushState(null, "", link.href);
-                    }
-                  }
-                }}
+                onClick={(e) => void handleNavLinkClick(link, e)}
                 className="text-outline hover:text-on-surface transition-colors relative group"
               >
                 {link.name}
@@ -120,20 +137,7 @@ export function LandingNavbar() {
                   <Link 
                     key={link.name}
                     href={link.href} 
-                    onClick={(e) => {
-                      if (link.onClick) {
-                        e.preventDefault();
-                        link.onClick();
-                      } else if (link.href.startsWith("/#")) {
-                        const id = link.href.replace("/#", "");
-                        const element = document.getElementById(id);
-                        if (element) {
-                          e.preventDefault();
-                          element.scrollIntoView({ behavior: "smooth" });
-                          window.history.pushState(null, "", link.href);
-                        }
-                      }
-                    }}
+                    onClick={(e) => void handleNavLinkClick(link, e)}
                     className="text-lg font-medium text-outline hover:text-on-surface transition-colors px-2 py-1"
                   >
                     {link.name}
@@ -144,7 +148,13 @@ export function LandingNavbar() {
                     asChild
                     className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[15px] h-12 rounded-xl shadow-lg border border-secondary-fixed-dim mt-4"
                   >
-                    <Link href={session ? "/dashboard" : "/sign-up"}>
+                    <Link
+                      href={session ? "/dashboard" : "/sign-up"}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        transitionRouter.push(session ? "/dashboard" : "/sign-up")
+                      }}
+                    >
                       {session ? "Ke Dashboard" : "Mulai Sekarang"}
                     </Link>
                   </Button>
