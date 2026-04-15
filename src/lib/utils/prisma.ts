@@ -1,16 +1,29 @@
 // lib/prisma.ts
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { withAccelerate } from '@prisma/extension-accelerate';
 import { Pool } from 'pg';
 
 const prismaClientSingleton = () => {
-  // 1. Setup the connection pool
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is missing in environment variables');
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  const pool = new Pool({
+    connectionString,
+    ssl: isProduction ? { rejectUnauthorized: false } : undefined,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+    max: isProduction ? 5 : 10,
+    keepAlive: true,
+  });
+
   const adapter = new PrismaPg(pool);
 
-  // 2. Initialize client with adapter and Accelerate
-  return new PrismaClient({ adapter }).$extends(withAccelerate());
+  return new PrismaClient({ adapter });
 };
 
 type PrismaClientConfigured = ReturnType<typeof prismaClientSingleton>;
