@@ -97,7 +97,7 @@ export function LandingNavbar() {
             className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[13px] h-10 px-6 rounded-md shadow-md transition-all active:scale-95 border border-secondary-fixed-dim"
           >
             <Link href={session ? "/dashboard" : "/sign-up"}>
-              {session ? "Ke Dashboard" : "Mulai Sekarang"}
+              {session ? "Ke Dashboard" : "Daftar Sekarang"}
             </Link>
           </Button>
         </div>
