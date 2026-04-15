@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useRef } from "react";
 import CountUp from "../../personal/CountUp";
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal";
-import TextType from "@/components/TextType";
+import TextType from "@/components/personal/TextType";
+import Shuffle from "@/components/personal/Shuffle";
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   useGsapScrollReveal(sectionRef, { start: "top 86%", y: 36, fade: false });
@@ -32,17 +33,32 @@ export function HeroSection() {
         </div>
 
         <h1 className="text-5xl lg:text-6xl xl:text-7xl font-headline font-bold text-on-surface leading-[1.1] tracking-tight">
-          Your Business, <br />
+          <Shuffle
+            text="Your Business,"
+            shuffleDirection="right"
+            duration={0.35}
+            animationMode="evenodd"
+            shuffleTimes={1}
+            ease="power3.out"
+            stagger={0.03}
+            threshold={0.1}
+            triggerOnce={true}
+            triggerOnHover
+            respectReducedMotion={true}
+            loop={false}
+            loopDelay={0}
+          />
+          <br />
 
           <TextType
-              text={["Responding", "Always on"]}
-              typingSpeed={75}
-              pauseDuration={3500}
-              showCursor
-              cursorCharacter=""
-              deletingSpeed={100}
-              cursorBlinkDuration={0.5}
-            /> <span className="text-secondary-fixed">24/7.</span>
+            text={["Responding", "Always on"]}
+            typingSpeed={75}
+            pauseDuration={3500}
+            showCursor
+            cursorCharacter=""
+            deletingSpeed={100}
+            cursorBlinkDuration={0.5}
+          /> <span className="text-secondary-fixed">24/7.</span>
         </h1>
 
         <p className="text-[16px] xl:text-[18px] text-outline leading-relaxed max-w-lg mt-2 mb-4">
