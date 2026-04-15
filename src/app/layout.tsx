@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
+import SplashCursor from "@/components/personal/SplashCursor";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -45,6 +46,7 @@ export default function RootLayout({
         <main className="flex-1 w-full flex flex-col h-full bg-background overflow-auto relative">
           <TransitionProvider>
             {children}
+            <SplashCursor SPLAT_FORCE={9000} />  
             <Toaster richColors position="bottom-right" duration={3000} closeButton />
           </TransitionProvider>
         </main>

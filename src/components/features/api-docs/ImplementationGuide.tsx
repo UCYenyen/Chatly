@@ -7,7 +7,7 @@ export function ImplementationGuide() {
       </div>
       
       <div className="bg-surface-container-low border border-outline-variant/15 rounded-md p-8 flex flex-col gap-10">
-        <p className="text-outline-variant text-[15px] leading-relaxed">
+        <p className="text-outline text-[15px] leading-relaxed">
           Mengintegrasikan Chatly ke dalam alur kerja Anda saat ini membutuhkan biaya minimal. Metode injeksi widget milik kami memastikan perwakilan AI CS Anda memuat secara asinkron tanpa memengaruhi metrik kinerja DOM inti.
         </p>
 

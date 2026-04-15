@@ -111,7 +111,7 @@ export function LandingNavbar() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] border-l border-border/20 bg-background/95 backdrop-blur-xl">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] border-l border-border/20 bg-background/85 backdrop-blur-xl px-4">
               <SheetHeader className="text-left pb-6 border-b border-border/10">
                 <SheetTitle className="text-xl font-headline font-bold">Chatly AI</SheetTitle>
               </SheetHeader>

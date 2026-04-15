@@ -18,7 +18,7 @@ export function EndpointsList() {
             <span className="text-[11px] font-mono text-outline uppercase tracking-wider">Batas Kecepatan: 500/Mnt</span>
           </div>
           
-          <p className="text-outline-variant text-sm leading-relaxed max-w-lg mt-2">
+          <p className="text-outline text-sm leading-relaxed max-w-lg mt-2">
             Mengirim pesan pengguna baru ke unit pemrosesan neural. Mengembalikan pengakuan segera dan referensi streaming.
           </p>
 
@@ -43,7 +43,7 @@ export function EndpointsList() {
             <span className="text-[11px] font-mono text-outline uppercase tracking-wider">Batas Kecepatan: 100/Mnt</span>
           </div>
           
-          <p className="text-outline-variant text-sm leading-relaxed max-w-lg mt-2">
+          <p className="text-outline text-sm leading-relaxed max-w-lg mt-2">
             Mengambil riwayat kinetik lengkap dari sebuah percakapan termasuk token analisis sentimen dan bendera resolusi.
           </p>
         </div>
