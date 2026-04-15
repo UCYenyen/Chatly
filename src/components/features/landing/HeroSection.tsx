@@ -51,7 +51,7 @@ export function HeroSection() {
           <br />
 
           <TextType
-            text={["Responding", "Always on"]}
+            text={["RESPONDING", "ALWAYS ON"]}
             typingSpeed={75}
             pauseDuration={3500}
             showCursor
