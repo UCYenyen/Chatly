@@ -13,7 +13,7 @@ export function CtaSection() {
             Bergabunglah dengan 2.000+ bisnis yang menggunakan Chatly AI untuk memberikan pengalaman pelanggan premium sepanjang waktu.
           </p>
           <Button className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 w-fit rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
-            Buat Akun Gratis
+            Mulai Sekarang
           </Button>
         </div>
 

@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 
+import { CreateBusinessModal } from "./CreateBusinessModal";
 import { authClient } from "@/lib/utils/auth/auth-client";
 
 export default function Sidebar() {
@@ -167,13 +168,15 @@ export default function Sidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3 bg-transparent custom-scrollbar flex flex-col gap-4">
-        <Button
-          variant={"default"}
-          className="py-6 rounded-sm uppercase text-[10px] tracking-[0.2em] font-black"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Buat Bisnis Baru</span>
-        </Button>
+        <CreateBusinessModal>
+          <Button
+            variant={"default"}
+            className="py-6 rounded-sm uppercase text-[10px] tracking-[0.2em] font-black"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Buat Bisnis Baru</span>
+          </Button>
+        </CreateBusinessModal>
         <SidebarGroup>
           <SidebarMenu className="space-y-1">
             {navItems.map((item) => {
