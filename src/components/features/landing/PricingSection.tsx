@@ -52,8 +52,8 @@ export function PricingSection() {
   return (
     <section ref={sectionRef} id="pricing" className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 flex flex-col items-center scroll-mt-32">
       <div className="text-center mb-16 flex flex-col items-center">
-        <h2 className="text-3xl font-headline font-bold text-on-surface mb-4">Pilih Paket Anda</h2>
-        <p className="text-[14px] text-outline max-w-lg leading-relaxed">
+        <h2 className="text-3xl w-full text-start sm:text-center font-headline font-bold text-on-surface mb-4">Pilih Paket Anda</h2>
+        <p className="text-[14px] w-full text-start sm:text-center text-outline max-w-lg leading-relaxed">
           Solusi skalabel untuk bisnis dari semua ukuran. Tanpa biaya tersembunyi, hanya performa murni.
         </p>
       </div>

@@ -2,13 +2,36 @@
 
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import CountUp from "../../personal/CountUp";
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal";
 import TextType from "@/components/personal/TextType";
 import Shuffle from "@/components/personal/Shuffle";
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const primaryButtonRef = useRef<HTMLButtonElement | null>(null);
+  const secondaryButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [ctaWidth, setCtaWidth] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const updateWidth = () => {
+      const primaryWidth = primaryButtonRef.current?.offsetWidth ?? 0;
+      const secondaryWidth = secondaryButtonRef.current?.offsetWidth ?? 0;
+      const width = Math.ceil(Math.max(primaryWidth, secondaryWidth));
+
+      if (width > 0) {
+        setCtaWidth(width);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+
+    return () => {
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, []);
+
   useGsapScrollReveal(sectionRef, { start: "top 86%", y: 36, fade: false });
 
   return (
@@ -32,7 +55,7 @@ export function HeroSection() {
           </span>
         </div>
 
-        <h1 className="text-5xl lg:text-6xl xl:text-7xl font-headline font-bold text-on-surface leading-[1.1] tracking-tight">
+        <h1 className="text-left text-4xl lg:text-6xl xl:text-7xl font-headline font-bold text-on-surface leading-[1.1] tracking-tight">
           <Shuffle
             text="Your Business,"
             shuffleDirection="right"
@@ -67,11 +90,19 @@ export function HeroSection() {
           saat Anda beristirahat.
         </p>
 
-        <div className="flex items-center gap-4">
-          <Button className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <Button
+            ref={primaryButtonRef}
+            style={ctaWidth ? { width: `${ctaWidth}px` } : undefined}
+            className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]"
+          >
             Luncurkan Agen Anda
           </Button>
-          <Button className="bg-transparent text-outline hover:text-on-surface hover:bg-surface-container font-medium text-[13px] h-12 px-8 rounded-sm border border-outline-variant transition-all active:scale-95">
+          <Button
+            ref={secondaryButtonRef}
+            style={ctaWidth ? { width: `${ctaWidth}px` } : undefined}
+            className="bg-transparent text-outline hover:text-on-surface hover:bg-surface-container font-medium text-[13px] h-12 px-8 rounded-sm border border-outline-variant transition-all active:scale-95"
+          >
             Lihat Dokumentasi
           </Button>
         </div>
