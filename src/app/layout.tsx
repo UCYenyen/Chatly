@@ -46,7 +46,7 @@ export default function RootLayout({
         <main className="flex-1 w-full flex flex-col h-full bg-background overflow-auto relative">
           <TransitionProvider>
             {children}
-            <SplashCursor SPLAT_FORCE={2000} COLOR="#bff44c" />  
+            {/* <SplashCursor SPLAT_FORCE={1000} COLOR="#bff44c" />   */}
             <Toaster richColors position="bottom-right" duration={3000} closeButton />
           </TransitionProvider>
         </main>
