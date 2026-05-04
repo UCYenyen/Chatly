@@ -1,35 +1,42 @@
-import { Download, ListFilter } from "lucide-react"
+"use client";
+
+import { Download, ExternalLink, ListFilter } from "lucide-react";
+import { useBilling } from "./BillingProvider";
+import { PLANS } from "@/lib/utils/payment-gateway/plans";
+import { formatIDR, formatShortDateID } from "./billing-format";
+import type { PaymentDTO, PaymentStatus } from "@/types/subscription.md";
+
+const STATUS_LABEL: Record<PaymentStatus, string> = {
+  PENDING: "Menunggu",
+  PAID: "Berhasil",
+  FAILED: "Gagal",
+  EXPIRED: "Kadaluarsa",
+};
+
+function statusClass(status: PaymentStatus): string {
+  switch (status) {
+    case "PAID":
+      return "bg-[#143600]/80 border-[#304400] text-secondary-fixed";
+    case "PENDING":
+      return "bg-surface-container-high border-outline-variant/20 text-outline";
+    case "FAILED":
+    case "EXPIRED":
+      return "bg-red-950/60 border-red-900/60 text-red-300";
+  }
+}
 
 export function TransactionHistory() {
-  const transactions = [
-    {
-      date: "Nov 12, 2024",
-      description: "Langganan Paket Growth",
-      invoice: "INV-2024-11-0024",
-      amount: "Rp 349.000",
-      status: "Berhasil"
-    },
-    {
-      date: "Okt 12, 2024",
-      description: "Langganan Paket Growth",
-      invoice: "INV-2024-10-0012",
-      amount: "Rp 349.000",
-      status: "Berhasil"
-    },
-    {
-      date: "Sep 12, 2024",
-      description: "Langganan Paket Growth",
-      invoice: "INV-2024-09-0008",
-      amount: "Rp 349.000",
-      status: "Berhasil"
-    }
-  ]
+  const { data, isLoading } = useBilling();
+  const payments: PaymentDTO[] = data?.payments ?? [];
 
   return (
     <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-2xl flex flex-col overflow-hidden w-full">
       <div className="p-8 pb-8 flex items-center justify-between border-b border-outline-variant/10">
         <h2 className="text-[16px] font-headline font-bold text-on-surface">Riwayat Transaksi</h2>
-        <button className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors p-2 rounded shadow-sm text-outline hover:text-on-surface active:scale-95">
+        <button
+          type="button"
+          className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors p-2 rounded shadow-sm text-outline hover:text-on-surface active:scale-95"
+        >
           <ListFilter className="w-[18px] h-[18px]" />
         </button>
       </div>
@@ -46,24 +53,66 @@ export function TransactionHistory() {
             </tr>
           </thead>
           <tbody className="text-[13px]">
-            {transactions.map((tx, i) => (
-              <tr key={i} className="border-b border-outline-variant/5 hover:bg-surface-container/30 transition-colors">
-                <td className="px-8 py-7 text-outline font-medium whitespace-nowrap">{tx.date}</td>
+            {isLoading && (
+              <tr>
+                <td colSpan={5} className="px-8 py-10 text-center text-outline">
+                  Memuat...
+                </td>
+              </tr>
+            )}
+            {!isLoading && payments.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-8 py-10 text-center text-outline">
+                  Belum ada transaksi.
+                </td>
+              </tr>
+            )}
+            {payments.map((tx) => (
+              <tr
+                key={tx.id}
+                className="border-b border-outline-variant/5 hover:bg-surface-container/30 transition-colors"
+              >
+                <td className="px-8 py-7 text-outline font-medium whitespace-nowrap">
+                  {formatShortDateID(tx.createdAt)}
+                </td>
                 <td className="px-4 py-7">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-on-surface font-bold">{tx.description}</span>
-                    <span className="text-[11px] font-mono text-outline">{tx.invoice}</span>
+                    <span className="text-on-surface font-bold">
+                      Langganan Paket {PLANS[tx.plan].name}
+                    </span>
+                    <span className="text-[11px] font-mono text-outline">{tx.xenditExternalId}</span>
                   </div>
                 </td>
-                <td className="px-4 py-7 text-on-surface font-mono font-bold tracking-wide">{tx.amount}</td>
+                <td className="px-4 py-7 text-on-surface font-mono font-bold tracking-wide">
+                  {formatIDR(tx.amount)}
+                </td>
                 <td className="px-4 py-7">
-                  <div className="inline-flex items-center gap-1.5 bg-[#143600]/80 border border-[#304400] text-secondary-fixed px-2.5 py-1 rounded shadow-sm">
-                    <span className="text-[10px] font-bold uppercase tracking-widest font-mono">{tx.status}</span>
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded shadow-sm border ${statusClass(tx.status)}`}
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-widest font-mono">
+                      {STATUS_LABEL[tx.status]}
+                    </span>
                   </div>
                 </td>
                 <td className="px-8 py-7 text-right">
-                  <div className="flex justify-end">
-                    <button className="text-outline hover:text-on-surface transition-colors active:scale-95 p-2 rounded-full hover:bg-surface-container">
+                  <div className="flex justify-end gap-1">
+                    {tx.status === "PENDING" && tx.invoiceUrl && (
+                      <a
+                        href={tx.invoiceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-outline hover:text-on-surface transition-colors active:scale-95 p-2 rounded-full hover:bg-surface-container"
+                        aria-label="Lanjutkan pembayaran"
+                      >
+                        <ExternalLink className="w-[18px] h-[18px]" />
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      className="text-outline hover:text-on-surface transition-colors active:scale-95 p-2 rounded-full hover:bg-surface-container"
+                      aria-label="Unduh invoice"
+                    >
                       <Download className="w-[18px] h-[18px]" />
                     </button>
                   </div>
@@ -75,10 +124,10 @@ export function TransactionHistory() {
       </div>
 
       <div className="p-5 border-t border-outline-variant/10 bg-surface-container-high hover:bg-surface-variant transition-colors cursor-pointer flex justify-center shadow-inner">
-        <button className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">
+        <button type="button" className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">
           Lihat Semua Transaksi
         </button>
       </div>
     </div>
-  )
+  );
 }

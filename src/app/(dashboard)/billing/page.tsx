@@ -4,9 +4,11 @@ import { PaymentMethod } from "@/components/features/billing/PaymentMethod";
 import { BillingInfo } from "@/components/features/billing/BillingInfo";
 import { TransactionHistory } from "@/components/features/billing/TransactionHistory";
 import { BillingFooter } from "@/components/features/billing/BillingFooter";
+import { BillingProvider } from "@/components/features/billing/BillingProvider";
 
 export default function BillingPage() {
   return (
+    <BillingProvider>
     <div className="p-8 lg:p-12 xl:p-14 w-full mx-auto max-w-[1500px] flex flex-col min-h-full gap-8">
       <BillingHeader />
 
@@ -31,5 +33,6 @@ export default function BillingPage() {
         <BillingFooter />
       </div>
     </div>
+    </BillingProvider>
   );
 }
