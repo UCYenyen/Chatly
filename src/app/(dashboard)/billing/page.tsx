@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { BillingHeader } from "@/components/features/billing/BillingHeader";
 import { CurrentPlan } from "@/components/features/billing/CurrentPlan";
 import { PaymentMethod } from "@/components/features/billing/PaymentMethod";
