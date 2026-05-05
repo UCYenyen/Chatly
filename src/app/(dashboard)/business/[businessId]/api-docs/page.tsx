@@ -5,7 +5,10 @@ import { EndpointsList } from "@/components/features/api-docs/EndpointsList";
 import { CodePanels } from "@/components/features/api-docs/CodePanels";
 import { ApiFooter } from "@/components/features/api-docs/ApiFooter";
 
+import { notFound } from "next/navigation";
+
 export default function ApiDocsPage() {
+  notFound();
   return (
     <div className="flex-1 w-full flex flex-col min-h-full">
       <div className="px-10 lg:px-14 py-12 flex-1 max-w-[1500px] w-full mx-auto flex flex-col">
