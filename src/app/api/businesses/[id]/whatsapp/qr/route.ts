@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
-import { fetchGowaDeviceInfo } from "@/lib/utils/whatsapp";
+import { fetchGowaDeviceStatus } from "@/lib/utils/whatsapp";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -37,7 +37,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   if (whatsappAuth.instanceKey) {
-    const info = await fetchGowaDeviceInfo(whatsappAuth.instanceKey);
+    const info = await fetchGowaDeviceStatus(whatsappAuth.instanceKey);
     if (info.connected) {
       const updated = await prisma.whatsAppAuth.update({
         where: { id: whatsappAuth.id },

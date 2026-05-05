@@ -1,19 +1,11 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import prisma from "@/lib/utils/prisma";
+import { sendGowaMessage } from "@/lib/utils/whatsapp";
+import { runChatlyAIEngine } from "@/lib/ai-engine";
 
-const GOWA_API_BASE = process.env.GOWA_API_BASE || "http://localhost:3001";
-const GOWA_BASIC_AUTH_USER = process.env.GOWA_BASIC_AUTH_USER;
-const GOWA_BASIC_AUTH_PASS = process.env.GOWA_BASIC_AUTH_PASS;
 const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
-
-function gowaAuthHeader(): Record<string, string> {
-  if (!GOWA_BASIC_AUTH_USER || !GOWA_BASIC_AUTH_PASS) return {};
-  const token = Buffer.from(
-    `${GOWA_BASIC_AUTH_USER}:${GOWA_BASIC_AUTH_PASS}`
-  ).toString("base64");
-  return { Authorization: `Basic ${token}` };
-}
+const ANALYTICS_COOLDOWN_MS = 5 * 60 * 1000;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!WEBHOOK_SECRET) return true;
@@ -90,40 +82,6 @@ const DISCONNECTION_EVENTS = new Set([
   "close",
 ]);
 
-async function sendWhatsAppReply(
-  deviceId: string,
-  to: string,
-  message: string
-): Promise<void> {
-  const res = await fetch(`${GOWA_API_BASE}/send/message`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "X-Device-Id": deviceId,
-      ...gowaAuthHeader(),
-    },
-    body: JSON.stringify({ phone: to, message }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    console.error(
-      `Gowa send/message failed (${res.status}):`,
-      errText.slice(0, 500)
-    );
-  }
-}
-
-async function generateReply(
-  _businessId: string,
-  _from: string,
-  text: string
-): Promise<string | null> {
-  if (!text) return null;
-  return `Halo! Pesan kamu sudah kami terima: "${text}"`;
-}
-
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature =
@@ -150,7 +108,7 @@ export async function POST(request: Request) {
   // Select `id` too so we can do targeted updates without relying on instanceKey uniqueness.
   let whatsappAuth = await prisma.whatsAppAuth.findFirst({
     where: { instanceKey: device_id },
-    select: { id: true, businessId: true, status: true, phoneNumber: true },
+    select: { id: true, businessId: true, status: true, phoneNumber: true, instanceKey: true },
   });
 
   // Fallback: search by phone number if device_id is a phone number
@@ -158,7 +116,7 @@ export async function POST(request: Request) {
     const phone = device_id.split("@")[0];
     whatsappAuth = await prisma.whatsAppAuth.findFirst({
       where: { phoneNumber: phone },
-      select: { id: true, businessId: true, status: true, phoneNumber: true },
+      select: { id: true, businessId: true, status: true, phoneNumber: true, instanceKey: true },
     });
   }
 
@@ -226,13 +184,78 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  const messageId =
+    typeof payload.id === "string" && payload.id.length > 0
+      ? payload.id
+      : null;
+
+  if (messageId) {
+    const existing = await prisma.chatLog.findUnique({
+      where: { messageId },
+      select: { id: true },
+    });
+    if (existing) {
+      return NextResponse.json({ ok: true, deduped: true });
+    }
+  }
+
+  if (!whatsappAuth.instanceKey) {
+    console.warn(
+      `[whatsapp:${whatsappAuth.businessId}] missing instanceKey, cannot reply`
+    );
+    return NextResponse.json({ ok: true });
+  }
+
   try {
-    const reply = await generateReply(whatsappAuth.businessId, from, text);
-    if (reply) {
-      await sendWhatsAppReply(device_id, from, reply);
+    const ai = await runChatlyAIEngine(text, from, whatsappAuth.businessId);
+
+    const cooldownSince = new Date(Date.now() - ANALYTICS_COOLDOWN_MS);
+    const recentEvent = await prisma.analyticsEvent.findFirst({
+      where: {
+        businessId: whatsappAuth.businessId,
+        phone: from,
+        intentCategory: ai.intentCategory,
+        mentionedProduct: ai.mentionedProduct,
+        createdAt: { gte: cooldownSince },
+      },
+      select: { id: true },
+    });
+
+    if (!recentEvent) {
+      await prisma.analyticsEvent.create({
+        data: {
+          businessId: whatsappAuth.businessId,
+          phone: from,
+          intentCategory: ai.intentCategory,
+          mentionedProduct: ai.mentionedProduct,
+        },
+      });
+    }
+
+    await prisma.chatLog.create({
+      data: {
+        businessId: whatsappAuth.businessId,
+        phone: from,
+        role: "USER",
+        content: text,
+        messageId: messageId,
+      },
+    });
+
+    if (ai.reply) {
+      await prisma.chatLog.create({
+        data: {
+          businessId: whatsappAuth.businessId,
+          phone: from,
+          role: "AI",
+          content: ai.reply,
+        },
+      });
+
+      await sendGowaMessage(from, ai.reply, whatsappAuth.instanceKey);
     }
   } catch (err) {
-    console.error("Reply pipeline error:", err);
+    console.error("[webhook] AI pipeline error:", err);
   }
 
   return NextResponse.json({ ok: true });

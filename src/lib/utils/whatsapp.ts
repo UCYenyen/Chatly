@@ -88,3 +88,35 @@ export async function fetchGowaDeviceStatus(
   // If both endpoints failed, assume disconnected
   return { connected: false, phoneNumber: null };
 }
+
+export async function sendGowaMessage(
+  to: string,
+  message: string,
+  token: string
+): Promise<{ ok: boolean; status: number; body: string }> {
+  try {
+    const res = await fetch(`${GOWA_API_BASE}/send/message`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Device-Id": token,
+        ...gowaAuthHeader(),
+      },
+      body: JSON.stringify({ phone: to, message }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    const body = await res.text().catch(() => "");
+    if (!res.ok) {
+      console.error(
+        `[gowa] /send/message failed (${res.status}):`,
+        body.slice(0, 500)
+      );
+    }
+    return { ok: res.ok, status: res.status, body };
+  } catch (err) {
+    console.error("[gowa] /send/message error:", err);
+    return { ok: false, status: 0, body: String(err) };
+  }
+}

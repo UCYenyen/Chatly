@@ -1,9 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector, prisma_postgres]
 }
 
 model User {
@@ -138,6 +140,42 @@ model Verification {
   @@map("verification")
 }
 
+model DocumentChunk {
+  id         String                       @id @default(cuid())
+  businessId String
+  content    String
+  embedding  Unsupported("vector(768)")
+  createdAt  DateTime                     @default(now())
+
+  @@index([businessId])
+  @@map("document_chunk")
+}
+
+model ChatLog {
+  id         String      @id @default(cuid())
+  businessId String
+  phone      String
+  role       ChatLogRole
+  content    String
+  messageId  String?     @unique
+  createdAt  DateTime    @default(now())
+
+  @@index([businessId, phone, createdAt])
+  @@map("chat_log")
+}
+
+model AnalyticsEvent {
+  id              String   @id @default(cuid())
+  businessId      String
+  phone           String
+  intentCategory  String
+  mentionedProduct String?
+  createdAt       DateTime @default(now())
+
+  @@index([businessId, phone, intentCategory, mentionedProduct, createdAt])
+  @@map("analytics_event")
+}
+
 model WhatsAppAuth {
   id             String             @id @default(cuid())
   businessId     String
@@ -194,6 +232,11 @@ enum UserRole {
 enum WhatsAppAuthType {
   OFFICIAL
   GOWA
+}
+
+enum ChatLogRole {
+  USER
+  AI
 }
 
 enum WhatsAppAuthStatus {
