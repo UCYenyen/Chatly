@@ -1,0 +1,1 @@
+ssh -R 2006:localhost:3000 -L 2000:localhost:3000 sembakobayi
