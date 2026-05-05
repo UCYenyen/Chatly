@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,48 +6,157 @@ datasource db {
   provider = "postgresql"
 }
 
-
 model User {
-  id    String   @id @default(cuid())
-  name  String?
-  email String   @unique
-  role  UserRole @default(GUEST)
-
-  emailVerified Boolean   @default(false)
+  id            String     @id @default(cuid())
+  name          String?
+  email         String     @unique
+  role          UserRole   @default(GUEST)
+  emailVerified Boolean    @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  balance       Int       @default(0)
-  sessions      Session[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  banned        Boolean?   @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  balance       Int        @default(0)
   accounts      Account[]
-  payments      Payment[]
   businesses    Business[]
-
-  banned           Boolean?          @default(false)
-  banReason        String?
-  banExpires       DateTime?
+  payments      Payment[]
+  sessions      Session[]
 
   @@map("user")
 }
 
 model Business {
-  id            String          @id @default(cuid())
-  userId        String
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name          String
-  description   String?
-  whatsappAuth  WhatsAppAuth[]
-  subscription  Subscription?
-  payments      Payment[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  knowledgeBase String?         @db.Text
-  aiTone        String?
+  id             String         @id @default(cuid())
+  userId         String
+  name           String
+  description    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  aiTone         String?
+  knowledgeBase  String?
   knowledgeFiles String[]       @default([])
-
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments       Payment[]
+  subscription   Subscription?
+  whatsappAuth   WhatsAppAuth[]
 
   @@index([userId])
   @@map("business")
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  plan               SubscriptionPlan   @default(FREE)
+  status             SubscriptionStatus @default(PENDING)
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean            @default(false)
+  canceledAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  businessId         String             @unique
+  payments           Payment[]
+  business           Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@map("subscription")
+}
+
+model Payment {
+  id               String           @id @default(cuid())
+  userId           String
+  subscriptionId   String?
+  plan             SubscriptionPlan
+  amount           Int
+  currency         String           @default("IDR")
+  status           PaymentStatus    @default(PENDING)
+  xenditInvoiceId  String?          @unique
+  xenditExternalId String           @unique
+  invoiceUrl       String?
+  paidAt           DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  businessId       String?
+  type             PaymentType      @default(SUBSCRIPTION)
+  business         Business?        @relation(fields: [businessId], references: [id])
+  subscription     Subscription?    @relation(fields: [subscriptionId], references: [id])
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([businessId])
+  @@index([subscriptionId])
+  @@map("payment")
+}
+
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model WhatsAppAuth {
+  id             String             @id @default(cuid())
+  businessId     String
+  authType       WhatsAppAuthType   @default(GOWA)
+  status         WhatsAppAuthStatus @default(PENDING)
+  phoneNumber    String?            @unique
+  qrCode         String?
+  qrCodeExpiry   DateTime?
+  instanceKey    String?            @unique
+  sessionData    Json?
+  lastConnected  DateTime?
+  disconnectedAt DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  business       Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, authType])
+  @@index([businessId])
+  @@map("whatsapp_auth")
 }
 
 enum SubscriptionPlan {
@@ -81,104 +185,10 @@ enum PaymentType {
   SUBSCRIPTION
 }
 
-model Subscription {
-  id                 String             @id @default(cuid())
-  businessId         String             @unique
-  business           Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  plan               SubscriptionPlan   @default(FREE)
-  status             SubscriptionStatus @default(PENDING)
-  currentPeriodStart DateTime?
-  currentPeriodEnd   DateTime?
-  cancelAtPeriodEnd  Boolean            @default(false)
-  canceledAt         DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  payments           Payment[]
-
-  @@index([businessId])
-  @@map("subscription")
-}
-
-model Payment {
-  id               String           @id @default(cuid())
-  userId           String
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businessId       String?
-  business         Business?        @relation(fields: [businessId], references: [id], onDelete: SetNull)
-  subscriptionId   String?
-  subscription     Subscription?    @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  type             PaymentType      @default(SUBSCRIPTION)
-  plan             SubscriptionPlan
-  amount           Int
-  currency         String           @default("IDR")
-  status           PaymentStatus    @default(PENDING)
-  xenditInvoiceId  String?          @unique
-  xenditExternalId String           @unique
-  invoiceUrl       String?
-  paidAt           DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  @@index([userId])
-  @@index([businessId])
-  @@index([subscriptionId])
-  @@map("payment")
-}
-
 enum UserRole {
   GUEST
   BUSINESS_OWNER
   ADMIN
-}
-
-model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  impersonatedBy String?
-
-  @@unique([token])
-  @@index([userId])
-  @@map("session")
-}
-
-model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  @@index([userId])
-  @@map("account")
-}
-
-model Verification {
-  id         String   @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([identifier])
-  @@map("verification")
 }
 
 enum WhatsAppAuthType {
@@ -191,25 +201,4 @@ enum WhatsAppAuthStatus {
   AUTHENTICATED
   EXPIRED
   DISCONNECTED
-}
-
-model WhatsAppAuth {
-  id              String                @id @default(cuid())
-  businessId      String
-  business        Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  authType        WhatsAppAuthType      @default(GOWA)
-  status          WhatsAppAuthStatus    @default(PENDING)
-  phoneNumber     String?               @unique
-  qrCode          String?
-  qrCodeExpiry    DateTime?
-  instanceKey     String?               @unique
-  sessionData     Json?
-  lastConnected   DateTime?
-  disconnectedAt  DateTime?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-
-  @@unique([businessId, authType])
-  @@index([businessId])
-  @@map("whatsapp_auth")
 }

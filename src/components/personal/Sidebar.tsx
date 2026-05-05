@@ -152,7 +152,7 @@ export default function Sidebar() {
                                             key={business.id}
                                             onClick={() => {
                                                 setActiveBusinessId(business.id);
-                                                router.push(`/business/${business.id}/dashboard`);
+                                                router.push(`/business/${business.id}/ringkasan`);
                                             }}
                                             className={cn(
                                                 "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-sm transition-colors focus:bg-secondary/10 focus:text-secondary",
