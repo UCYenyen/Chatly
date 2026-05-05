@@ -29,10 +29,38 @@ function extractPhone(obj: unknown): string | null {
   return cleaned || null;
 }
 
-function isConnectedStatus(status: unknown): boolean {
-  if (typeof status !== "string") return false;
-  const s = status.toLowerCase();
-  return s === "connected" || s === "logged_in" || s === "online" || s === "authenticated";
+type ConnectionState = "connected" | "disconnected" | "unknown";
+
+function readConnectionState(obj: unknown): ConnectionState {
+  if (!obj || typeof obj !== "object") return "unknown";
+  const o = obj as Record<string, unknown>;
+
+  if (o.is_logged_in === true || o.connected === true) return "connected";
+  if (o.is_logged_in === false || o.connected === false) return "disconnected";
+
+  if (typeof o.status === "string") {
+    const s = o.status.toLowerCase();
+    if (
+      s === "connected" ||
+      s === "logged_in" ||
+      s === "online" ||
+      s === "authenticated" ||
+      s === "ready"
+    ) {
+      return "connected";
+    }
+    if (
+      s === "disconnected" ||
+      s === "logged_out" ||
+      s === "offline" ||
+      s === "pending" ||
+      s === "qr"
+    ) {
+      return "disconnected";
+    }
+  }
+
+  return "unknown";
 }
 
 async function fetchGowaDeviceInfo(
@@ -53,13 +81,14 @@ async function fetchGowaDeviceInfo(
       const data = await res.json();
       console.log("Gowa /devices/:id response:", JSON.stringify(data));
       const r = data.results ?? data;
-      const phone = extractPhone(r) ?? extractPhone(r?.user);
-      const connected =
-        isConnectedStatus(r?.status) ||
-        r?.connected === true ||
-        r?.is_logged_in === true ||
-        Boolean(phone);
-      if (connected) return { connected: true, phoneNumber: phone };
+      const state = readConnectionState(r);
+      if (state === "disconnected") {
+        return { connected: false, phoneNumber: null };
+      }
+      if (state === "connected") {
+        const phone = extractPhone(r) ?? extractPhone(r?.user);
+        return { connected: true, phoneNumber: phone };
+      }
     }
   } catch (err) {
     console.error("Gowa /devices/:id error:", err);
@@ -74,8 +103,11 @@ async function fetchGowaDeviceInfo(
       const data = await res.json();
       console.log("Gowa /user/info response:", JSON.stringify(data));
       const r = data.results ?? data;
-      const phone = extractPhone(r) ?? extractPhone(r?.user);
-      if (phone) return { connected: true, phoneNumber: phone };
+      const state = readConnectionState(r);
+      if (state === "connected") {
+        const phone = extractPhone(r) ?? extractPhone(r?.user);
+        return { connected: true, phoneNumber: phone };
+      }
     }
   } catch (err) {
     console.error("Gowa /user/info error:", err);
