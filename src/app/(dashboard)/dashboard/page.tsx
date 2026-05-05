@@ -1,3 +1,4 @@
+'use client'
 import { BusinessSelectorCards } from "@/components/features/dashboard/BusinessSelectorCards";
 import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter";
 
