@@ -1,5 +1,3 @@
-"use client";
-
 import { CumulativeAnalytics } from "@/components/features/dashboard/CumulativeAnalytics";
 import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";

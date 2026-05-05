@@ -97,12 +97,13 @@ export function HeroSection() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Button
             ref={primaryButtonRef}
+            asChild
             style={ctaWidth ? { width: `${ctaWidth}px` } : undefined}
             className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]"
           >
-              <Link href={session ? "/dashboard" : "/sign-in"}>
-                Luncurkan Agen Anda
-              </Link>
+            <Link href={session ? "/dashboard" : "/sign-in"}>
+              Luncurkan Agen Anda
+            </Link>
           </Button>
           <Button
             ref={secondaryButtonRef}
