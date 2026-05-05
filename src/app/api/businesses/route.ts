@@ -18,6 +18,9 @@ function toDTO(b: Business): BusinessDTO {
     id: b.id,
     name: b.name,
     description: b.description,
+    knowledgeBase: b.knowledgeBase,
+    aiTone: b.aiTone,
+    knowledgeFiles: b.knowledgeFiles,
     createdAt: b.createdAt.toISOString(),
     updatedAt: b.updatedAt.toISOString(),
   };

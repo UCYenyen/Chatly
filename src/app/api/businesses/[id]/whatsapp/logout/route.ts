@@ -7,13 +7,7 @@ const GOWA_API_BASE = process.env.GOWA_API_BASE || "http://localhost:3001";
 const GOWA_BASIC_AUTH_USER = process.env.GOWA_BASIC_AUTH_USER;
 const GOWA_BASIC_AUTH_PASS = process.env.GOWA_BASIC_AUTH_PASS;
 
-function gowaAuthHeader(): Record<string, string> {
-  if (!GOWA_BASIC_AUTH_USER || !GOWA_BASIC_AUTH_PASS) return {};
-  const token = Buffer.from(
-    `${GOWA_BASIC_AUTH_USER}:${GOWA_BASIC_AUTH_PASS}`
-  ).toString("base64");
-  return { Authorization: `Basic ${token}` };
-}
+import { gowaAuthHeader } from "@/lib/utils/whatsapp";
 
 async function logoutGowaInstance(deviceId: string): Promise<void> {
   try {

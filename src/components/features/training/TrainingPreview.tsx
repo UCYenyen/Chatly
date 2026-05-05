@@ -1,3 +1,5 @@
+"use client";
+
 import { Rocket, Send, Sparkles } from "lucide-react"
 
 export function TrainingPreview() {

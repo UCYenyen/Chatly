@@ -16,13 +16,13 @@ export function KnowledgeBase() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (activeBusiness?.knowledgeBase) {
-            setKnowledge(activeBusiness.knowledgeBase);
+        if (activeBusiness) {
+            setKnowledge(activeBusiness.knowledgeBase || "");
         }
     }, [activeBusiness]);
 
-    const wordCount = useMemo(() => {
-        return knowledge.trim() ? knowledge.trim().split(/\s+/).length : 0;
+    const charCount = useMemo(() => {
+        return knowledge.length;
     }, [knowledge]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,9 +47,16 @@ export function KnowledgeBase() {
         if (!activeBusiness) return;
 
         // The user requested the function accepts files as parameters but does not add functionality yet.
-        const saveWithFiles = async (text: string, attachedFiles: File[]) => {
-            console.log("Saving knowledge base with files:", attachedFiles.map(f => f.name));
-            return await updateBusiness({ knowledgeBase: text });
+        const saveWithFiles = async (text: string, newFiles: File[]) => {
+            const existingFileNames = activeBusiness?.knowledgeFiles || [];
+            const newFileNames = newFiles.map(f => f.name);
+            // Combine existing and new (avoiding duplicates for simplicity)
+            const allFiles = [...new Set([...existingFileNames, ...newFileNames])];
+            
+            return await updateBusiness({ 
+                knowledgeBase: text,
+                knowledgeFiles: allFiles 
+            });
         };
 
         const updated = await saveWithFiles(knowledge, files);
@@ -59,6 +66,16 @@ export function KnowledgeBase() {
             await refresh();
         } else {
             toast.error("Gagal memperbarui basis pengetahuan");
+        }
+    };
+
+    const removeExistingFile = async (fileName: string) => {
+        if (!activeBusiness) return;
+        const remainingFiles = (activeBusiness.knowledgeFiles || []).filter(f => f !== fileName);
+        const updated = await updateBusiness({ knowledgeFiles: remainingFiles });
+        if (updated) {
+            toast.success("File berhasil dihapus");
+            await refresh();
         }
     };
 
@@ -86,7 +103,7 @@ export function KnowledgeBase() {
                             Konteks Inti & Dokumentasi
                         </span>
                         <span className="text-[10px] font-mono text-outline/60 bg-surface-container-high px-2 py-0.5 rounded">
-                            {wordCount} Kata
+                            {charCount} Karakter
                         </span>
                     </div>
                     <textarea
@@ -125,10 +142,35 @@ export function KnowledgeBase() {
                         </div>
                     </div>
 
+                    {(activeBusiness?.knowledgeFiles || []).length > 0 && (
+                        <div className="flex flex-col gap-2 mb-4">
+                            <span className="text-[10px] font-mono text-secondary-fixed/70 uppercase tracking-widest font-bold mb-1">
+                                File Tersimpan
+                            </span>
+                            {activeBusiness?.knowledgeFiles.map((fileName, idx) => (
+                                <div key={`existing-${idx}`} className="bg-surface-container-high/40 flex items-center justify-between p-3 px-4 rounded-md border border-secondary-fixed/10 shadow-sm">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <FileText className="w-4 h-4 text-secondary-fixed shrink-0" />
+                                        <span className="text-[12px] font-medium text-on-surface truncate">{fileName}</span>
+                                    </div>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); removeExistingFile(fileName); }}
+                                        className="p-1 hover:bg-surface-container-high rounded-full text-outline hover:text-red-400 transition-colors"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     {files.length > 0 && (
-                        <div className="mt-4 flex flex-col gap-2">
+                        <div className="flex flex-col gap-2">
+                             <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold mb-1">
+                                File Baru (Belum Disimpan)
+                            </span>
                             {files.map((file, idx) => (
-                                <div key={idx} className="bg-[#08111d] flex items-center justify-between p-3 px-4 rounded-md border border-outline-variant/10 shadow-sm animate-in fade-in slide-in-from-top-1">
+                                <div key={`new-${idx}`} className="bg-[#08111d] flex items-center justify-between p-3 px-4 rounded-md border border-outline-variant/10 shadow-sm animate-in fade-in slide-in-from-top-1">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <FileText className="w-4 h-4 text-secondary-fixed shrink-0" />
                                         <span className="text-[12px] font-medium text-outline truncate">{file.name}</span>

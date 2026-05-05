@@ -48,6 +48,7 @@ model Business {
   updatedAt     DateTime        @updatedAt
   knowledgeBase String?         @db.Text
   aiTone        String?
+  knowledgeFiles String[]       @default([])
 
 
   @@index([userId])

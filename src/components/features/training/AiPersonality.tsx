@@ -1,3 +1,5 @@
+"use client";
+
 import { MessageSquareText } from "lucide-react"
 import { useBusinessContext } from "@/components/features/business/BusinessProvider"
 import { useUpdateBusiness } from "@/hooks/use-update-business"

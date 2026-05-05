@@ -27,6 +27,7 @@ function toDTO(b: Business): BusinessDTO {
     description: b.description,
     knowledgeBase: b.knowledgeBase,
     aiTone: b.aiTone,
+    knowledgeFiles: b.knowledgeFiles,
     createdAt: b.createdAt.toISOString(),
     updatedAt: b.updatedAt.toISOString(),
   };
@@ -73,7 +74,11 @@ export async function PATCH(
     if (body.aiTone !== undefined) {
       data.aiTone = body.aiTone;
     }
+    if (Array.isArray(body.knowledgeFiles)) {
+      data.knowledgeFiles = body.knowledgeFiles;
+    }
 
+    console.log("[PATCH /api/businesses/:id] data:", JSON.stringify(data, null, 2));
     const updated = await prisma.business.update({ where: { id }, data });
     return NextResponse.json(toDTO(updated));
   } catch (error) {

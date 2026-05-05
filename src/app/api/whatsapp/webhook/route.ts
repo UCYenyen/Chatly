@@ -56,6 +56,40 @@ function normalizePhone(jid: string): string {
   return jid.split("@")[0]?.split(":")[0] ?? jid;
 }
 
+// Gowa can embed the connected phone in several locations inside the payload.
+function extractPhoneFromPayload(payload: Record<string, unknown>): string | null {
+  const user = payload.user as Record<string, unknown> | undefined;
+  const candidate =
+    (payload.phone as string) ??
+    (payload.phone_number as string) ??
+    (payload.jid as string) ??
+    (user?.id as string) ??
+    (user?.phone as string) ??
+    null;
+  if (typeof candidate !== "string") return null;
+  const cleaned = candidate.split("@")[0]?.split(":")[0] ?? null;
+  return cleaned || null;
+}
+
+// Gowa fires several possible event names when a device successfully connects.
+const CONNECTION_EVENTS = new Set([
+  "connection",
+  "connected",
+  "login",
+  "logged_in",
+  "authenticated",
+  "open",
+  "ready",
+]);
+
+// Gowa fires these events when a device disconnects.
+const DISCONNECTION_EVENTS = new Set([
+  "disconnected",
+  "logout",
+  "logged_out",
+  "close",
+]);
+
 async function sendWhatsAppReply(
   deviceId: string,
   to: string,
@@ -113,17 +147,66 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const whatsappAuth = await prisma.whatsAppAuth.findFirst({
+  // Select `id` too so we can do targeted updates without relying on instanceKey uniqueness.
+  let whatsappAuth = await prisma.whatsAppAuth.findFirst({
     where: { instanceKey: device_id },
-    select: { businessId: true },
+    select: { id: true, businessId: true, status: true, phoneNumber: true },
   });
 
+  // Fallback: search by phone number if device_id is a phone number
+  if (!whatsappAuth && device_id.includes("@")) {
+    const phone = device_id.split("@")[0];
+    whatsappAuth = await prisma.whatsAppAuth.findFirst({
+      where: { phoneNumber: phone },
+      select: { id: true, businessId: true, status: true, phoneNumber: true },
+    });
+  }
+
   if (!whatsappAuth) {
-    console.warn("Webhook for unknown device:", device_id);
+    console.warn(`[webhook] Unknown device_id: ${device_id}. Event: ${event}`);
+    console.debug("Payload:", JSON.stringify(payload));
     return NextResponse.json({ ok: true });
   }
 
-  if (event !== "message") {
+  const eventLower = event.toLowerCase();
+
+  // ── Handle connection event ─────────────────────────────────────────────────
+  if (CONNECTION_EVENTS.has(eventLower)) {
+    const phoneNumber = extractPhoneFromPayload(payload);
+    console.log(
+      `[whatsapp:${whatsappAuth.businessId}] Connection event="${event}" phone=${phoneNumber}`
+    );
+    await prisma.whatsAppAuth.update({
+      where: { id: whatsappAuth.id },
+      data: {
+        status: "AUTHENTICATED",
+        phoneNumber: phoneNumber,
+        qrCode: null,
+        qrCodeExpiry: null,
+        lastConnected: new Date(),
+      },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  // ── Handle disconnection event ──────────────────────────────────────────────
+  if (DISCONNECTION_EVENTS.has(eventLower)) {
+    console.log(
+      `[whatsapp:${whatsappAuth.businessId}] Disconnection event="${event}"`
+    );
+    await prisma.whatsAppAuth.update({
+      where: { id: whatsappAuth.id },
+      data: {
+        status: "DISCONNECTED",
+        disconnectedAt: new Date(),
+      },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  // ── Handle incoming message event ──────────────────────────────────────────
+  if (eventLower !== "message") {
+    // Unknown / unhandled event — acknowledge and ignore.
     return NextResponse.json({ ok: true });
   }
 

@@ -6,6 +6,7 @@ export interface BusinessDTO {
   updatedAt: string;
   knowledgeBase: string | null;
   aiTone: string | null;
+  knowledgeFiles: string[];
 }
 
 export interface CreateBusinessRequest {
@@ -18,6 +19,7 @@ export interface UpdateBusinessRequest {
   description?: string | null;
   knowledgeBase?: string | null;
   aiTone?: string | null;
+  knowledgeFiles?: string[];
 }
 
 export interface BusinessListResponse {
