@@ -25,6 +25,8 @@ function toDTO(b: Business): BusinessDTO {
     id: b.id,
     name: b.name,
     description: b.description,
+    knowledgeBase: b.knowledgeBase,
+    aiTone: b.aiTone,
     createdAt: b.createdAt.toISOString(),
     updatedAt: b.updatedAt.toISOString(),
   };
@@ -64,6 +66,12 @@ export async function PATCH(
         typeof body.description === "string" && body.description.trim().length > 0
           ? body.description.trim()
           : null;
+    }
+    if (body.knowledgeBase !== undefined) {
+      data.knowledgeBase = body.knowledgeBase;
+    }
+    if (body.aiTone !== undefined) {
+      data.aiTone = body.aiTone;
     }
 
     const updated = await prisma.business.update({ where: { id }, data });

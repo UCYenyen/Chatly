@@ -46,6 +46,9 @@ model Business {
   payments      Payment[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  knowledgeBase String?         @db.Text
+  aiTone        String?
+
 
   @@index([userId])
   @@map("business")
