@@ -39,15 +39,20 @@ export async function GET(_request: Request, context: RouteContext) {
   if (whatsappAuth.instanceKey) {
     const info = await fetchGowaDeviceStatus(whatsappAuth.instanceKey);
     if (info.connected) {
+      const updateData: any = {
+        status: "AUTHENTICATED",
+        qrCode: null,
+        qrCodeExpiry: null,
+        lastConnected: new Date(),
+      };
+      
+      if (info.phoneNumber) {
+        updateData.phoneNumber = info.phoneNumber;
+      }
+
       const updated = await prisma.whatsAppAuth.update({
         where: { id: whatsappAuth.id },
-        data: {
-          status: "AUTHENTICATED",
-          phoneNumber: info.phoneNumber,
-          qrCode: null,
-          qrCodeExpiry: null,
-          lastConnected: new Date(),
-        },
+        data: updateData,
       });
       return NextResponse.json(
         { status: "AUTHENTICATED", phoneNumber: updated.phoneNumber },

@@ -17,11 +17,9 @@ export function extractPhone(obj: unknown): string | null {
     (o.phone as string) ??
     (o.phone_number as string) ??
     (o.jid as string) ??
-    (o.id as string) ??
     null;
   if (typeof candidate !== "string") return null;
-  const cleaned = candidate.split("@")[0]?.split(":")[0] ?? null;
-  return cleaned || null;
+  return candidate;
 }
 
 /**
@@ -54,7 +52,7 @@ export async function fetchGowaDeviceStatus(
 
       // Gowa returns { is_logged_in: true/false } in its status response
       if (r.is_logged_in === true || r.connected === true) {
-        const phone = extractPhone(r) ?? extractPhone(r?.user) ?? deviceId.split("@")[0];
+        const phone = extractPhone(r) ?? extractPhone(r?.user) ?? null;
         return { connected: true, phoneNumber: phone };
       }
       return { connected: false, phoneNumber: null };
@@ -76,7 +74,7 @@ export async function fetchGowaDeviceStatus(
       const r = data.results ?? data;
 
       if (r.is_logged_in === true || r.connected === true) {
-        const phone = extractPhone(r) ?? extractPhone(r?.user) ?? deviceId.split("@")[0];
+        const phone = extractPhone(r) ?? extractPhone(r?.user) ?? null;
         return { connected: true, phoneNumber: phone };
       }
       return { connected: false, phoneNumber: null };

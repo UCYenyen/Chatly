@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import prisma from "@/lib/utils/prisma";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -35,8 +35,13 @@ export async function runChatlyAIEngine(
   incomingPhone: string,
   businessId: string
 ): Promise<ChatlyAIResult> {
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { name: true, description: true, aiTone: true },
+  });
+
   const embeddingModel = genAI.getGenerativeModel({
-    model: "text-embedding-004",
+    model: "gemini-embedding-001",
   });
   const embedRes = await embeddingModel.embedContent(incomingMessage);
   const queryVector = `[${embedRes.embedding.values.join(",")}]`;
@@ -49,113 +54,110 @@ export async function runChatlyAIEngine(
     LIMIT 3
   `;
 
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
-    select: { name: true, description: true, aiTone: true },
-  });
-
   const recentLogs = await prisma.chatLog.findMany({
     where: { businessId, phone: incomingPhone },
     orderBy: { createdAt: "desc" },
-    take: 4,
+    take: 6,
     select: { role: true, content: true },
   });
   const history: HistoryRow[] = recentLogs.reverse();
 
-  const prompt = buildPrompt({
-    business,
-    chunks,
-    history,
-    incomingMessage,
-  });
+  // Unified System Instruction for persona and constraints
+  const systemInstruction = buildSystemInstruction(business);
 
   const chatModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash-lite",
-    generationConfig: { responseMimeType: "application/json" },
+    model: "gemini-2.5-flash",
+    systemInstruction,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          reply: {
+            type: SchemaType.STRING,
+            description: "The helpful response to send to the customer on WhatsApp.",
+          },
+          intentCategory: {
+            type: SchemaType.STRING,
+            description: "A short snake_case label representing the user's intent.",
+          },
+          mentionedProduct: {
+            type: SchemaType.STRING,
+            nullable: true,
+            description: "Specific product name explicitly mentioned by the customer.",
+          },
+        },
+        required: ["reply", "intentCategory"],
+      },
+    },
   });
 
-  const result = await chatModel.generateContent(prompt);
-  const raw = result.response.text();
+  const userPrompt = buildUserPrompt(chunks, history, incomingMessage);
 
-  const parsed = safeParseJson(raw);
+  console.log(`[ai-engine] Querying Gemini for business: ${business?.name || "unknown"}`);
+  
+  try {
+    const result = await chatModel.generateContent(userPrompt);
+    const raw = result.response.text();
+    const parsed = JSON.parse(raw);
 
-  return {
-    reply: typeof parsed.reply === "string" ? parsed.reply : "",
-    intentCategory:
-      typeof parsed.intentCategory === "string"
-        ? parsed.intentCategory
-        : "unknown",
-    mentionedProduct:
-      typeof parsed.mentionedProduct === "string" && parsed.mentionedProduct
-        ? parsed.mentionedProduct
-        : null,
-  };
+    return {
+      reply: parsed.reply || "",
+      intentCategory: parsed.intentCategory || "unknown",
+      mentionedProduct: parsed.mentionedProduct || null,
+    };
+  } catch (error) {
+    console.error("[ai-engine] Gemini API Error:", error);
+    return {
+      reply: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
+      intentCategory: "error",
+      mentionedProduct: null,
+    };
+  }
 }
 
-function buildPrompt({
-  business,
-  chunks,
-  history,
-  incomingMessage,
-}: {
-  business: BusinessRow | null;
-  chunks: ChunkRow[];
-  history: HistoryRow[];
-  incomingMessage: string;
-}): string {
+function buildSystemInstruction(business: BusinessRow | null): string {
   const businessName = business?.name ?? "(unknown)";
   const businessDesc = business?.description ?? "";
   const tone = business?.aiTone ?? "ramah, profesional, dan membantu";
 
+  return `You are the customer-service AI assistant for the business: "${businessName}".
+Business Description: ${businessDesc}
+Preferred Tone: ${tone}
+
+RULES:
+1. Reply on WhatsApp in the same language the customer uses (usually Indonesian).
+2. Ground your "reply" in the provided Knowledge Base. 
+3. If the answer isn't in the Knowledge Base, honestly say you don't know and offer to connect them with a human agent.
+4. Keep replies concise and suitable for WhatsApp (no markdown headings, use emoji sparingly).
+5. Always return a valid JSON object.`;
+}
+
+function buildUserPrompt(
+  chunks: ChunkRow[],
+  history: HistoryRow[],
+  incomingMessage: string
+): string {
   const knowledgeBlock =
     chunks.length > 0
-      ? chunks.map((c, i) => `[${i + 1}] ${c.content}`).join("\n\n")
-      : "(no knowledge base entries matched)";
+      ? chunks.map((c, i) => `[Fact ${i + 1}] ${c.content}`).join("\n")
+      : "(No matching facts found in Knowledge Base)";
 
   const historyBlock =
     history.length > 0
       ? history
           .map((h) => `${h.role === "USER" ? "Customer" : "Assistant"}: ${h.content}`)
           .join("\n")
-      : "(no prior messages)";
+      : "(No prior history)";
 
-  return `[1] ROLE
-You are the customer-service AI assistant for the business below. Reply on WhatsApp in the same language the customer used.
-
-[2] BUSINESS
-Name: ${businessName}
-Description: ${businessDesc}
-Preferred tone: ${tone}
-
-[3] KNOWLEDGE BASE (top matches, may be partial)
+  return `KNOWLEDGE BASE (Context):
 ${knowledgeBlock}
 
-[4] CONVERSATION HISTORY (oldest → newest)
+CONVERSATION HISTORY:
 ${historyBlock}
 
-[5] CUSTOMER MESSAGE
+CUSTOMER'S LATEST MESSAGE:
 ${incomingMessage}
 
-[6] OUTPUT
-Respond with ONE valid JSON object and nothing else. Schema:
-{
-  "reply": string,            // The reply to send back to the customer.
-  "intentCategory": string,   // One short snake_case label, e.g. "price_inquiry", "complaint", "greeting", "product_question", "support_request".
-  "mentionedProduct": string | null  // Specific product/service name explicitly referenced in the customer's message, or null.
-}
-- "reply" must be grounded in the knowledge base when possible. If unknown, say so honestly and offer to escalate.
-- Keep "reply" suitable for WhatsApp: concise, no markdown headings.`;
-}
-
-function safeParseJson(raw: string): Record<string, unknown> {
-  const cleaned = raw
-    .trim()
-    .replace(/^```(?:json)?/i, "")
-    .replace(/```$/i, "")
-    .trim();
-  try {
-    return JSON.parse(cleaned) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
+Provide your JSON response now.`;
 }

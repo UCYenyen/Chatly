@@ -9,7 +9,9 @@ const ANALYTICS_COOLDOWN_MS = 5 * 60 * 1000;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!WEBHOOK_SECRET) {
-    console.warn("[webhook] GOWA_WEBHOOK_SECRET is not set, skipping verification.");
+    console.warn(
+      "[webhook] GOWA_WEBHOOK_SECRET is not set, skipping verification.",
+    );
     return true;
   }
   if (!signature) {
@@ -28,7 +30,9 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
   const b = Buffer.from(signatureHex);
 
   if (a.length !== b.length) {
-    console.error(`[webhook] Signature length mismatch. Expected ${a.length}, got ${b.length}`);
+    console.error(
+      `[webhook] Signature length mismatch. Expected ${a.length}, got ${b.length}`,
+    );
     return false;
   }
 
@@ -59,6 +63,7 @@ interface GowaWebhookPayload {
 
 function extractText(p: GowaWebhookPayload["payload"]): string {
   return (
+    (p as any).body ??
     p.message?.conversation ??
     p.message?.text ??
     p.message?.extendedTextMessage?.text ??
@@ -72,7 +77,9 @@ function normalizePhone(jid: string): string {
 }
 
 // Gowa can embed the connected phone in several locations inside the payload.
-function extractPhoneFromPayload(payload: Record<string, unknown>): string | null {
+function extractPhoneFromPayload(
+  payload: Record<string, unknown>,
+): string | null {
   const user = payload.user as Record<string, unknown> | undefined;
   const candidate =
     (payload.phone as string) ??
@@ -82,8 +89,7 @@ function extractPhoneFromPayload(payload: Record<string, unknown>): string | nul
     (user?.phone as string) ??
     null;
   if (typeof candidate !== "string") return null;
-  const cleaned = candidate.split("@")[0]?.split(":")[0] ?? null;
-  return cleaned || null;
+  return candidate || null;
 }
 
 // Gowa fires several possible event names when a device successfully connects.
@@ -115,10 +121,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
-  
+
   // Log all headers for debugging
   const headersObj = Object.fromEntries(request.headers.entries());
-  console.log("[webhook] Incoming Request Headers:", JSON.stringify(headersObj, null, 2));
+  console.log(
+    "[webhook] Incoming Request Headers:",
+    JSON.stringify(headersObj, null, 2),
+  );
 
   const signature =
     request.headers.get("x-hub-signature-256") ??
@@ -142,19 +151,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Select `id` too so we can do targeted updates without relying on instanceKey uniqueness.
+  const phoneCandidate = device_id.split("@")[0];
+
   let whatsappAuth = await prisma.whatsAppAuth.findFirst({
-    where: { instanceKey: device_id },
-    select: { id: true, businessId: true, status: true, phoneNumber: true, instanceKey: true },
+    where: {
+      OR: [
+        { instanceKey: device_id },
+        { phoneNumber: device_id },
+        { phoneNumber: phoneCandidate }
+      ]
+    },
+    select: {
+      id: true,
+      businessId: true,
+      status: true,
+      phoneNumber: true,
+      instanceKey: true,
+    },
   });
 
-  // Fallback: search by phone number if device_id is a phone number
-  if (!whatsappAuth && device_id.includes("@")) {
-    const phone = device_id.split("@")[0];
-    whatsappAuth = await prisma.whatsAppAuth.findFirst({
-      where: { phoneNumber: phone },
-      select: { id: true, businessId: true, status: true, phoneNumber: true, instanceKey: true },
+  if (!whatsappAuth) {
+    // Fallback: If we have exactly one authenticated session missing a phone number, assume this webhook belongs to it.
+    const missingPhoneAuths = await prisma.whatsAppAuth.findMany({
+      where: { status: "AUTHENTICATED", phoneNumber: null },
+      select: {
+        id: true,
+        businessId: true,
+        status: true,
+        phoneNumber: true,
+        instanceKey: true,
+      },
     });
+
+    if (missingPhoneAuths.length === 1) {
+      whatsappAuth = missingPhoneAuths[0];
+      await prisma.whatsAppAuth.update({
+        where: { id: whatsappAuth.id },
+        data: { phoneNumber: device_id },
+      });
+      whatsappAuth.phoneNumber = device_id;
+      console.log(`[webhook] Auto-linked unknown device_id ${device_id} to missing phone auth ${whatsappAuth.id}`);
+    }
   }
 
   if (!whatsappAuth) {
@@ -169,13 +206,13 @@ export async function POST(request: Request) {
   if (CONNECTION_EVENTS.has(eventLower)) {
     const phoneNumber = extractPhoneFromPayload(payload);
     console.log(
-      `[whatsapp:${whatsappAuth.businessId}] Connection event="${event}" phone=${phoneNumber}`
+      `[whatsapp:${whatsappAuth.businessId}] Connection event="${event}" phone=${phoneNumber}`,
     );
     await prisma.whatsAppAuth.update({
       where: { id: whatsappAuth.id },
       data: {
         status: "AUTHENTICATED",
-        phoneNumber: phoneNumber,
+        phoneNumber: device_id.includes("@") ? device_id : phoneNumber,
         qrCode: null,
         qrCodeExpiry: null,
         lastConnected: new Date(),
@@ -187,7 +224,7 @@ export async function POST(request: Request) {
   // ── Handle disconnection event ──────────────────────────────────────────────
   if (DISCONNECTION_EVENTS.has(eventLower)) {
     console.log(
-      `[whatsapp:${whatsappAuth.businessId}] Disconnection event="${event}"`
+      `[whatsapp:${whatsappAuth.businessId}] Disconnection event="${event}"`,
     );
     await prisma.whatsAppAuth.update({
       where: { id: whatsappAuth.id },
@@ -209,12 +246,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // Filter out group messages (chat_id contains @g.us)
+  const chatId = typeof payload.chat_id === "string" ? payload.chat_id : "";
+  if (chatId.includes("@g.us")) {
+    console.log(`[webhook] Ignoring group message from chat_id=${chatId}`);
+    return NextResponse.json({ ok: true });
+  }
+
   const fromJid = payload.from ?? "";
   const from = normalizePhone(fromJid);
   const text = extractText(payload);
 
   console.log(
-    `[whatsapp:${whatsappAuth.businessId}] from=${from} text=${text}`
+    `[whatsapp:${whatsappAuth.businessId}] from=${from} text=${text}`,
   );
 
   if (!from || !text) {
@@ -222,9 +266,7 @@ export async function POST(request: Request) {
   }
 
   const messageId =
-    typeof payload.id === "string" && payload.id.length > 0
-      ? payload.id
-      : null;
+    typeof payload.id === "string" && payload.id.length > 0 ? payload.id : null;
 
   if (messageId) {
     const existing = await prisma.chatLog.findUnique({
@@ -238,10 +280,11 @@ export async function POST(request: Request) {
 
   if (!whatsappAuth.instanceKey) {
     console.warn(
-      `[whatsapp:${whatsappAuth.businessId}] missing instanceKey, cannot reply`
+      `[whatsapp:${whatsappAuth.businessId}] missing instanceKey, cannot reply`,
     );
     return NextResponse.json({ ok: true });
   }
+
 
   try {
     const ai = await runChatlyAIEngine(text, from, whatsappAuth.businessId);
@@ -290,6 +333,7 @@ export async function POST(request: Request) {
       });
 
       await sendGowaMessage(from, ai.reply, whatsappAuth.instanceKey);
+      console.log("kkkkkkkkkk");
     }
   } catch (err) {
     console.error("[webhook] AI pipeline error:", err);
