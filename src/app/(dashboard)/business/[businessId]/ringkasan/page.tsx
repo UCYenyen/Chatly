@@ -2,6 +2,7 @@
 
 import { CumulativeAnalytics } from "@/components/features/dashboard/CumulativeAnalytics";
 import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter";
+import { WhatsappAuthContainer } from "@/components/features/dashboard/WhatsappAuthContainer";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 
 export default function BusinessDashboardPage() {
@@ -17,6 +18,8 @@ export default function BusinessDashboardPage() {
             </div>
 
             <CumulativeAnalytics />
+
+            {activeBusiness && <WhatsappAuthContainer businessId={activeBusiness.id} />}
 
             <div className="mt-auto pt-8">
                 <AnalyticsFooter />
