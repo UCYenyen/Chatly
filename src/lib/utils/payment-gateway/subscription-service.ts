@@ -151,6 +151,38 @@ export async function handleXenditCallback(
   }
 }
 
+export async function cancelPayment(
+  userId: string,
+  paymentId: string,
+): Promise<{ status: "FAILED" }> {
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!payment || payment.userId !== userId) {
+    throw new Error("Pembayaran tidak ditemukan");
+  }
+  if (payment.status === "PAID") {
+    throw new Error("Pembayaran yang sudah berhasil tidak dapat dibatalkan");
+  }
+  if (payment.status === "FAILED") {
+    return { status: "FAILED" };
+  }
+
+  if (payment.status === "PENDING" && payment.xenditInvoiceId) {
+    try {
+      const { Invoice } = xenditClient;
+      await Invoice.expireInvoice({ invoiceId: payment.xenditInvoiceId });
+    } catch (error) {
+      console.warn("[cancelPayment] expireInvoice failed", error);
+    }
+  }
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { status: "FAILED" },
+  });
+
+  return { status: "FAILED" };
+}
+
 export async function verifyPaymentByExternalId(
   userId: string,
   externalId: string,

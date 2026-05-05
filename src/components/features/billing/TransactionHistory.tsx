@@ -1,10 +1,16 @@
 "use client";
 
-import { Download, ExternalLink, ListFilter } from "lucide-react";
+import { Download, ExternalLink, ListFilter, X } from "lucide-react";
+import { toast } from "sonner";
 import { useBilling } from "./BillingProvider";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { formatIDR, formatShortDateID } from "./billing-format";
+import { useCancelPayment } from "@/hooks/use-cancel-payment";
 import type { PaymentDTO, PaymentStatus } from "@/types/subscription.md";
+
+function isCancelable(status: PaymentStatus): boolean {
+  return status !== "PAID" && status !== "FAILED";
+}
 
 const STATUS_LABEL: Record<PaymentStatus, string> = {
   PENDING: "Menunggu",
@@ -26,8 +32,23 @@ function statusClass(status: PaymentStatus): string {
 }
 
 export function TransactionHistory() {
-  const { data, isLoading } = useBilling();
+  const { data, isLoading, refresh } = useBilling();
+  const { cancelPayment, pendingId } = useCancelPayment();
   const payments: PaymentDTO[] = data?.payments ?? [];
+
+  const handleCancel = async (payment: PaymentDTO): Promise<void> => {
+    const confirmed = window.confirm(
+      `Batalkan transaksi ${payment.xenditExternalId}? Tindakan ini tidak dapat diurungkan.`,
+    );
+    if (!confirmed) return;
+    const ok = await cancelPayment(payment.id);
+    if (ok) {
+      toast.success("Transaksi dibatalkan.");
+      await refresh();
+    } else {
+      toast.error("Gagal membatalkan transaksi.");
+    }
+  };
 
   return (
     <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-2xl flex flex-col overflow-hidden w-full">
@@ -107,6 +128,17 @@ export function TransactionHistory() {
                       >
                         <ExternalLink className="w-[18px] h-[18px]" />
                       </a>
+                    )}
+                    {isCancelable(tx.status) && (
+                      <button
+                        type="button"
+                        onClick={() => handleCancel(tx)}
+                        disabled={pendingId === tx.id}
+                        aria-label="Batalkan transaksi"
+                        className="text-outline hover:text-destructive transition-colors active:scale-95 p-2 rounded-full hover:bg-surface-container disabled:opacity-50"
+                      >
+                        <X className="w-[18px] h-[18px]" />
+                      </button>
                     )}
                     <button
                       type="button"

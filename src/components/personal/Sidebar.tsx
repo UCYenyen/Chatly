@@ -2,23 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   LayoutDashboard,
   BarChart2,
   BrainCircuit,
-  Code2,
   CreditCard,
-  FileText,
-  Settings,
-  HelpCircle,
   Plus,
   ChevronsUpDown,
   Rocket,
   MoreHorizontal,
   LogOut,
-  Building2,
-  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -43,13 +36,18 @@ import { Button } from "../ui/button";
 
 import { CreateBusinessModal } from "./CreateBusinessModal";
 import { authClient } from "@/lib/utils/auth/auth-client";
+import { useBusinessContext } from "@/components/features/business/BusinessProvider";
+import { useSubscription } from "@/hooks/use-subscription";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
   const router = useRouter();
+  const { data: subscriptionData, isLoading: isSubscriptionLoading } = useSubscription();
+  const { businesses, activeBusiness, setActiveBusinessId, isLoading } =
+    useBusinessContext();
 
-  const handleSignOut = async () => {
+  const handleSignOut = async (): Promise<void> => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
@@ -61,6 +59,11 @@ export default function Sidebar() {
   };
 
   const user = session?.user;
+  const subscriptionPlanLabel = isSubscriptionLoading
+    ? "Memuat..."
+    : subscriptionData?.subscription?.status === "ACTIVE"
+      ? subscriptionData.subscription.plan
+      : "FREE";
   const initials = user?.name
     ? user.name
         .split(" ")
@@ -70,21 +73,11 @@ export default function Sidebar() {
         .slice(0, 2)
     : "U";
 
-  const businesses = [
-    { name: "Acme Corp", type: "Perusahaan Terverifikasi", icon: Rocket },
-    { name: "Global Tech", type: "B2B Penjualan", icon: Building2 },
-    { name: "Startup X", type: "Inovasi Digital", icon: Zap },
-  ];
-
-  const [activeBusiness, setActiveBusiness] = useState(businesses[0]);
-
-  const navItems = [
+  const navItems: ReadonlyArray<{ name: string; path: string; icon: any }> = [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Analitik", path: "/analytics", icon: BarChart2 },
     { name: "Pelatihan", path: "/training", icon: BrainCircuit },
-    // { name: "Manajemen API", path: "/api-management", icon: Code2 },
     { name: "Billing", path: "/billing", icon: CreditCard },
-    // { name: "Dokumentasi API", path: "/api-docs", icon: FileText },
   ];
 
   return (
@@ -106,63 +99,52 @@ export default function Sidebar() {
         </Link>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild disabled={businesses.length === 0}>
             <div className="p-3 bg-surface-container rounded-sm border border-outline-variant/10 cursor-pointer group transition-all duration-200 hover:bg-card outline-none">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-widest text-secondary-fixed mb-1 font-label">
                     Pengalih Bisnis
                   </p>
                   <p className="font-bold text-secondary-fixed truncate text-sm">
-                    {activeBusiness.name}
-                  </p>
-                  <p className="text-xs text-outline mt-0.5">
-                    Kelola Perusahaan
+                    {activeBusiness
+                      ? activeBusiness.name
+                      : isLoading
+                        ? "Memuat..."
+                        : "Belum ada bisnis"}
                   </p>
                 </div>
-                <ChevronsUpDown className="w-4 h-4 text-outline group-hover:text-secondary-fixed transition-colors" />
+                <ChevronsUpDown className="w-4 h-4 text-outline group-hover:text-secondary-fixed transition-colors shrink-0 ml-2" />
               </div>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] rounded-lg bg-surface border-outline-variant/20 shadow-xl z-[100]"
+            className="w-[--radix-dropdown-menu-trigger-width] rounded-lg bg-surface border-outline-variant/20 shadow-xl z-100"
             align="start"
             sideOffset={8}
           >
             <DropdownMenuLabel className="text-outline text-[10px] uppercase tracking-widest px-3 py-2">
               Pilih Bisnis
             </DropdownMenuLabel>
-            {businesses.map((business) => (
-              <DropdownMenuItem
-                key={business.name}
-                onClick={() => setActiveBusiness(business)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-sm transition-colors focus:bg-secondary/10 focus:text-secondary",
-                  activeBusiness.name === business.name
-                    ? "bg-surface-container-high text-secondary-fixed"
-                    : "text-on-surface",
-                )}
-              >
-                <div
+            {businesses.map((business) => {
+              const isActive = activeBusiness?.id === business.id;
+              return (
+                <DropdownMenuItem
+                  key={business.id}
+                  onClick={() => setActiveBusinessId(business.id)}
                   className={cn(
-                    "w-8 h-8 rounded-sm flex items-center justify-center font-black",
-                    activeBusiness.name === business.name
-                      ? "bg-secondary-fixed text-on-secondary"
-                      : "bg-surface-container-high text-outline",
+                    "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-sm transition-colors focus:bg-secondary/10 focus:text-secondary",
+                    isActive
+                      ? "bg-surface-container-high text-secondary-fixed"
+                      : "text-on-surface",
                   )}
                 >
-                  <business.icon className="w-4 h-4" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-sm tracking-tight">
+                  <span className="font-bold text-sm tracking-tight truncate">
                     {business.name}
                   </span>
-                  <span className="text-[10px] text-outline">
-                    {business.type}
-                  </span>
-                </div>
-              </DropdownMenuItem>
-            ))}
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarHeader>
@@ -195,7 +177,7 @@ export default function Sidebar() {
                     )}
                   >
                     <Link href={item.path} data-transition-ignore>
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      <item.icon className="w-5 h-5 shrink-0" />
                       <span>{item.name}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -208,30 +190,6 @@ export default function Sidebar() {
 
       <SidebarFooter className="p-4 pt-0 bg-transparent border-0 space-y-4">
         <SidebarMenu className="space-y-1">
-          {/* <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild
-              className="flex items-center gap-3 px-4 py-5 text-outline hover:bg-surface-container hover:text-on-surface rounded-sm transition-all text-sm font-medium h-auto"
-            >
-              <Link href="/settings" data-transition-ignore>
-                <Settings className="w-5 h-5 flex-shrink-0" />
-                <span>Pengaturan</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild
-              className="flex items-center gap-3 px-4 py-5 text-outline hover:bg-surface-container hover:text-on-surface rounded-sm transition-all text-sm font-medium h-auto"
-            >
-              <Link href="/support" data-transition-ignore>
-                <HelpCircle className="w-5 h-5 flex-shrink-0" />
-                <span>Bantuan</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem> */}
-
-          {/* Authenticated User Section */}
           <div className="pt-4 mt-2 border-t border-outline-variant/15">
             <SidebarMenuItem>
               <DropdownMenu>
@@ -254,14 +212,14 @@ export default function Sidebar() {
                         {user?.name || "User"}
                       </span>
                       <span className="truncate text-[11px] text-outline mt-0.5">
-                        {user?.role === "ADMIN" ? "Admin" : "Akses Personal"}
+                        Paket {subscriptionPlanLabel}
                       </span>
                     </div>
                     <MoreHorizontal className="ml-auto size-4 text-outline" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-surface border-outline-variant/20 shadow-xl z-[100]"
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-surface border-outline-variant/20 shadow-xl z-100"
                   side="right"
                   align="end"
                   sideOffset={14}

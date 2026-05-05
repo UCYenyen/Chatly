@@ -1,77 +1,129 @@
-import { Building2, Plus, ArrowRight, Settings2 } from "lucide-react"
-import { CreateBusinessModal } from "@/components/personal/CreateBusinessModal"
+"use client";
+
+import { useState } from "react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Plus,
+  Settings2,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { CreateBusinessModal } from "@/components/personal/CreateBusinessModal";
+import { useBusinessContext } from "@/components/features/business/BusinessProvider";
+import { useDeleteBusiness } from "@/hooks/use-delete-business";
+import { cn } from "@/lib/utils";
+import type { BusinessDTO } from "@/types/business.md";
 
 export function BusinessSelectorCards() {
-  const businesses = [
-    {
-      name: "Toko Utama Indonesia",
-      plan: "Growth",
-      status: "Aktif",
-      messages: "1.2M",
-      color: "bg-secondary-fixed text-on-secondary",
-      borderColor: "border-secondary-fixed/50",
-      glow: "shadow-[0_0_20px_rgba(164,215,48,0.15)]"
-    },
-    {
-      name: "Aplikasi Dukungan B2B",
-      plan: "Pro",
-      status: "Aktif",
-      messages: "980K",
-      color: "bg-[#3545d6] text-white",
-      borderColor: "border-[#3545d6]/50",
-      glow: "shadow-[0_0_20px_rgba(53,69,214,0.15)]"
-    },
-    {
-      name: "Proyek Ekspansi Q4",
-      plan: "Starter",
-      status: "Pengembangan",
-      messages: "24K",
-      color: "bg-surface-container-highest text-on-surface",
-      borderColor: "border-outline-variant/30",
-      glow: "shadow-lg"
+  const {
+    businesses,
+    activeBusiness,
+    setActiveBusinessId,
+    isLoading,
+    refresh,
+  } = useBusinessContext();
+  const { deleteBusiness, isPending: isDeleting } = useDeleteBusiness();
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const handleSelect = (business: BusinessDTO): void => {
+    setActiveBusinessId(business.id);
+    toast.success(`Beralih ke ${business.name}`);
+  };
+
+  const handleDelete = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    business: BusinessDTO,
+  ): Promise<void> => {
+    e.stopPropagation();
+    setPendingDeleteId(business.id);
+    const ok = await deleteBusiness(business.id);
+    setPendingDeleteId(null);
+    if (ok) {
+      toast.success(`${business.name} dihapus.`);
+      await refresh();
     }
-  ]
+  };
 
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center justify-between">
-        <h2 className="text-[20px] font-headline font-bold text-on-surface">Organisasi Bisnis Anda</h2>
-        <button className="text-[12px] font-mono text-outline hover:text-on-surface transition-colors font-bold uppercase tracking-widest flex items-center gap-2">
+        <h2 className="text-[20px] font-headline font-bold text-on-surface">
+          Organisasi Bisnis Anda
+        </h2>
+        {/* <button
+          type="button"
+          className="text-[12px] font-mono text-outline hover:text-on-surface transition-colors font-bold uppercase tracking-widest flex items-center gap-2"
+        >
           Kelola Ruang Kerja <Settings2 className="w-4 h-4" />
-        </button>
+        </button> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
-        {businesses.map((biz) => (
-          <div 
-            key={biz.name}
-            className={`bg-surface-container-low border border-outline-variant/15 p-6 rounded-xl flex flex-col justify-between cursor-pointer group hover:-translate-y-1 transition-all duration-300 ${biz.glow} hover:border-outline`}
-          >
-            <div className="flex flex-col gap-4">
-              <div className="flex items-start justify-between">
-                <div className={`w-10 h-10 rounded-md flex items-center justify-center font-bold ${biz.color}`}>
-                  {biz.name.charAt(0)}
-                </div>
-                <div className={`text-[9px] font-bold uppercase tracking-widest font-mono px-2 py-0.5 rounded border ${biz.borderColor} opacity-80 group-hover:opacity-100 transition-opacity`}>
-                  {biz.plan}
+        {isLoading && businesses.length === 0 && (
+          <div className="col-span-full text-[13px] text-outline">Memuat bisnis...</div>
+        )}
+
+        {businesses.map((biz) => {
+          const isActive = activeBusiness?.id === biz.id;
+          return (
+            <div
+              key={biz.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleSelect(biz)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSelect(biz);
+                }
+              }}
+              className={cn(
+                "text-left bg-surface-container-low border p-6 rounded-xl flex flex-col justify-between cursor-pointer group hover:-translate-y-1 transition-all duration-300 hover:border-outline shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-secondary-fixed",
+                isActive
+                  ? "border-secondary-fixed/50 shadow-[0_0_20px_rgba(164,215,48,0.15)]"
+                  : "border-outline-variant/15",
+              )}
+            >
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h3 className="font-bold text-[16px] text-on-surface tracking-wide group-hover:text-secondary-fixed transition-colors line-clamp-1">
+                    {biz.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full shadow-[0_0_4px_currentColor]",
+                        isActive ? "bg-secondary-fixed" : "bg-outline",
+                      )}
+                    />
+                    <span className="text-[11px] font-mono text-outline uppercase tracking-wider">
+                      {isActive ? "Aktif" : "Tidak Aktif"}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div>
-                <h3 className="font-bold text-[16px] text-on-surface tracking-wide group-hover:text-secondary-fixed transition-colors line-clamp-1">{biz.name}</h3>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${biz.status === "Aktif" ? "bg-secondary-fixed" : "bg-outline"} shadow-[0_0_4px_currentColor]`}></div>
-                  <span className="text-[11px] font-mono text-outline uppercase tracking-wider">{biz.status}</span>
+
+              <div className="mt-8 pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={(e) => handleDelete(e, biz)}
+                  disabled={isDeleting && pendingDeleteId === biz.id}
+                  aria-label={`Hapus ${biz.name}`}
+                  className="text-outline hover:text-destructive transition-colors p-1 rounded disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-2">
+                  {isActive && <CheckCircle2 className="w-4 h-4 text-secondary-fixed" />}
+                  <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                    <ArrowRight className="w-4 h-4 text-on-surface" />
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <div className="mt-8 pt-4 border-t border-outline-variant/10 flex items-center justify-between">
-              <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 text-on-surface" />
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         <CreateBusinessModal>
           <button
@@ -81,11 +133,15 @@ export function BusinessSelectorCards() {
             <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-[#bff44c] group-hover:border-[#a4d730] transition-colors shadow-sm">
               <Plus className="w-6 h-6 text-outline group-hover:text-[#141f00] transition-colors" />
             </div>
-            <span className="font-bold text-[15px] text-on-surface mb-1 text-center">Tambahkan Bisnis Baru</span>
-            <span className="text-[12px] text-outline text-center max-w-[160px]">Buka instans baru untuk divisi atau merek lain.</span>
+            <span className="font-bold text-[15px] text-on-surface mb-1 text-center">
+              Tambahkan Bisnis Baru
+            </span>
+            <span className="text-[12px] text-outline text-center max-w-[160px]">
+              Buka instans baru untuk divisi atau merek lain.
+            </span>
           </button>
         </CreateBusinessModal>
       </div>
     </div>
-  )
+  );
 }
