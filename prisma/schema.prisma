@@ -36,13 +36,14 @@ model User {
 }
 
 model Business {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  whatsappAuth  WhatsAppAuth[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([userId])
   @@map("business")
@@ -163,4 +164,37 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum WhatsAppAuthType {
+  OFFICIAL
+  GOWA
+}
+
+enum WhatsAppAuthStatus {
+  PENDING
+  AUTHENTICATED
+  EXPIRED
+  DISCONNECTED
+}
+
+model WhatsAppAuth {
+  id              String                @id @default(cuid())
+  businessId      String
+  business        Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  authType        WhatsAppAuthType      @default(GOWA)
+  status          WhatsAppAuthStatus    @default(PENDING)
+  phoneNumber     String?               @unique
+  qrCode          String?
+  qrCodeExpiry    DateTime?
+  instanceKey     String?               @unique
+  sessionData     Json?
+  lastConnected   DateTime?
+  disconnectedAt  DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@unique([businessId, authType])
+  @@index([businessId])
+  @@map("whatsapp_auth")
 }
