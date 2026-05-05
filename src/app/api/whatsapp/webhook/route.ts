@@ -187,10 +187,11 @@ export async function POST(request: Request) {
       whatsappAuth = missingPhoneAuths[0];
       await prisma.whatsAppAuth.update({
         where: { id: whatsappAuth.id },
-        data: { phoneNumber: device_id },
+        data: { phoneNumber: (payload as any).chat_id },
       });
       whatsappAuth.phoneNumber = device_id;
       console.log(`[webhook] Auto-linked unknown device_id ${device_id} to missing phone auth ${whatsappAuth.id}`);
+      console.log(body);
     }
   }
 

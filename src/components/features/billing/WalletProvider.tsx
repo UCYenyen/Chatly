@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useWallet } from '@/hooks/use-wallet'
+import { Suspense } from 'react'
 import type { WalletStateResponse, TopUpRequest, TopUpResponse } from '@/types/wallet.md'
 
 interface WalletContextValue {
@@ -15,9 +16,7 @@ interface WalletContextValue {
 
 const WalletContext = createContext<WalletContextValue | null>(null)
 
-export function WalletProvider({ children }: { children: ReactNode }) {
-    const value = useWallet()
-    const { refresh } = value
+function WalletParamsHandler({ refresh }: { refresh: () => Promise<void> }) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const handledRef = useRef<boolean>(false)
@@ -29,21 +28,33 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         if (!ext || paid !== '1') return
 
         handledRef.current = true
-        ;(async () => {
-            try {
-                await fetch('/api/billing/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ externalId: ext }),
-                })
-            } finally {
-                await refresh()
-                router.replace('/billing')
-            }
-        })()
+            ; (async () => {
+                try {
+                    await fetch('/api/billing/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ externalId: ext }),
+                    })
+                } finally {
+                    await refresh()
+                    router.replace('/billing')
+                }
+            })()
     }, [searchParams, refresh, router])
 
-    return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+    return null
+}
+
+export function WalletProvider({ children }: { children: ReactNode }) {
+    const value = useWallet()
+    return (
+        <WalletContext.Provider value={value}>
+            <Suspense fallback={null}>
+                <WalletParamsHandler refresh={value.refresh} />
+            </Suspense>
+            {children}
+        </WalletContext.Provider>
+    )
 }
 
 export function useWalletContext(): WalletContextValue {

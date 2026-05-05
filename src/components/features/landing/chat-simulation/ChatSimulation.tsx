@@ -2,7 +2,7 @@
 
 import { useChatSimulation } from "@/hooks/use-chat-simulation";
 import { ChatBubble } from "./ChatBubble";
-import { SimulationStep } from "@/types/chat-simulation.md.ts";
+import { SimulationStep } from "@/types/chat-simulation.md";
 import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useRef } from "react";
 

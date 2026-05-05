@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ChatMessage, SimulationStep } from "@/types/chat-simulation.md.ts";
+import { ChatMessage, SimulationStep } from "@/types/chat-simulation.md";
 
 export function useChatSimulation(steps: SimulationStep[]) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);

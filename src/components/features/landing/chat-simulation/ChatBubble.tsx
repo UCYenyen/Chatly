@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
-import { MessageRole } from "@/types/chat-simulation.md.ts";
+import { MessageRole } from "@/types/chat-simulation.md";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, User } from "lucide-react";
 
