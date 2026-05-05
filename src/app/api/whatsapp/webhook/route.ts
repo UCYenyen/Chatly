@@ -8,15 +8,38 @@ const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
 const ANALYTICS_COOLDOWN_MS = 5 * 60 * 1000;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
-  if (!WEBHOOK_SECRET) return true;
-  if (!signature) return false;
+  if (!WEBHOOK_SECRET) {
+    console.warn("[webhook] GOWA_WEBHOOK_SECRET is not set, skipping verification.");
+    return true;
+  }
+  if (!signature) {
+    console.error("[webhook] No signature header found.");
+    return false;
+  }
+
+  // Handle 'sha256=' prefix if present
+  const signatureHex = signature.replace(/^sha256=/, "");
+
   const expected = createHmac("sha256", WEBHOOK_SECRET)
     .update(rawBody)
     .digest("hex");
+
   const a = Buffer.from(expected);
-  const b = Buffer.from(signature.replace(/^sha256=/, ""));
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  const b = Buffer.from(signatureHex);
+
+  if (a.length !== b.length) {
+    console.error(`[webhook] Signature length mismatch. Expected ${a.length}, got ${b.length}`);
+    return false;
+  }
+
+  const match = timingSafeEqual(a, b);
+  if (!match) {
+    console.error("[webhook] Signature mismatch.");
+    console.debug("[webhook] Expected hex:", expected);
+    console.debug("[webhook] Received hex:", signatureHex);
+  }
+
+  return match;
 }
 
 interface GowaWebhookPayload {
@@ -82,11 +105,25 @@ const DISCONNECTION_EVENTS = new Set([
   "close",
 ]);
 
+export async function GET() {
+  return NextResponse.json({
+    status: "alive",
+    message: "WhatsApp Webhook is ready for POST requests",
+    timestamp: new Date().toISOString(),
+  });
+}
+
 export async function POST(request: Request) {
   const rawBody = await request.text();
+  
+  // Log all headers for debugging
+  const headersObj = Object.fromEntries(request.headers.entries());
+  console.log("[webhook] Incoming Request Headers:", JSON.stringify(headersObj, null, 2));
+
   const signature =
     request.headers.get("x-hub-signature-256") ??
-    request.headers.get("x-signature");
+    request.headers.get("x-signature") ??
+    request.headers.get("hmac"); // Check alternative header name
 
   if (!verifySignature(rawBody, signature)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
