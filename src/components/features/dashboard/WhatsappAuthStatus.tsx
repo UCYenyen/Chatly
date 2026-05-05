@@ -34,7 +34,7 @@ export function WhatsappAuthStatus({
         return {
           icon: CheckCircle2,
           color: "text-green-600",
-          bgColor: "bg-green-50",
+          bgColor: "bg-transparentc",
           label: "Terautentikasi",
           description: `Nomor: ${auth.phoneNumber || "Loading..."}`,
         };
@@ -58,7 +58,7 @@ export function WhatsappAuthStatus({
         return {
           icon: AlertCircle,
           color: "text-orange-600",
-          bgColor: "bg-orange-50",
+          bgColor: "bg-transparent",
           label: "Terputus",
           description: auth.disconnectedAt
             ? `Terputus pada ${new Date(auth.disconnectedAt).toLocaleString("id-ID")}`

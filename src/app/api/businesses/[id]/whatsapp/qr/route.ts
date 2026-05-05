@@ -3,6 +3,87 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
 
+const GOWA_API_BASE = process.env.GOWA_API_BASE || "http://localhost:3001";
+const GOWA_BASIC_AUTH_USER = process.env.GOWA_BASIC_AUTH_USER;
+const GOWA_BASIC_AUTH_PASS = process.env.GOWA_BASIC_AUTH_PASS;
+
+function gowaAuthHeader(): Record<string, string> {
+  if (!GOWA_BASIC_AUTH_USER || !GOWA_BASIC_AUTH_PASS) return {};
+  const token = Buffer.from(
+    `${GOWA_BASIC_AUTH_USER}:${GOWA_BASIC_AUTH_PASS}`
+  ).toString("base64");
+  return { Authorization: `Basic ${token}` };
+}
+
+function extractPhone(obj: unknown): string | null {
+  if (!obj || typeof obj !== "object") return null;
+  const o = obj as Record<string, unknown>;
+  const candidate =
+    (o.phone as string) ??
+    (o.phone_number as string) ??
+    (o.jid as string) ??
+    (o.id as string) ??
+    null;
+  if (typeof candidate !== "string") return null;
+  const cleaned = candidate.split("@")[0]?.split(":")[0] ?? null;
+  return cleaned || null;
+}
+
+function isConnectedStatus(status: unknown): boolean {
+  if (typeof status !== "string") return false;
+  const s = status.toLowerCase();
+  return s === "connected" || s === "logged_in" || s === "online" || s === "authenticated";
+}
+
+async function fetchGowaDeviceInfo(
+  deviceId: string
+): Promise<{ connected: boolean; phoneNumber: string | null }> {
+  const headersInit = {
+    Accept: "application/json",
+    "X-Device-Id": deviceId,
+    ...gowaAuthHeader(),
+  };
+
+  try {
+    const res = await fetch(`${GOWA_API_BASE}/devices/${deviceId}`, {
+      method: "GET",
+      headers: headersInit,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      console.log("Gowa /devices/:id response:", JSON.stringify(data));
+      const r = data.results ?? data;
+      const phone = extractPhone(r) ?? extractPhone(r?.user);
+      const connected =
+        isConnectedStatus(r?.status) ||
+        r?.connected === true ||
+        r?.is_logged_in === true ||
+        Boolean(phone);
+      if (connected) return { connected: true, phoneNumber: phone };
+    }
+  } catch (err) {
+    console.error("Gowa /devices/:id error:", err);
+  }
+
+  try {
+    const res = await fetch(`${GOWA_API_BASE}/user/info`, {
+      method: "GET",
+      headers: headersInit,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      console.log("Gowa /user/info response:", JSON.stringify(data));
+      const r = data.results ?? data;
+      const phone = extractPhone(r) ?? extractPhone(r?.user);
+      if (phone) return { connected: true, phoneNumber: phone };
+    }
+  } catch (err) {
+    console.error("Gowa /user/info error:", err);
+  }
+
+  return { connected: false, phoneNumber: null };
+}
+
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
@@ -33,6 +114,26 @@ export async function GET(_request: Request, context: RouteContext) {
       { error: "No WhatsApp auth found" },
       { status: 404 }
     );
+  }
+
+  if (whatsappAuth.instanceKey) {
+    const info = await fetchGowaDeviceInfo(whatsappAuth.instanceKey);
+    if (info.connected) {
+      const updated = await prisma.whatsAppAuth.update({
+        where: { id: whatsappAuth.id },
+        data: {
+          status: "AUTHENTICATED",
+          phoneNumber: info.phoneNumber,
+          qrCode: null,
+          qrCodeExpiry: null,
+          lastConnected: new Date(),
+        },
+      });
+      return NextResponse.json(
+        { status: "AUTHENTICATED", phoneNumber: updated.phoneNumber },
+        { status: 200 }
+      );
+    }
   }
 
   if (whatsappAuth.status === "AUTHENTICATED") {

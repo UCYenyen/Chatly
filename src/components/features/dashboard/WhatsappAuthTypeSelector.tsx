@@ -35,7 +35,7 @@ export function WhatsappAuthTypeSelector({
             )}
             <span>GoWa API</span>
           </div>
-          <span className={`text-xs text-left` + selectedType==="GOWA" ? "text-white" : "text-background"}>
+          <span className={`text-xs text-left` + selectedType==="GOWA" ? "text-background" : "text-white"}>
             API alternatif WhatsApp dengan QR code scanning
           </span>
         </Button>
