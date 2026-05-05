@@ -7,6 +7,8 @@ import CountUp from "../../personal/CountUp";
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal";
 import TextType from "@/components/personal/TextType";
 import Shuffle from "@/components/personal/Shuffle";
+import Link from "next/link";
+import { authClient } from "@/lib/utils/auth/auth-client";
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const primaryButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -33,6 +35,8 @@ export function HeroSection() {
   }, []);
 
   useGsapScrollReveal(sectionRef, { start: "top 86%", y: 36, fade: false });
+
+  const { data: session } = authClient.useSession();
 
   return (
     <section
@@ -96,7 +100,9 @@ export function HeroSection() {
             style={ctaWidth ? { width: `${ctaWidth}px` } : undefined}
             className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]"
           >
-            Luncurkan Agen Anda
+              <Link href={session ? "/dashboard" : "/sign-in"}>
+                Luncurkan Agen Anda
+              </Link>
           </Button>
           <Button
             ref={secondaryButtonRef}

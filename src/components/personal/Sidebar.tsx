@@ -82,9 +82,9 @@ export default function Sidebar() {
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Analitik", path: "/analytics", icon: BarChart2 },
     { name: "Pelatihan", path: "/training", icon: BrainCircuit },
-    { name: "Manajemen API", path: "/api-management", icon: Code2 },
+    // { name: "Manajemen API", path: "/api-management", icon: Code2 },
     { name: "Billing", path: "/billing", icon: CreditCard },
-    { name: "Dokumentasi API", path: "/api-docs", icon: FileText },
+    // { name: "Dokumentasi API", path: "/api-docs", icon: FileText },
   ];
 
   return (

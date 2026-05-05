@@ -23,9 +23,9 @@ export default function BillingPage() {
         </div>
       </div>
 
-      <div className="w-full shrink-0 mt-2">
+      {/* <div className="w-full shrink-0 mt-2">
         <BillingInfo />
-      </div>
+      </div> */}
 
       <div className="w-full flex-1 mt-4 mb-8">
         <TransactionHistory />
