@@ -15,13 +15,53 @@ function gowaAuthHeader(): Record<string, string> {
   return { Authorization: `Basic ${token}` };
 }
 
-async function generateGowaQrCode(): Promise<{
-  qrCode: string;
-  expiry: number;
-}> {
+function deviceHeader(deviceId: string): Record<string, string> {
+  return { "X-Device-Id": deviceId };
+}
+
+async function createGowaDevice(): Promise<string> {
+  const res = await fetch(`${GOWA_API_BASE}/devices`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...gowaAuthHeader(),
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to create Gowa device (status ${res.status})`
+    );
+  }
+
+  const data = await res.json();
+  console.log("Gowa create-device response:", JSON.stringify(data));
+
+  const deviceId: string | undefined =
+    data.results?.device_id ??
+    data.device_id ??
+    data.results?.id ??
+    data.id;
+
+  if (!deviceId) {
+    throw new Error("Gowa create-device response did not contain device_id");
+  }
+
+  return deviceId;
+}
+
+async function generateGowaQrCode(
+  deviceId: string
+): Promise<{ qrCode: string; expiry: number }> {
   const response = await fetch(`${GOWA_API_BASE}/app/login`, {
     method: "GET",
-    headers: { Accept: "application/json", ...gowaAuthHeader() },
+    headers: {
+      Accept: "application/json",
+      ...deviceHeader(deviceId),
+      ...gowaAuthHeader(),
+    },
   });
 
   if (!response.ok) {
@@ -43,7 +83,7 @@ async function generateGowaQrCode(): Promise<{
   const externalUrl = qrLink.replace(/^https?:\/\/[^/]+/, GOWA_API_BASE);
 
   const imgRes = await fetch(externalUrl, {
-    headers: { ...gowaAuthHeader() },
+    headers: { ...deviceHeader(deviceId), ...gowaAuthHeader() },
   });
 
   if (!imgRes.ok) {
@@ -95,32 +135,41 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   if (!whatsappAuth) {
-    const instanceKey = `${businessId}-${Date.now()}`;
     whatsappAuth = await prisma.whatsAppAuth.create({
       data: {
         businessId,
         authType: "GOWA",
         status: "PENDING",
-        instanceKey,
       },
     });
   }
 
   try {
-    const { qrCode, expiry } = await generateGowaQrCode();
+    if (!whatsappAuth.instanceKey) {
+      const deviceId = await createGowaDevice();
+      whatsappAuth = await prisma.whatsAppAuth.update({
+        where: { id: whatsappAuth.id },
+        data: { instanceKey: deviceId },
+      });
+    }
+
+    const { qrCode, expiry } = await generateGowaQrCode(
+      whatsappAuth.instanceKey!
+    );
 
     const expiryDate = new Date();
     expiryDate.setSeconds(expiryDate.getSeconds() + expiry);
 
     await prisma.whatsAppAuth.update({
       where: { id: whatsappAuth.id },
-      data: { qrCode, qrCodeExpiry: expiryDate },
+      data: { qrCode, qrCodeExpiry: expiryDate, status: "PENDING" },
     });
 
     return NextResponse.json(
       {
         qrCode,
         qrCodeExpiry: expiryDate.toISOString(),
+        deviceId: whatsappAuth.instanceKey,
         message: "QR code generated successfully",
       },
       { status: 200 }

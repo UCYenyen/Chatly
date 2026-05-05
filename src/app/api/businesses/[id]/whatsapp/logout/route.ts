@@ -15,14 +15,27 @@ function gowaAuthHeader(): Record<string, string> {
   return { Authorization: `Basic ${token}` };
 }
 
-async function logoutGowaInstance(): Promise<void> {
+async function logoutGowaInstance(deviceId: string): Promise<void> {
   try {
     await fetch(`${GOWA_API_BASE}/app/logout`, {
       method: "GET",
-      headers: { Accept: "application/json", ...gowaAuthHeader() },
+      headers: {
+        Accept: "application/json",
+        "X-Device-Id": deviceId,
+        ...gowaAuthHeader(),
+      },
     });
   } catch (error) {
     console.error("Error calling Gowa logout API:", error);
+  }
+
+  try {
+    await fetch(`${GOWA_API_BASE}/devices/${deviceId}`, {
+      method: "DELETE",
+      headers: { Accept: "application/json", ...gowaAuthHeader() },
+    });
+  } catch (error) {
+    console.error("Error deleting Gowa device:", error);
   }
 }
 
@@ -58,7 +71,9 @@ export async function POST(_request: Request, context: RouteContext) {
     );
   }
 
-  await logoutGowaInstance();
+  if (whatsappAuth.instanceKey) {
+    await logoutGowaInstance(whatsappAuth.instanceKey);
+  }
 
   await prisma.whatsAppAuth.update({
     where: { id: whatsappAuth.id },

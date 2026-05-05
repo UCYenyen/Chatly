@@ -34,7 +34,7 @@ export function WhatsappAuthStatus({
         return {
           icon: CheckCircle2,
           color: "text-green-600",
-          bgColor: "bg-green-50",
+          bgColor: "bg-transparentc",
           label: "Terautentikasi",
           description: `Nomor: ${auth.phoneNumber || "Loading..."}`,
         };
