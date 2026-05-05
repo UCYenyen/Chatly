@@ -22,9 +22,9 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  balance       Int       @default(0)
   sessions      Session[]
   accounts      Account[]
-  subscription  Subscription?
   payments      Payment[]
   businesses    Business[]
 
@@ -42,6 +42,8 @@ model Business {
   name          String
   description   String?
   whatsappAuth  WhatsAppAuth[]
+  subscription  Subscription?
+  payments      Payment[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
@@ -70,10 +72,15 @@ enum PaymentStatus {
   EXPIRED
 }
 
+enum PaymentType {
+  TOPUP
+  SUBSCRIPTION
+}
+
 model Subscription {
   id                 String             @id @default(cuid())
-  userId             String             @unique
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId         String             @unique
+  business           Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
   plan               SubscriptionPlan   @default(FREE)
   status             SubscriptionStatus @default(PENDING)
   currentPeriodStart DateTime?
@@ -84,7 +91,7 @@ model Subscription {
   updatedAt          DateTime           @updatedAt
   payments           Payment[]
 
-  @@index([userId])
+  @@index([businessId])
   @@map("subscription")
 }
 
@@ -92,8 +99,11 @@ model Payment {
   id               String           @id @default(cuid())
   userId           String
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId       String?
+  business         Business?        @relation(fields: [businessId], references: [id], onDelete: SetNull)
   subscriptionId   String?
   subscription     Subscription?    @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  type             PaymentType      @default(SUBSCRIPTION)
   plan             SubscriptionPlan
   amount           Int
   currency         String           @default("IDR")
@@ -106,6 +116,7 @@ model Payment {
   updatedAt        DateTime         @updatedAt
 
   @@index([userId])
+  @@index([businessId])
   @@index([subscriptionId])
   @@map("payment")
 }

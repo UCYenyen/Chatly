@@ -1,8 +1,12 @@
 "use client";
 
+import { toast } from "sonner";
+import { useSubscriptionContext } from "./SubscriptionProvider";
+import { useWalletContext } from "../billing/WalletProvider";
 import { Check, X } from "lucide-react";
+import { useParams } from "next/navigation";
 import { useCheckout } from "@/hooks/use-checkout";
-import { formatIDR } from "./billing-format";
+import { formatIDR } from "../billing/billing-format";
 import type { PlanDefinition } from "@/types/subscription.md";
 
 interface PlanCardProps {
@@ -11,12 +15,21 @@ interface PlanCardProps {
 }
 
 export function PlanCard({ plan, isCurrent }: PlanCardProps) {
-  const { isPending, error, startCheckout } = useCheckout();
+  const params = useParams();
+  const businessId = params.businessId as string;
+  const { isPending, error, startCheckout } = useCheckout(businessId);
+  const { refresh: refreshSub } = useSubscriptionContext();
+  const { refresh: refreshWallet } = useWalletContext();
   const isFree = plan.id === "FREE";
 
   const handleClick = async (): Promise<void> => {
     if (isFree || isCurrent) return;
-    await startCheckout(plan.id as Exclude<PlanDefinition["id"], "FREE">);
+    const ok = await startCheckout(plan.id as Exclude<PlanDefinition["id"], "FREE">);
+    if (ok) {
+      toast.success(`Berhasil berlangganan paket ${plan.name}`);
+      void refreshSub();
+      void refreshWallet();
+    }
   };
 
   return (

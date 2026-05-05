@@ -1,15 +1,18 @@
 "use client";
 
-import { useBilling } from "./BillingProvider";
+import { useParams } from "next/navigation";
+import { useSubscriptionContext } from "./SubscriptionProvider";
 import { PlansDialog } from "./PlansDialog";
 import { useCancelSubscription } from "@/hooks/use-cancel-subscription";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
-import { formatIDR, formatDateID } from "./billing-format";
+import { formatIDR, formatDateID } from "../billing/billing-format";
 import type { SubscriptionPlan } from "@prisma/client";
 
 export function CurrentPlan() {
-  const { data, isLoading, error, refresh } = useBilling();
-  const { isPending, cancel, error: cancelError } = useCancelSubscription();
+  const params = useParams();
+  const businessId = params.businessId as string;
+  const { data, isLoading, error, refresh } = useSubscriptionContext();
+  const { isPending, cancel, error: cancelError } = useCancelSubscription(businessId);
 
   const sub = data?.subscription;
   const planId: SubscriptionPlan = sub?.status === "ACTIVE" ? sub.plan : "FREE";

@@ -2,11 +2,12 @@
 
 import { Download, ExternalLink, ListFilter, X } from "lucide-react";
 import { toast } from "sonner";
-import { useBilling } from "./BillingProvider";
+import { useWalletContext } from "./WalletProvider";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { formatIDR, formatShortDateID } from "./billing-format";
 import { useCancelPayment } from "@/hooks/use-cancel-payment";
-import type { PaymentDTO, PaymentStatus } from "@/types/subscription.md";
+import type { PaymentDTO, WalletStateResponse } from "@/types/wallet.md";
+import type { PaymentStatus } from "@prisma/client";
 
 function isCancelable(status: PaymentStatus): boolean {
   return status !== "PAID" && status !== "FAILED";
@@ -32,7 +33,7 @@ function statusClass(status: PaymentStatus): string {
 }
 
 export function TransactionHistory() {
-  const { data, isLoading, refresh } = useBilling();
+  const { data, isLoading, refresh } = useWalletContext();
   const { cancelPayment, pendingId } = useCancelPayment();
   const payments: PaymentDTO[] = data?.payments ?? [];
 
@@ -99,8 +100,11 @@ export function TransactionHistory() {
                 <td className="px-4 py-7">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-on-surface font-bold">
-                      Langganan Paket {PLANS[tx.plan].name}
+                      {tx.type === 'TOPUP' ? 'Top Up Saldo Akun' : `Langganan Paket ${PLANS[tx.plan].name}`}
                     </span>
+                    {tx.businessName && (
+                        <span className="text-[11px] text-secondary-fixed">Bisnis: {tx.businessName}</span>
+                    )}
                     <span className="text-[11px] font-mono text-outline">{tx.xenditExternalId}</span>
                   </div>
                 </td>

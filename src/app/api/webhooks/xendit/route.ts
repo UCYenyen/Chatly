@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { handleXenditCallback } from "@/lib/utils/payment-gateway/subscription-service";
+import { handleXenditCallback } from "@/lib/utils/payment-gateway/billing-service";
 import type {
   ApiErrorResponse,
   XenditInvoiceCallbackPayload,

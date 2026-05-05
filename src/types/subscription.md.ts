@@ -25,6 +25,7 @@ export interface PlanDefinition {
 
 export interface SubscriptionDTO {
   id: string;
+  businessId: string;
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
   currentPeriodStart: string | null;
@@ -33,31 +34,20 @@ export interface SubscriptionDTO {
   canceledAt: string | null;
 }
 
-export interface PaymentDTO {
-  id: string;
-  plan: SubscriptionPlan;
-  amount: number;
-  currency: string;
-  status: PaymentStatus;
-  invoiceUrl: string | null;
-  xenditExternalId: string;
-  paidAt: string | null;
-  createdAt: string;
-}
 
 export interface CreateSubscriptionRequest {
   plan: Exclude<SubscriptionPlan, "FREE">;
 }
 
 export interface CreateSubscriptionResponse {
-  invoiceUrl: string;
-  paymentId: string;
-  externalId: string;
+  success: boolean;
+  invoiceUrl?: string;
+  paymentId?: string;
+  externalId?: string;
 }
 
 export interface SubscriptionStateResponse {
   subscription: SubscriptionDTO | null;
-  payments: PaymentDTO[];
 }
 
 export interface XenditInvoiceCallbackPayload {

@@ -4,13 +4,13 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { PlanCard } from "./PlanCard";
-import { useBilling } from "./BillingProvider";
+import { useSubscriptionContext } from "./SubscriptionProvider";
 import type { SubscriptionPlan } from "@prisma/client";
 
 const PLAN_ORDER: ReadonlyArray<SubscriptionPlan> = ["FREE", "PRO", "BUSINESS"];
 
 export function PlansDialog() {
-  const { data } = useBilling();
+  const { data } = useSubscriptionContext();
   const [open, setOpen] = useState<boolean>(false);
   const currentPlan: SubscriptionPlan =
     data?.subscription?.status === "ACTIVE" ? data.subscription.plan : "FREE";
@@ -26,8 +26,10 @@ export function PlansDialog() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="relative w-full max-w-5xl rounded-2xl bg-surface-container-low border border-outline-variant/15 p-8 shadow-2xl">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-5xl rounded-2xl bg-surface-container-low/90 backdrop-blur-xl border border-outline-variant/20 p-8 shadow-2xl ring-1 ring-white/5 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent pointer-events-none" />
+
             <button
               type="button"
               onClick={() => setOpen(false)}

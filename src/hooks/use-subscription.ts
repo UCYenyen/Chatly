@@ -13,19 +13,22 @@ interface UseSubscriptionResult {
   refresh: () => Promise<void>;
 }
 
-export function useSubscription(): UseSubscriptionResult {
+export function useSubscription(businessId?: string): UseSubscriptionResult {
   const [data, setData] = useState<SubscriptionStateResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async (): Promise<void> => {
+    if (!businessId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/subscriptions/me", {
+      const res = await fetch(`/api/businesses/${businessId}/subscription`, {
         method: "GET",
         cache: "no-store",
-        credentials: "include",
       });
       if (!res.ok) {
         const body = (await res.json()) as ApiErrorResponse;
@@ -34,11 +37,11 @@ export function useSubscription(): UseSubscriptionResult {
       const json = (await res.json()) as SubscriptionStateResponse;
       setData(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat data");
+      setError(err instanceof Error ? err.message : "Gagal memuat data langganan");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [businessId]);
 
   useEffect(() => {
     void refresh();

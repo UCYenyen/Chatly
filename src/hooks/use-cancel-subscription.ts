@@ -9,17 +9,20 @@ interface UseCancelSubscriptionResult {
   cancel: () => Promise<boolean>;
 }
 
-export function useCancelSubscription(): UseCancelSubscriptionResult {
+export function useCancelSubscription(businessId?: string): UseCancelSubscriptionResult {
   const [isPending, setIsPending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const cancel = useCallback(async (): Promise<boolean> => {
+    if (!businessId) {
+      setError("Business ID tidak ditemukan");
+      return false;
+    }
     setIsPending(true);
     setError(null);
     try {
-      const res = await fetch("/api/subscriptions/cancel", {
+      const res = await fetch(`/api/businesses/${businessId}/subscription/cancel`, {
         method: "POST",
-        credentials: "include",
       });
       if (!res.ok) {
         const body = (await res.json()) as ApiErrorResponse;
@@ -32,7 +35,7 @@ export function useCancelSubscription(): UseCancelSubscriptionResult {
     } finally {
       setIsPending(false);
     }
-  }, []);
+  }, [businessId]);
 
   return { isPending, error, cancel };
 }

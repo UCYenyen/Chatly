@@ -38,13 +38,14 @@ import { Button } from "../ui/button";
 import { CreateBusinessModal } from "./CreateBusinessModal";
 import { authClient } from "@/lib/utils/auth/auth-client";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useWalletContext } from "@/components/features/billing/WalletProvider";
+import { formatIDR } from "@/components/features/billing/billing-format";
 
 export default function Sidebar() {
     const pathname = usePathname();
-    const { data: session } = authClient.useSession();
     const router = useRouter();
-    const { data: subscriptionData, isLoading: isSubscriptionLoading } = useSubscription();
+    const { data: session } = authClient.useSession();
+    const { data: walletData, isLoading: isWalletLoading } = useWalletContext();
     const params = useParams();
     const businessId = params?.businessId as string | undefined;
     const { businesses, activeBusiness, setActiveBusinessId, isLoading } =
@@ -62,11 +63,10 @@ export default function Sidebar() {
     };
 
     const user = session?.user;
-    const subscriptionPlanLabel = isSubscriptionLoading
+    const balanceLabel = isWalletLoading
         ? "Memuat..."
-        : subscriptionData?.subscription?.status === "ACTIVE"
-            ? subscriptionData.subscription.plan
-            : "FREE";
+        : formatIDR(walletData?.balance ?? 0);
+
     const initials = user?.name
         ? user.name
             .split(" ")
@@ -81,6 +81,7 @@ export default function Sidebar() {
             { name: "Ringkasan", path: `/business/${businessId}/ringkasan`, icon: LayoutDashboard },
             { name: "Analitik", path: `/business/${businessId}/analytics`, icon: BarChart2 },
             { name: "Pelatihan", path: `/business/${businessId}/training`, icon: BrainCircuit },
+            { name: "Langganan", path: `/business/${businessId}/langganan`, icon: CreditCard },
         ]
         : [
             { name: "Beranda", path: "/dashboard", icon: LayoutDashboard },
@@ -235,7 +236,7 @@ export default function Sidebar() {
                                                 {user?.name || "User"}
                                             </span>
                                             <span className="truncate text-[11px] text-outline mt-0.5">
-                                                Paket {subscriptionPlanLabel}
+                                                Saldo: {balanceLabel}
                                             </span>
                                         </div>
                                         <MoreHorizontal className="ml-auto size-4 text-outline" />
