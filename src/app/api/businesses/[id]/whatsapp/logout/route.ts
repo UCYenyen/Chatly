@@ -82,6 +82,7 @@ export async function POST(_request: Request, context: RouteContext) {
       phoneNumber: null,
       qrCode: null,
       qrCodeExpiry: null,
+      instanceKey: null,
       lastConnected: null,
       disconnectedAt: new Date(),
     },

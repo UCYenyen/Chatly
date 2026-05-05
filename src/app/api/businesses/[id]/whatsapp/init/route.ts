@@ -153,9 +153,22 @@ export async function POST(request: Request, context: RouteContext) {
       });
     }
 
-    const { qrCode, expiry } = await generateGowaQrCode(
-      whatsappAuth.instanceKey!
-    );
+    let qr: { qrCode: string; expiry: number };
+    try {
+      qr = await generateGowaQrCode(whatsappAuth.instanceKey!);
+    } catch (err) {
+      console.warn(
+        "Stored device failed, recreating:",
+        err instanceof Error ? err.message : err
+      );
+      const deviceId = await createGowaDevice();
+      whatsappAuth = await prisma.whatsAppAuth.update({
+        where: { id: whatsappAuth.id },
+        data: { instanceKey: deviceId },
+      });
+      qr = await generateGowaQrCode(whatsappAuth.instanceKey!);
+    }
+    const { qrCode, expiry } = qr;
 
     const expiryDate = new Date();
     expiryDate.setSeconds(expiryDate.getSeconds() + expiry);
