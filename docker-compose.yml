@@ -1,0 +1,32 @@
+services:
+  chatly_web:
+    container_name: chatly_prod_app
+    image: ghcr.io/ucyenyen/chatly:latest
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXT_PUBLIC_APP_URL
+      - BETTER_AUTH_SECRET
+      - BETTER_AUTH_URL
+      - GMAIL_USER
+      - GMAIL_APP_PASSWORD
+      - DATABASE_URL
+      - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+      - CLOUDINARY_API_KEY
+      - CLOUDINARY_API_SECRET
+      - XENDIT_SECRET_KEY
+      - NEXT_PUBLIC_XENDIT_KEY
+      - GEMINI_API_KEY
+      - GOWA_API_BASE
+      - GOWA_BASIC_AUTH_USER
+      - GOWA_BASIC_AUTH_PASS
+      - GOWA_WEBHOOK_SECRET
+    env_file:
+      - .env
+    networks:
+      - global_proxy
+
+networks:
+  global_proxy:
+    external: true
