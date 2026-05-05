@@ -83,7 +83,7 @@ export default function Sidebar() {
             { name: "Pelatihan", path: `/business/${businessId}/training`, icon: BrainCircuit },
         ]
         : [
-            { name: "Dasbor Utama", path: "/dashboard", icon: LayoutDashboard },
+            { name: "Beranda", path: "/dashboard", icon: LayoutDashboard },
             { name: "Billing", path: "/billing", icon: CreditCard },
         ];
 
@@ -106,69 +106,70 @@ export default function Sidebar() {
                 </Link>
 
                 {businessId && (
-                    <div className="px-1">
-                        <Link
-                            href="/dashboard"
-                            className="flex items-center gap-3 px-4 py-3 rounded-sm text-[13px] font-medium text-outline hover:bg-surface-container hover:text-on-surface transition-all duration-200 group border border-dashed border-outline-variant/20 mb-2"
-                        >
-                            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                            <span>Kembali ke Utama</span>
-                        </Link>
-                    </div>
-                )}
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild disabled={businesses.length === 0}>
-                        <div className="p-3 bg-surface-container rounded-sm border border-outline-variant/10 cursor-pointer group transition-all duration-200 hover:bg-card outline-none">
-                            <div className="flex items-center justify-between">
-                                <div className="min-w-0">
-                                    <p className="text-[10px] uppercase tracking-widest text-secondary-fixed mb-1 font-label">
-                                        Pengalih Bisnis
-                                    </p>
-                                    <p className="font-bold text-secondary-fixed truncate text-sm">
-                                        {activeBusiness
-                                            ? activeBusiness.name
-                                            : isLoading
-                                                ? "Memuat..."
-                                                : "Belum ada bisnis"}
-                                    </p>
-                                </div>
-                                <ChevronsUpDown className="w-4 h-4 text-outline group-hover:text-secondary-fixed transition-colors shrink-0 ml-2" />
-                            </div>
+                    <>
+                        <div className="px-1">
+                            <Link
+                                href="/dashboard"
+                                className="flex items-center gap-3 px-4 py-3 rounded-sm text-[13px] font-medium text-outline hover:bg-surface-container hover:text-on-surface transition-all duration-200 group border border-dashed border-outline-variant/20 mb-2"
+                            >
+                                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                                <span>Kembali ke Utama</span>
+                            </Link>
                         </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                        className="w-[--radix-dropdown-menu-trigger-width] rounded-lg bg-surface border-outline-variant/20 shadow-xl z-100"
-                        align="start"
-                        sideOffset={8}
-                    >
-                        <DropdownMenuLabel className="text-outline text-[10px] uppercase tracking-widest px-3 py-2">
-                            Pilih Bisnis
-                        </DropdownMenuLabel>
-                        {businesses.map((business) => {
-                            const isActive = activeBusiness?.id === business.id;
-                            return (
-                                <DropdownMenuItem
-                                    key={business.id}
-                                    onClick={() => {
-                                        setActiveBusinessId(business.id);
-                                        router.push(`/business/${business.id}/dashboard`);
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-sm transition-colors focus:bg-secondary/10 focus:text-secondary",
-                                        isActive
-                                            ? "bg-surface-container-high text-secondary-fixed"
-                                            : "text-on-surface",
-                                    )}
-                                >
-                                    <span className="font-bold text-sm tracking-tight truncate">
-                                        {business.name}
-                                    </span>
-                                </DropdownMenuItem>
-                            );
-                        })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild disabled={businesses.length === 0}>
+                                <div className="p-3 bg-surface-container rounded-sm border border-outline-variant/10 cursor-pointer group transition-all duration-200 hover:bg-card outline-none">
+                                    <div className="flex items-center justify-between">
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] uppercase tracking-widest text-secondary-fixed mb-1 font-label">
+                                                Pengalih Bisnis
+                                            </p>
+                                            <p className="font-bold text-secondary-fixed truncate text-sm">
+                                                {activeBusiness
+                                                    ? activeBusiness.name
+                                                    : isLoading
+                                                        ? "Memuat..."
+                                                        : "Belum ada bisnis"}
+                                            </p>
+                                        </div>
+                                        <ChevronsUpDown className="w-4 h-4 text-outline group-hover:text-secondary-fixed transition-colors shrink-0 ml-2" />
+                                    </div>
+                                </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                className="w-[--radix-dropdown-menu-trigger-width] rounded-lg bg-surface border-outline-variant/20 shadow-xl z-100"
+                                align="start"
+                                sideOffset={8}
+                            >
+                                <DropdownMenuLabel className="text-outline text-[10px] uppercase tracking-widest px-3 py-2">
+                                    Pilih Bisnis
+                                </DropdownMenuLabel>
+                                {businesses.map((business) => {
+                                    const isActive = activeBusiness?.id === business.id;
+                                    return (
+                                        <DropdownMenuItem
+                                            key={business.id}
+                                            onClick={() => {
+                                                setActiveBusinessId(business.id);
+                                                router.push(`/business/${business.id}/dashboard`);
+                                            }}
+                                            className={cn(
+                                                "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-sm transition-colors focus:bg-secondary/10 focus:text-secondary",
+                                                isActive
+                                                    ? "bg-surface-container-high text-secondary-fixed"
+                                                    : "text-on-surface",
+                                            )}
+                                        >
+                                            <span className="font-bold text-sm tracking-tight truncate">
+                                                {business.name}
+                                            </span>
+                                        </DropdownMenuItem>
+                                    );
+                                })}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </>
+                )}
             </SidebarHeader>
 
             <SidebarContent className="px-3 bg-transparent custom-scrollbar flex flex-col gap-4">

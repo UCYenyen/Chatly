@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateBusinessModal } from "@/components/personal/CreateBusinessModal";
+import { DeleteBusinessModal } from "@/components/personal/DeleteBusinessModal";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
-import { useDeleteBusiness } from "@/hooks/use-delete-business";
 import { cn } from "@/lib/utils";
 import type { BusinessDTO } from "@/types/business.md";
 
@@ -23,29 +23,12 @@ export function BusinessSelectorCards() {
         activeBusiness,
         setActiveBusinessId,
         isLoading,
-        refresh,
     } = useBusinessContext();
-    const { deleteBusiness, isPending: isDeleting } = useDeleteBusiness();
-    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
     const handleSelect = (business: BusinessDTO): void => {
         setActiveBusinessId(business.id);
         router.push(`/business/${business.id}/ringkasan`);
         toast.success(`Beralih ke ${business.name}`);
-    };
-
-    const handleDelete = async (
-        e: React.MouseEvent<HTMLButtonElement>,
-        business: BusinessDTO,
-    ): Promise<void> => {
-        e.stopPropagation();
-        setPendingDeleteId(business.id);
-        const ok = await deleteBusiness(business.id);
-        setPendingDeleteId(null);
-        if (ok) {
-            toast.success(`${business.name} dihapus.`);
-            await refresh();
-        }
     };
 
     return (
@@ -54,12 +37,6 @@ export function BusinessSelectorCards() {
                 <h2 className="text-[20px] font-headline font-bold text-on-surface">
                     Organisasi Bisnis Anda
                 </h2>
-                {/* <button
-          type="button"
-          className="text-[12px] font-mono text-outline hover:text-on-surface transition-colors font-bold uppercase tracking-widest flex items-center gap-2"
-        >
-          Kelola Ruang Kerja <Settings2 className="w-4 h-4" />
-        </button> */}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
@@ -93,32 +70,27 @@ export function BusinessSelectorCards() {
                                     <h3 className="font-bold text-[16px] text-on-surface tracking-wide group-hover:text-secondary-fixed transition-colors line-clamp-1">
                                         {biz.name}
                                     </h3>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <div
-                                            className={cn(
-                                                "w-1.5 h-1.5 rounded-full shadow-[0_0_4px_currentColor]",
-                                                isActive ? "bg-secondary-fixed" : "bg-outline",
-                                            )}
-                                        />
-                                        <span className="text-[11px] font-mono text-outline uppercase tracking-wider">
-                                            {isActive ? "Aktif" : "Tidak Aktif"}
-                                        </span>
-                                    </div>
+                                    {biz.description && (
+                                        <p className="text-[12px] text-outline mt-2 line-clamp-2 leading-relaxed">
+                                            {biz.description}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="mt-8 pt-4 border-t border-outline-variant/10 flex items-center justify-between">
-                                <button
-                                    type="button"
-                                    onClick={(e) => handleDelete(e, biz)}
-                                    disabled={isDeleting && pendingDeleteId === biz.id}
-                                    aria-label={`Hapus ${biz.name}`}
-                                    className="text-outline hover:text-destructive transition-colors p-1 rounded disabled:opacity-50"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div onClick={(e) => e.stopPropagation()}>
+                                    <DeleteBusinessModal business={biz}>
+                                        <button
+                                            type="button"
+                                            aria-label={`Hapus ${biz.name}`}
+                                            className="text-outline hover:text-destructive transition-colors p-1 rounded disabled:opacity-50 cursor-pointer"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </DeleteBusinessModal>
+                                </div>
                                 <div className="flex items-center gap-2">
-                                    {isActive && <CheckCircle2 className="w-4 h-4 text-secondary-fixed" />}
                                     <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
                                         <ArrowRight className="w-4 h-4 text-on-surface" />
                                     </div>
