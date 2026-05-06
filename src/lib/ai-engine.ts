@@ -204,7 +204,15 @@ export async function runChatlyAIEngine(
       escalate_to_human: {
         type: SchemaType.BOOLEAN,
         description:
-          "Set true HANYA jika pelanggan secara eksplisit minta dialihkan ke admin/manusia/CS (mis. 'tolong sambungkan ke admin', 'saya mau bicara dengan orang', 'gak puas, mau lapor ke admin'). JANGAN true hanya karena pelanggan menyebut kata 'admin' dalam konteks lain (mis. 'apakah ada admin di sana?'). Pertimbangkan keseluruhan kalimat dan niat sebenarnya.",
+          `Set true HANYA jika pelanggan secara eksplisit minta dialihkan ke admin/manusia/CS karena masalah yang TIDAK BISA kamu selesaikan sendiri. Contoh true: "tolong sambungkan ke admin", "saya mau bicara dengan orang langsung", "saya tidak puas, mau komplain ke admin", "ini urgent, panggil CS-nya".
+
+JANGAN set true untuk:
+- Pelanggan ingin membeli/memesan produk → gunakan generate_transaction, BUKAN escalate. Kamu sepenuhnya mampu memproses pembelian (mis. "saya mau beli produk x", "pesan 10 unit", "checkout dong" → JANGAN escalate, langsung buat transaksi).
+- Pelanggan bertanya harga, stok, info produk, jam buka → kamu jawab sendiri.
+- Pelanggan menyebut kata "admin" dalam konteks lain (mis. "apakah ada admin di sana?", "siapa adminnya?").
+- Keluhan ringan yang masih bisa dijawab dari knowledge base.
+
+Pertimbangkan keseluruhan kalimat dan niat sebenarnya — jangan asal trigger.`,
       },
       end_conversation: {
         type: SchemaType.BOOLEAN,
