@@ -429,8 +429,14 @@ export async function POST(request: Request) {
       console.log("[webhook] AI chat log saved OK");
 
       console.log(`[webhook] Sending GoWA message to ${from} via instanceKey=${whatsappAuth.instanceKey}...`);
-      await sendGowaMessage(from, finalReply, whatsappAuth.instanceKey);
-      console.log("[webhook] GoWA message sent OK");
+      const sendResult = await sendGowaMessage(from, finalReply, whatsappAuth.instanceKey);
+      if (sendResult.ok) {
+        console.log("[webhook] GoWA message sent OK");
+      } else {
+        console.error(
+          `[webhook] GoWA send FAILED status=${sendResult.status}: ${sendResult.body.slice(0, 300)}`,
+        );
+      }
     } else {
       console.log("[webhook] No reply to send (empty response)");
     }
