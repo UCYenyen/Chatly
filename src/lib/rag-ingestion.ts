@@ -53,7 +53,7 @@ export async function processAndSaveKnowledgeBase(
   ]);
   const extractedText = extractionResult.response.text();
 
-  await prisma.$executeRaw`DELETE FROM document_chunk WHERE business_id = ${businessId}`;
+  await prisma.$executeRaw`DELETE FROM document_chunk WHERE "businessId" = ${businessId}`;
 
   const chunks = extractedText
     .split(/\n\s*\n/)
