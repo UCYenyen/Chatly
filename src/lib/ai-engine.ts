@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import prisma from "@/lib/utils/prisma";
 import { composeSystemPrompt } from "@/lib/system-prompts/composer";
+import { retrieveRelevantChunks } from "@/lib/rag-retrieval";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -81,6 +82,16 @@ export async function runChatlyAIEngine(
   });
   console.log(`[ai-engine] Step 2: Key mapping:`, JSON.stringify(keyToIntent));
 
+  // 2a. RAG retrieval — fetch top-K chunks relevant to the incoming message
+  console.log("[ai-engine] Step 2.5: Retrieving relevant document chunks...");
+  let retrievedChunks: string[] = [];
+  try {
+    retrievedChunks = await retrieveRelevantChunks(businessId, incomingMessage, 5);
+    console.log(`[ai-engine] Step 2.5 OK: retrieved ${retrievedChunks.length} chunks`);
+  } catch (err) {
+    console.error("[ai-engine] Step 2.5 FAILED (continuing without RAG):", err);
+  }
+
   // 2. Compose the system prompt from modular sections
   console.log("[ai-engine] Step 3: Composing system prompt...");
   let systemInstruction: string;
@@ -90,6 +101,7 @@ export async function runChatlyAIEngine(
       businessDescription: business?.description ?? null,
       aiTone: business?.aiTone ?? null,
       knowledgeBase: business?.knowledgeBase ?? null,
+      retrievedChunks,
       intentNames,
       intentKeyMap: intentToKey,
     });

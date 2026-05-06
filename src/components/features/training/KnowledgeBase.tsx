@@ -46,27 +46,42 @@ export function KnowledgeBase() {
     const handleSave = async () => {
         if (!activeBusiness) return;
 
-        // The user requested the function accepts files as parameters but does not add functionality yet.
-        const saveWithFiles = async (text: string, newFiles: File[]) => {
-            const existingFileNames = activeBusiness?.knowledgeFiles || [];
-            const newFileNames = newFiles.map(f => f.name);
-            // Combine existing and new (avoiding duplicates for simplicity)
-            const allFiles = [...new Set([...existingFileNames, ...newFileNames])];
-            
-            return await updateBusiness({ 
-                knowledgeBase: text,
-                knowledgeFiles: allFiles 
-            });
-        };
-
-        const updated = await saveWithFiles(knowledge, files);
-        if (updated) {
-            toast.success("Basis pengetahuan berhasil diperbarui");
-            setFiles([]); // Clear local files after "sending" them
-            await refresh();
-        } else {
+        const updated = await updateBusiness({ knowledgeBase: knowledge });
+        if (!updated) {
             toast.error("Gagal memperbarui basis pengetahuan");
+            return;
         }
+
+        if (files.length > 0) {
+            const form = new FormData();
+            for (const f of files) form.append("files", f);
+
+            const ingestToast = toast.loading(
+                `Memproses ${files.length} dokumen (ekstraksi & embedding)...`,
+            );
+            try {
+                const res = await fetch(
+                    `/api/businesses/${activeBusiness.id}/knowledge-files`,
+                    { method: "POST", body: form },
+                );
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ message: "Upload gagal" }));
+                    throw new Error(err.message || "Upload gagal");
+                }
+                toast.success("Dokumen berhasil diproses ke basis pengetahuan", {
+                    id: ingestToast,
+                });
+                setFiles([]);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : "Upload gagal";
+                toast.error(msg, { id: ingestToast });
+                return;
+            }
+        } else {
+            toast.success("Basis pengetahuan berhasil diperbarui");
+        }
+
+        await refresh();
     };
 
     const removeExistingFile = async (fileName: string) => {

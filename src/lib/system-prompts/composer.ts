@@ -14,6 +14,8 @@ export interface ComposerInput {
   businessDescription: string | null;
   aiTone: string | null;
   knowledgeBase: string | null;
+  /** Top-K chunks retrieved from vector store relevant to the current message. */
+  retrievedChunks?: string[];
   intentNames: string[];
   /** Mapping from real intent name → sanitized key (e.g. "intent_0") */
   intentKeyMap: Record<string, string>;
@@ -34,7 +36,7 @@ Deskripsi: ${input.businessDescription || "(Tidak ada deskripsi)"}`);
   sections.push(getPersonalityPrompt(input.aiTone));
 
   // 4. Training / Knowledge Base
-  sections.push(buildTrainingPrompt(input.knowledgeBase));
+  sections.push(buildTrainingPrompt(input.knowledgeBase, input.retrievedChunks));
 
   // 5. Intent analytics
   sections.push(buildIntentPrompt(input.intentNames, input.intentKeyMap));
