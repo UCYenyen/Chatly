@@ -2,7 +2,7 @@ name: Deploy Chatly Server
 
 on:
   push:
-    branches: [main]
+    branches: [system-prompts]
   workflow_dispatch:
 
 env:
