@@ -22,6 +22,18 @@ export interface ChatlyAIResult {
     description: string;
     amount: number;
   } | null;
+  /** True ONLY when the customer explicitly asks to be handed over to a human/admin. */
+  escalate_to_human: boolean;
+  /** True ONLY when the customer explicitly says they want to end the conversation. */
+  end_conversation: boolean;
+  /**
+   * Whether the AI's `response` should actually be sent to the customer.
+   * In HUMAN mode the AI usually stays silent (false) until the customer
+   * shows clear intent to talk to the bot again.
+   */
+  should_respond: boolean;
+  /** Conversation mode after this turn. */
+  next_mode: "AI" | "HUMAN";
 }
 
 interface HistoryRow {
@@ -36,7 +48,8 @@ interface HistoryRow {
 export async function runChatlyAIEngine(
   incomingMessage: string,
   incomingPhone: string,
-  businessId: string
+  businessId: string,
+  currentMode: "AI" | "HUMAN" = "AI",
 ): Promise<ChatlyAIResult> {
   console.log(`[ai-engine] ====== START ======`);
   console.log(`[ai-engine] message="${incomingMessage}" phone=${incomingPhone} businessId=${businessId}`);
@@ -67,6 +80,10 @@ export async function runChatlyAIEngine(
       response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
       intent_analytics: {},
       generate_transaction: null,
+      escalate_to_human: false,
+      end_conversation: false,
+      should_respond: true,
+      next_mode: "AI",
     };
   }
 
@@ -112,6 +129,10 @@ export async function runChatlyAIEngine(
       response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
       intent_analytics: {},
       generate_transaction: null,
+      escalate_to_human: false,
+      end_conversation: false,
+      should_respond: true,
+      next_mode: "AI",
     };
   }
 
@@ -180,8 +201,45 @@ export async function runChatlyAIEngine(
         },
         required: ["name", "description", "amount"],
       },
+      escalate_to_human: {
+        type: SchemaType.BOOLEAN,
+        description:
+          "Set true HANYA jika pelanggan secara eksplisit minta dialihkan ke admin/manusia/CS (mis. 'tolong sambungkan ke admin', 'saya mau bicara dengan orang', 'gak puas, mau lapor ke admin'). JANGAN true hanya karena pelanggan menyebut kata 'admin' dalam konteks lain (mis. 'apakah ada admin di sana?'). Pertimbangkan keseluruhan kalimat dan niat sebenarnya.",
+      },
+      end_conversation: {
+        type: SchemaType.BOOLEAN,
+        description:
+          "Set true HANYA jika pelanggan secara eksplisit menyatakan ingin mengakhiri percakapan (mis. 'sudah cukup, terima kasih', 'sampai sini saja', 'selesai'). JANGAN true untuk salam pamit biasa di tengah percakapan ('ok thanks') jika konteks belum tuntas.",
+      },
+      should_respond: {
+        type: SchemaType.BOOLEAN,
+        description:
+          `Apakah balasanmu (\`response\`) harus dikirim ke pelanggan?
+- Mode saat ini: ${currentMode}.
+- Jika mode = AI: HAMPIR SELALU true (kamu yang menjawab pelanggan).
+- Jika mode = HUMAN: pelanggan sedang ditangani admin manusia. Set false (diam) jika pesan pelanggan masih ditujukan ke admin atau merupakan kelanjutan obrolan dengan admin (mis. balasan, klarifikasi, terima kasih ke admin). Set true HANYA jika pelanggan jelas-jelas mulai topik/pertanyaan baru yang ingin dijawab bot (mis. tanya produk lain, tanya harga, tanya jam buka) — bukan masih nyambung dengan admin.`,
+      },
+      next_mode: {
+        type: SchemaType.STRING,
+        format: "enum",
+        enum: ["AI", "HUMAN"],
+        description:
+          `Mode percakapan SETELAH giliran ini.
+- Jika kamu set escalate_to_human=true, set next_mode="HUMAN".
+- Jika mode saat ini HUMAN dan pelanggan sudah jelas balik bertanya ke bot (kamu set should_respond=true), set next_mode="AI".
+- Jika mode saat ini HUMAN dan pelanggan masih dengan admin, tetap "HUMAN".
+- Jika end_conversation=true, set "AI" (percakapan berikutnya dimulai segar dengan bot).
+- Selain itu pertahankan mode saat ini: ${currentMode}.`,
+      },
     },
-    required: ["response", "intent_analytics"],
+    required: [
+      "response",
+      "intent_analytics",
+      "escalate_to_human",
+      "end_conversation",
+      "should_respond",
+      "next_mode",
+    ],
   };
 
   console.log("[ai-engine] Step 5 OK: Schema built. intent_analytics keys:", Object.keys(intentProperties));
@@ -205,6 +263,10 @@ export async function runChatlyAIEngine(
       response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
       intent_analytics: {},
       generate_transaction: null,
+      escalate_to_human: false,
+      end_conversation: false,
+      should_respond: true,
+      next_mode: "AI",
     };
   }
 
@@ -241,6 +303,10 @@ export async function runChatlyAIEngine(
       response: parsed.response || "",
       intent_analytics: intentAnalytics,
       generate_transaction: parsed.generate_transaction ?? null,
+      escalate_to_human: parsed.escalate_to_human === true,
+      end_conversation: parsed.end_conversation === true,
+      should_respond: parsed.should_respond !== false,
+      next_mode: parsed.next_mode === "HUMAN" ? "HUMAN" : "AI",
     };
     console.log("[ai-engine] ====== DONE (success) ======");
     return finalResult;
@@ -253,6 +319,10 @@ export async function runChatlyAIEngine(
       response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
       intent_analytics: {},
       generate_transaction: null,
+      escalate_to_human: false,
+      end_conversation: false,
+      should_respond: true,
+      next_mode: "AI",
     };
   }
 }

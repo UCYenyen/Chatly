@@ -327,10 +327,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // ── Load conversation mode (AI / HUMAN) for this customer ──────────────
+  const convState = await prisma.conversationState.findUnique({
+    where: {
+      businessId_phone: { businessId: whatsappAuth.businessId, phone: from },
+    },
+    select: { mode: true },
+  });
+  const currentMode: "AI" | "HUMAN" = convState?.mode === "HUMAN" ? "HUMAN" : "AI";
+  console.log(`[webhook] Conversation mode for ${from}: ${currentMode}`);
+
   try {
     // ── Run AI Engine ──────────────────────────────────────────────────────────
     console.log(`[webhook] >>> Calling runChatlyAIEngine for from=${from} businessId=${whatsappAuth.businessId}`);
-    const ai = await runChatlyAIEngine(text, from, whatsappAuth.businessId);
+    const ai = await runChatlyAIEngine(text, from, whatsappAuth.businessId, currentMode);
     console.log(`[webhook] <<< AI engine returned. response length=${ai.response?.length}, intents=${JSON.stringify(ai.intent_analytics)}, transaction=${JSON.stringify(ai.generate_transaction)}`);
 
     let finalReply = ai.response;
@@ -383,8 +393,30 @@ export async function POST(request: Request) {
       console.log("[webhook] No transaction requested");
     }
 
-    // ── Save AI chat logs & send reply ───────────────────────────────────────
-    if (finalReply) {
+    // ── Persist next conversation mode ─────────────────────────────────────
+    if (ai.next_mode !== currentMode) {
+      try {
+        await prisma.conversationState.upsert({
+          where: {
+            businessId_phone: { businessId: whatsappAuth.businessId, phone: from },
+          },
+          update: { mode: ai.next_mode },
+          create: {
+            businessId: whatsappAuth.businessId,
+            phone: from,
+            mode: ai.next_mode,
+          },
+        });
+        console.log(`[webhook] Conversation mode: ${currentMode} → ${ai.next_mode}`);
+      } catch (err) {
+        console.error("[webhook] Failed to upsert conversation mode:", err);
+      }
+    }
+
+    // ── Save AI chat logs & send reply (only if AI judged it should) ──────
+    if (!ai.should_respond) {
+      console.log(`[webhook] AI chose silence (mode=${currentMode}, next=${ai.next_mode}). No reply sent.`);
+    } else if (finalReply) {
       console.log(`[webhook] Saving AI chat log (${finalReply.length} chars)...`);
       await prisma.chatLog.create({
         data: {
