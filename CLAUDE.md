@@ -20,6 +20,10 @@ Package manager is **pnpm** (`pnpm-workspace.yaml` present). Use `pnpm`, not npm
 - `pnpm lint` — `eslint` (flat config in `eslint.config.mjs`, extends `eslint-config-next`)
 - `pnpm start` — production server
 
+Docker (production only — not for local dev):
+- `Dockerfile` builds the production image published as `ghcr.io/ucyenyen/chatly:latest`.
+- `docker-compose.yml` runs that prebuilt image (`chatly_prod_app`) on the external `global_proxy` network with env from `.env`. Use `pnpm dev` for local development.
+
 Prisma:
 - Schema: `prisma/schema.prisma`; runtime config: `prisma.config.ts` (loads `DATABASE_URL` via `dotenv/config`).
 - Generate client: `pnpm prisma generate`. New migration: `pnpm prisma migrate dev --name <name>`.
@@ -48,7 +52,7 @@ No test runner is configured.
 ### Code organization conventions
 - `src/components/`: `ui/` (shadcn primitives — see `components.json`), `features/` (feature-scoped: `analytics`, `billing`, `dashboard`, `landing`, `training`, `auth`, `api-docs`, `api-management`), `personal/`, `providers/`. Prefer feature-scoped components in `features/<feature>/` over inlining in pages.
 - `src/hooks/` — shared hooks. New hooks belong here, not in pages/components.
-- `src/types/` — shared TS types. Existing files use a `.md.ts` suffix (e.g., `user.md.ts`, `page-prop.md.ts`); follow this when adding new ones. Same convention in `src/validations/` (`authValidation.md.ts`).
+- `src/types/` and `src/validations/` use a non-standard `.md.ts` suffix (e.g., `user.md.ts`, `page-prop.md.ts`, `authValidation.md.ts`). This is intentional — do **not** "fix" it to plain `.ts`. Follow the same suffix when adding new files in these directories.
 - `src/lib/utils/` — server/shared utilities (auth, prisma, payment-gateway). UI helper `cn` lives in `src/lib/utils.ts`.
 
 ### TypeScript
