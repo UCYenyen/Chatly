@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import prisma from "@/lib/utils/prisma";
+import { composeSystemPrompt } from "@/lib/system-prompts/composer";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -9,20 +10,17 @@ if (!GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY ?? "");
 
+/**
+ * The structured result returned by the AI engine.
+ */
 export interface ChatlyAIResult {
-  reply: string;
-  intentCategory: string;
-  mentionedProduct: string | null;
-}
-
-interface BusinessRow {
-  name: string;
-  description: string | null;
-  aiTone: string | null;
-}
-
-interface ChunkRow {
-  content: string;
+  response: string;
+  intent_analytics: Record<string, boolean>;
+  generate_transaction: {
+    name: string;
+    description: string;
+    amount: number;
+  } | null;
 }
 
 interface HistoryRow {
@@ -30,134 +28,243 @@ interface HistoryRow {
   content: string;
 }
 
+/**
+ * Main AI engine function.
+ * Composes the system prompt, calls Gemini, and returns structured output.
+ */
 export async function runChatlyAIEngine(
   incomingMessage: string,
   incomingPhone: string,
   businessId: string
 ): Promise<ChatlyAIResult> {
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
-    select: { name: true, description: true, aiTone: true },
+  console.log(`[ai-engine] ====== START ======`);
+  console.log(`[ai-engine] message="${incomingMessage}" phone=${incomingPhone} businessId=${businessId}`);
+
+  // 1. Fetch business data + intents in parallel
+  console.log("[ai-engine] Step 1: Fetching business + intents from DB...");
+  let business, intents;
+  try {
+    [business, intents] = await Promise.all([
+      prisma.business.findUnique({
+        where: { id: businessId },
+        select: {
+          name: true,
+          description: true,
+          aiTone: true,
+          knowledgeBase: true,
+        },
+      }),
+      prisma.businessIntent.findMany({
+        where: { businessId },
+        select: { name: true },
+      }),
+    ]);
+    console.log(`[ai-engine] Step 1 OK: business="${business?.name}", intents=${JSON.stringify(intents.map(i => i.name))}`);
+  } catch (err) {
+    console.error("[ai-engine] Step 1 FAILED: DB query error:", err);
+    return {
+      response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
+      intent_analytics: {},
+      generate_transaction: null,
+    };
+  }
+
+  const intentNames = intents.map((i) => i.name);
+
+  // Build a mapping: sanitized key <-> real intent name
+  const keyToIntent: Record<string, string> = {};
+  const intentToKey: Record<string, string> = {};
+  intentNames.forEach((name, i) => {
+    const key = `intent_${i}`;
+    keyToIntent[key] = name;
+    intentToKey[name] = key;
   });
+  console.log(`[ai-engine] Step 2: Key mapping:`, JSON.stringify(keyToIntent));
 
-  const embeddingModel = genAI.getGenerativeModel({
-    model: "gemini-embedding-001",
-  });
-  const embedRes = await embeddingModel.embedContent(incomingMessage);
-  const queryVector = `[${embedRes.embedding.values.join(",")}]`;
+  // 2. Compose the system prompt from modular sections
+  console.log("[ai-engine] Step 3: Composing system prompt...");
+  let systemInstruction: string;
+  try {
+    systemInstruction = composeSystemPrompt({
+      businessName: business?.name ?? "(unknown)",
+      businessDescription: business?.description ?? null,
+      aiTone: business?.aiTone ?? null,
+      knowledgeBase: business?.knowledgeBase ?? null,
+      intentNames,
+      intentKeyMap: intentToKey,
+    });
+    console.log(`[ai-engine] Step 3 OK: system prompt length = ${systemInstruction.length} chars`);
+  } catch (err) {
+    console.error("[ai-engine] Step 3 FAILED: Compose error:", err);
+    return {
+      response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
+      intent_analytics: {},
+      generate_transaction: null,
+    };
+  }
 
-  const chunks = await prisma.$queryRaw<ChunkRow[]>`
-    SELECT content
-    FROM document_chunk
-    WHERE "businessId" = ${businessId}
-    ORDER BY embedding <=> ${queryVector}::vector
-    LIMIT 3
-  `;
+  // 3. Fetch conversation history (memory)
+  console.log("[ai-engine] Step 4: Fetching chat history...");
+  let history: HistoryRow[];
+  try {
+    const recentLogs = await prisma.chatLog.findMany({
+      where: { businessId, phone: incomingPhone },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { role: true, content: true },
+    });
+    history = recentLogs.reverse();
+    console.log(`[ai-engine] Step 4 OK: ${history.length} history messages`);
+  } catch (err) {
+    console.error("[ai-engine] Step 4 FAILED: Chat history error:", err);
+    history = [];
+  }
 
-  const recentLogs = await prisma.chatLog.findMany({
-    where: { businessId, phone: incomingPhone },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-    select: { role: true, content: true },
-  });
-  const history: HistoryRow[] = recentLogs.reverse();
+  // 4. Build the dynamic intent_analytics schema properties using safe keys
+  console.log("[ai-engine] Step 5: Building schema...");
+  const intentProperties: Record<string, { type: typeof SchemaType.BOOLEAN; description: string }> = {};
+  for (const [key, intentName] of Object.entries(keyToIntent)) {
+    intentProperties[key] = {
+      type: SchemaType.BOOLEAN,
+      description: `Apakah pesan terakhir pelanggan mengindikasikan: "${intentName}"`,
+    };
+  }
 
-  // Unified System Instruction for persona and constraints
-  const systemInstruction = buildSystemInstruction(business);
-
-  const chatModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    systemInstruction,
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
+  const responseSchema = {
+    type: SchemaType.OBJECT,
+    properties: {
+      response: {
+        type: SchemaType.STRING,
+        description: "Pesan balasan untuk dikirim ke pelanggan via WhatsApp.",
+      },
+      intent_analytics: {
         type: SchemaType.OBJECT,
-        properties: {
-          reply: {
-            type: SchemaType.STRING,
-            description: "The helpful response to send to the customer on WhatsApp.",
-          },
-          intentCategory: {
-            type: SchemaType.STRING,
-            description: "A short snake_case label representing the user's intent.",
-          },
-          mentionedProduct: {
-            type: SchemaType.STRING,
-            nullable: true,
-            description: "Specific product name explicitly mentioned by the customer.",
+        description: "Evaluasi niat pelanggan berdasarkan pesan terakhir.",
+        properties: intentNames.length > 0 ? intentProperties : {
+          _empty: {
+            type: SchemaType.BOOLEAN,
+            description: "Placeholder — tidak ada niat yang dilacak.",
           },
         },
-        required: ["reply", "intentCategory"],
+        required: intentNames.length > 0 ? Object.keys(keyToIntent) : [],
+      },
+      generate_transaction: {
+        type: SchemaType.OBJECT,
+        nullable: true,
+        description: "Isi jika pelanggan ingin membeli/membayar sesuatu. null jika tidak.",
+        properties: {
+          name: {
+            type: SchemaType.STRING,
+            description: "Nama item atau layanan yang dibeli.",
+          },
+          description: {
+            type: SchemaType.STRING,
+            description: "Deskripsi singkat transaksi.",
+          },
+          amount: {
+            type: SchemaType.NUMBER,
+            description: "Harga dalam Rupiah (angka bulat).",
+          },
+        },
+        required: ["name", "description", "amount"],
       },
     },
-  });
+    required: ["response", "intent_analytics"],
+  };
 
-  const userPrompt = buildUserPrompt(chunks, history, incomingMessage);
+  console.log("[ai-engine] Step 5 OK: Schema built. intent_analytics keys:", Object.keys(intentProperties));
 
-  console.log(`[ai-engine] Querying Gemini for business: ${business?.name || "unknown"}`);
-  
+  // 5. Configure Gemini model
+  console.log("[ai-engine] Step 6: Creating Gemini model instance...");
+  let chatModel;
+  try {
+    chatModel = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash-lite",
+      systemInstruction,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: responseSchema as any,
+      },
+    });
+    console.log("[ai-engine] Step 6 OK: Model created");
+  } catch (err) {
+    console.error("[ai-engine] Step 6 FAILED: getGenerativeModel error:", err);
+    return {
+      response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
+      intent_analytics: {},
+      generate_transaction: null,
+    };
+  }
+
+  // 6. Build user prompt with conversation history
+  const userPrompt = buildUserPrompt(history, incomingMessage);
+  console.log("[ai-engine] Step 7: User prompt built, length =", userPrompt.length);
+
+  // 7. Call Gemini
+  console.log("[ai-engine] Step 8: Calling Gemini generateContent...");
   try {
     const result = await chatModel.generateContent(userPrompt);
-    const raw = result.response.text();
-    const parsed = JSON.parse(raw);
+    console.log("[ai-engine] Step 8 OK: Got response from Gemini");
 
-    return {
-      reply: parsed.reply || "",
-      intentCategory: parsed.intentCategory || "unknown",
-      mentionedProduct: parsed.mentionedProduct || null,
+    const raw = result.response.text();
+    console.log("[ai-engine] Step 9: Raw response text:", raw);
+
+    const parsed = JSON.parse(raw);
+    console.log("[ai-engine] Step 10: Parsed JSON OK:", JSON.stringify(parsed, null, 2));
+
+    // Map sanitized keys back to real intent names
+    const intentAnalytics: Record<string, boolean> = {};
+    if (parsed.intent_analytics && typeof parsed.intent_analytics === "object") {
+      for (const [key, value] of Object.entries(parsed.intent_analytics)) {
+        if (key === "_empty") continue;
+        const realName = keyToIntent[key];
+        if (realName && typeof value === "boolean") {
+          intentAnalytics[realName] = value;
+        }
+      }
+    }
+    console.log("[ai-engine] Step 11: Mapped intent analytics:", JSON.stringify(intentAnalytics));
+
+    const finalResult: ChatlyAIResult = {
+      response: parsed.response || "",
+      intent_analytics: intentAnalytics,
+      generate_transaction: parsed.generate_transaction ?? null,
     };
+    console.log("[ai-engine] ====== DONE (success) ======");
+    return finalResult;
   } catch (error) {
-    console.error("[ai-engine] Gemini API Error:", error);
+    console.error("[ai-engine] Step 8-10 FAILED: Gemini API Error:", error);
+    console.error("[ai-engine] Error name:", (error as any)?.name);
+    console.error("[ai-engine] Error message:", (error as any)?.message);
+    console.error("[ai-engine] Error stack:", (error as any)?.stack);
     return {
-      reply: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
-      intentCategory: "error",
-      mentionedProduct: null,
+      response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
+      intent_analytics: {},
+      generate_transaction: null,
     };
   }
 }
 
-function buildSystemInstruction(business: BusinessRow | null): string {
-  const businessName = business?.name ?? "(unknown)";
-  const businessDesc = business?.description ?? "";
-  const tone = business?.aiTone ?? "ramah, profesional, dan membantu";
-
-  return `You are the customer-service AI assistant for the business: "${businessName}".
-Business Description: ${businessDesc}
-Preferred Tone: ${tone}
-
-RULES:
-1. Reply on WhatsApp in the same language the customer uses (usually Indonesian).
-2. Ground your "reply" in the provided Knowledge Base. 
-3. If the answer isn't in the Knowledge Base, honestly say you don't know and offer to connect them with a human agent.
-4. Keep replies concise and suitable for WhatsApp (no markdown headings, use emoji sparingly).
-5. Always return a valid JSON object.`;
+function stripUrls(text: string): string {
+  return text.replace(/https?:\/\/\S+/g, "[link pembayaran]").trim();
 }
 
 function buildUserPrompt(
-  chunks: ChunkRow[],
   history: HistoryRow[],
   incomingMessage: string
 ): string {
-  const knowledgeBlock =
-    chunks.length > 0
-      ? chunks.map((c, i) => `[Fact ${i + 1}] ${c.content}`).join("\n")
-      : "(No matching facts found in Knowledge Base)";
-
   const historyBlock =
     history.length > 0
       ? history
-          .map((h) => `${h.role === "USER" ? "Customer" : "Assistant"}: ${h.content}`)
+          .map((h) => `${h.role === "USER" ? "Pelanggan" : "Asisten"}: ${stripUrls(h.content)}`)
           .join("\n")
-      : "(No prior history)";
+      : "(Belum ada riwayat percakapan)";
 
-  return `KNOWLEDGE BASE (Context):
-${knowledgeBlock}
-
-CONVERSATION HISTORY:
+  return `RIWAYAT PERCAKAPAN:
 ${historyBlock}
 
-CUSTOMER'S LATEST MESSAGE:
+PESAN TERAKHIR PELANGGAN:
 ${incomingMessage}
 
-Provide your JSON response now.`;
+Berikan respons JSON sekarang.`;
 }

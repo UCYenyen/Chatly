@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
 
-const GOWA_API_BASE = process.env.GOWA_API_BASE || "http://localhost:3001";
+const rawGowaBase = process.env.GOWA_API_BASE || "http://localhost:3001";
+const GOWA_API_BASE = rawGowaBase.replace(/\/+$/, "");
 const GOWA_BASIC_AUTH_USER = process.env.GOWA_BASIC_AUTH_USER;
 const GOWA_BASIC_AUTH_PASS = process.env.GOWA_BASIC_AUTH_PASS;
 

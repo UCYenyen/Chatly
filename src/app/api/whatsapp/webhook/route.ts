@@ -3,9 +3,9 @@ import { createHmac, timingSafeEqual } from "crypto";
 import prisma from "@/lib/utils/prisma";
 import { sendGowaMessage } from "@/lib/utils/whatsapp";
 import { runChatlyAIEngine } from "@/lib/ai-engine";
+import { createCustomerTransactionInvoice } from "@/lib/utils/payment-gateway/billing-service";
 
 const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
-const ANALYTICS_COOLDOWN_MS = 5 * 60 * 1000;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!WEBHOOK_SECRET) {
@@ -52,6 +52,7 @@ interface GowaWebhookPayload {
   payload: Record<string, unknown> & {
     from?: string;
     from_me?: boolean;
+    is_from_me?: boolean;
     message?: {
       text?: string;
       conversation?: string;
@@ -124,10 +125,10 @@ export async function POST(request: Request) {
 
   // Log all headers for debugging
   const headersObj = Object.fromEntries(request.headers.entries());
-  console.log(
-    "[webhook] Incoming Request Headers:",
-    JSON.stringify(headersObj, null, 2),
-  );
+  // console.log(
+  //   "[webhook] Incoming Request Headers:",
+  //   JSON.stringify(headersObj, null, 2),
+  // );
 
   const signature =
     request.headers.get("x-hub-signature-256") ??
@@ -146,6 +147,9 @@ export async function POST(request: Request) {
   }
 
   const { event, device_id, payload } = body;
+
+  // DO NOT DELETE
+  console.log(body);
 
   if (!device_id) {
     return NextResponse.json({ ok: true });
@@ -187,7 +191,7 @@ export async function POST(request: Request) {
       whatsappAuth = missingPhoneAuths[0];
       await prisma.whatsAppAuth.update({
         where: { id: whatsappAuth.id },
-        data: { phoneNumber: (payload as any).chat_id },
+        data: { phoneNumber: (payload as any).device_id },
       });
       whatsappAuth.phoneNumber = device_id;
       console.log(`[webhook] Auto-linked unknown device_id ${device_id} to missing phone auth ${whatsappAuth.id}`);
@@ -238,19 +242,30 @@ export async function POST(request: Request) {
   }
 
   // ── Handle incoming message event ──────────────────────────────────────────
+  // GoWA sends many event types: message, message.ack, message.reaction,
+  // message.revoked, message.edited, message.deleted, etc.
+  // We only care about exactly "message" — everything else is ignored.
   if (eventLower !== "message") {
-    // Unknown / unhandled event — acknowledge and ignore.
     return NextResponse.json({ ok: true });
   }
 
-  if (payload.from_me) {
+  // Guard 1: GoWA sets is_from_me / from_me on outgoing messages.
+  if (payload.from_me || payload.is_from_me || (payload as any).fromMe) {
+    console.log(`[webhook] Ignoring from_me message`);
+    return NextResponse.json({ ok: true });
+  }
+
+  // Guard 2: If the sender JID matches the device (bot) JID, it's our own message.
+  const senderJid = (payload.from ?? "") as string;
+  if (senderJid && senderJid === device_id) {
+    console.log(`[webhook] Ignoring self-message (sender === device_id)`);
     return NextResponse.json({ ok: true });
   }
 
   // Filter out group messages (chat_id contains @g.us)
   const chatId = typeof payload.chat_id === "string" ? payload.chat_id : "";
   if (chatId.includes("@g.us")) {
-    console.log(`[webhook] Ignoring group message from chat_id=${chatId}`);
+    // console.log(`[webhook] Ignoring group message from chat_id=${chatId}`);
     return NextResponse.json({ ok: true });
   }
 
@@ -263,20 +278,46 @@ export async function POST(request: Request) {
   );
 
   if (!from || !text) {
+    console.log(`[webhook] Early return: empty from or text. from=${from}, text=${text}`);
     return NextResponse.json({ ok: true });
   }
 
   const messageId =
     typeof payload.id === "string" && payload.id.length > 0 ? payload.id : null;
 
+  // Deduplication: GoWA may retry delivery, and race conditions can cause
+  // the same message to arrive multiple times.
   if (messageId) {
-    const existing = await prisma.chatLog.findUnique({
+    const existing = await prisma.chatLog.findFirst({
       where: { messageId },
       select: { id: true },
     });
     if (existing) {
+      console.log(`[webhook] Duplicate message ID detected: ${messageId}`);
       return NextResponse.json({ ok: true, deduped: true });
     }
+  }
+
+  // To prevent race conditions with GoWA retries, save the USER message FIRST.
+  console.log("[webhook] Saving USER chat log...");
+  try {
+    await prisma.chatLog.create({
+      data: {
+        businessId: whatsappAuth.businessId,
+        phone: from,
+        role: "USER",
+        content: text,
+        messageId: messageId, // If a retry comes right after this, it will be caught by the findUnique above
+      },
+    });
+    console.log("[webhook] USER chat log saved OK");
+  } catch (err: any) {
+    // If it's a unique constraint violation (P2002), it's a duplicate from a race condition
+    if (err.code === "P2002") {
+      console.log(`[webhook] Race condition duplicate message ID detected: ${messageId}`);
+      return NextResponse.json({ ok: true, deduped: true });
+    }
+    console.error("[webhook] Failed to save USER chat log:", err);
   }
 
   if (!whatsappAuth.instanceKey) {
@@ -286,58 +327,86 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-
   try {
+    // ── Run AI Engine ──────────────────────────────────────────────────────────
+    console.log(`[webhook] >>> Calling runChatlyAIEngine for from=${from} businessId=${whatsappAuth.businessId}`);
     const ai = await runChatlyAIEngine(text, from, whatsappAuth.businessId);
+    console.log(`[webhook] <<< AI engine returned. response length=${ai.response?.length}, intents=${JSON.stringify(ai.intent_analytics)}, transaction=${JSON.stringify(ai.generate_transaction)}`);
 
-    const cooldownSince = new Date(Date.now() - ANALYTICS_COOLDOWN_MS);
-    const recentEvent = await prisma.analyticsEvent.findFirst({
-      where: {
-        businessId: whatsappAuth.businessId,
-        phone: from,
-        intentCategory: ai.intentCategory,
-        mentionedProduct: ai.mentionedProduct,
-        createdAt: { gte: cooldownSince },
-      },
-      select: { id: true },
-    });
+    let finalReply = ai.response;
 
-    if (!recentEvent) {
-      await prisma.analyticsEvent.create({
-        data: {
-          businessId: whatsappAuth.businessId,
-          phone: from,
-          intentCategory: ai.intentCategory,
-          mentionedProduct: ai.mentionedProduct,
-        },
-      });
+    console.log(finalReply);
+
+    // ── Process Intent Analytics ───────────────────────────────────────────────
+    // For each intent that is true, create an AnalyticsEvent row
+    const trueIntents = Object.entries(ai.intent_analytics)
+      .filter(([, value]) => value === true)
+      .map(([key]) => key);
+
+    console.log(`[webhook] True intents: [${trueIntents.join(", ")}] (${trueIntents.length} total)`);
+
+    if (trueIntents.length > 0) {
+      try {
+        await prisma.analyticsEvent.createMany({
+          data: trueIntents.map((intentName) => ({
+            businessId: whatsappAuth.businessId,
+            phone: from,
+            intentCategory: intentName,
+            messageContent: text,
+          })),
+        });
+        console.log(`[webhook] Recorded ${trueIntents.length} intent analytics OK`);
+      } catch (analyticsErr) {
+        console.error("[webhook] Failed to save analytics events:", analyticsErr);
+      }
     }
 
-    await prisma.chatLog.create({
-      data: {
-        businessId: whatsappAuth.businessId,
-        phone: from,
-        role: "USER",
-        content: text,
-        messageId: messageId,
-      },
-    });
+    // ── Process Transaction Generation ─────────────────────────────────────────
+    if (ai.generate_transaction) {
+      console.log(`[webhook] Transaction requested: ${JSON.stringify(ai.generate_transaction)}`);
+      try {
+        const { invoiceUrl } = await createCustomerTransactionInvoice(
+          whatsappAuth.businessId,
+          from,
+          ai.generate_transaction.name,
+          ai.generate_transaction.amount,
+          ai.generate_transaction.description,
+        );
 
-    if (ai.reply) {
+        // Append only the payment link — the AI response already includes the instruction text
+        finalReply += `\n\n${invoiceUrl}`;
+        console.log(`[webhook] Generated transaction link for ${from}: ${invoiceUrl}`);
+      } catch (err) {
+        console.error("[webhook] Failed to create customer transaction:", err);
+      }
+    } else {
+      console.log("[webhook] No transaction requested");
+    }
+
+    // ── Save AI chat logs & send reply ───────────────────────────────────────
+    if (finalReply) {
+      console.log(`[webhook] Saving AI chat log (${finalReply.length} chars)...`);
       await prisma.chatLog.create({
         data: {
           businessId: whatsappAuth.businessId,
           phone: from,
           role: "AI",
-          content: ai.reply,
+          content: finalReply,
         },
       });
+      console.log("[webhook] AI chat log saved OK");
 
-      await sendGowaMessage(from, ai.reply, whatsappAuth.instanceKey);
-      console.log("kkkkkkkkkk");
+      console.log(`[webhook] Sending GoWA message to ${from} via instanceKey=${whatsappAuth.instanceKey}...`);
+      await sendGowaMessage(from, finalReply, whatsappAuth.instanceKey);
+      console.log("[webhook] GoWA message sent OK");
+    } else {
+      console.log("[webhook] No reply to send (empty response)");
     }
   } catch (err) {
     console.error("[webhook] AI pipeline error:", err);
+    console.error("[webhook] Error name:", (err as any)?.name);
+    console.error("[webhook] Error message:", (err as any)?.message);
+    console.error("[webhook] Error stack:", (err as any)?.stack);
   }
 
   return NextResponse.json({ ok: true });

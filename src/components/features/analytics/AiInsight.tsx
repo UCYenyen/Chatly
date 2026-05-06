@@ -8,7 +8,7 @@ export function AiInsight() {
         <div className="flex flex-col gap-2">
           <h2 className="text-[15px] font-headline font-bold text-on-surface">Wawasan AI</h2>
           <p className="text-[13px] text-outline leading-relaxed max-w-[240px]">
-            Korelasi tinggi terdeteksi antara pertanyaan &quot;Produk X&quot; dan tr...
+            Korelasi tinggi ditemukan antara pertanyaan &quot;Produk X&quot; dan tr...
           </p>
         </div>
       </div>

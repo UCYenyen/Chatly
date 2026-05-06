@@ -25,12 +25,13 @@ export async function POST(
 ): Promise<NextResponse<WebhookOkResponse | ApiErrorResponse>> {
   const expectedToken = process.env.XENDIT_CALLBACK_TOKEN;
   if (!expectedToken) {
-    console.error("XENDIT_CALLBACK_TOKEN is not configured");
+    console.error("[xendit webhook] XENDIT_CALLBACK_TOKEN is not configured");
     return NextResponse.json({ message: "Server salah konfigurasi" }, { status: 500 });
   }
 
   const callbackToken = request.headers.get("x-callback-token");
   if (callbackToken !== expectedToken) {
+    console.warn("[xendit webhook] Invalid callback token received");
     return NextResponse.json({ message: "Tidak diizinkan" }, { status: 401 });
   }
 
@@ -41,12 +42,17 @@ export async function POST(
     return NextResponse.json({ message: "Body bukan JSON" }, { status: 400 });
   }
 
+  console.log("[xendit webhook] Received payload:", JSON.stringify(payload, null, 2));
+
   if (!isInvoicePayload(payload)) {
+    console.warn("[xendit webhook] Payload tidak dikenali:", payload);
     return NextResponse.json({ message: "Payload tidak dikenali" }, { status: 400 });
   }
 
   try {
+    console.log(`[xendit webhook] Processing: external_id=${payload.external_id}, status=${payload.status}, amount=${payload.amount}`);
     await handleXenditCallback(payload);
+    console.log(`[xendit webhook] Successfully processed: ${payload.external_id}`);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[xendit webhook]", error);
@@ -54,3 +60,4 @@ export async function POST(
     return NextResponse.json({ message }, { status: 500 });
   }
 }
+

@@ -79,9 +79,11 @@ export default function Sidebar() {
     const navItems = businessId
         ? [
             { name: "Ringkasan", path: `/business/${businessId}/ringkasan`, icon: LayoutDashboard },
+            { name: "Transaksi", path: `/business/${businessId}/transaksi`, icon: CreditCard },
             { name: "Analitik", path: `/business/${businessId}/analytics`, icon: BarChart2 },
             { name: "Pelatihan", path: `/business/${businessId}/training`, icon: BrainCircuit },
             { name: "Langganan", path: `/business/${businessId}/langganan`, icon: CreditCard },
+
         ]
         : [
             { name: "Beranda", path: "/dashboard", icon: LayoutDashboard },

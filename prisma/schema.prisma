@@ -30,22 +30,59 @@ model User {
 }
 
 model Business {
-  id             String         @id @default(cuid())
+  id             String           @id @default(cuid())
   userId         String
   name           String
   description    String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   aiTone         String?
   knowledgeBase  String?
-  knowledgeFiles String[]       @default([])
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  knowledgeFiles String[]         @default([])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  intents        BusinessIntent[]
   payments       Payment[]
   subscription   Subscription?
   whatsappAuth   WhatsAppAuth[]
+  customerTransactions CustomerTransaction[]
 
   @@index([userId])
   @@map("business")
+}
+
+model CustomerTransaction {
+  id               String        @id @default(cuid())
+  businessId       String
+  customerPhone    String
+  name             String
+  description      String?
+  amount           Int
+  currency         String        @default("IDR")
+  status           PaymentStatus @default(PENDING)
+  xenditInvoiceId  String?       @unique
+  xenditExternalId String        @unique
+  invoiceUrl       String?
+  paidAt           DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  business         Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([customerPhone])
+  @@map("customer_transaction")
+}
+
+
+model BusinessIntent {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@map("business_intent")
 }
 
 model Subscription {
@@ -141,11 +178,11 @@ model Verification {
 }
 
 model DocumentChunk {
-  id         String                       @id @default(cuid())
+  id         String                @id @default(cuid())
   businessId String
   content    String
-  embedding  Unsupported("vector(768)")
-  createdAt  DateTime                     @default(now())
+  embedding  Unsupported("vector")
+  createdAt  DateTime              @default(now())
 
   @@index([businessId])
   @@map("document_chunk")
@@ -165,12 +202,13 @@ model ChatLog {
 }
 
 model AnalyticsEvent {
-  id              String   @id @default(cuid())
-  businessId      String
-  phone           String
-  intentCategory  String
+  id               String   @id @default(cuid())
+  businessId       String
+  phone            String
+  intentCategory   String
   mentionedProduct String?
-  createdAt       DateTime @default(now())
+  messageContent   String?
+  createdAt        DateTime @default(now())
 
   @@index([businessId, phone, intentCategory, mentionedProduct, createdAt])
   @@map("analytics_event")

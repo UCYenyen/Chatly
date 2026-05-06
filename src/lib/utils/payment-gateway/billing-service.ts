@@ -1,6 +1,7 @@
 import prisma from "@/lib/utils/prisma";
 import { xenditClient } from "@/lib/utils/payment-gateway/xendit";
 import { getPlan, isPaidPlan } from "@/lib/utils/payment-gateway/plans";
+import { sendGowaMessage } from "@/lib/utils/whatsapp";
 import type {
     SubscriptionDTO,
     XenditInvoiceCallbackPayload,
@@ -161,6 +162,61 @@ export async function createSubscriptionInvoice(
     };
 }
 
+/**
+ * Create a Custom Transaction Invoice for an End-Customer
+ */
+export async function createCustomerTransactionInvoice(
+    businessId: string,
+    customerPhone: string,
+    name: string,
+    amount: number,
+    description?: string,
+): Promise<PaymentInvoiceResult> {
+    if (amount < 1000) {
+        throw new Error("Minimal transaksi adalah Rp 1.000");
+    }
+
+    const shortBiz = businessId.slice(-6).toUpperCase();
+    const externalId = `TRX-${shortBiz}-${Date.now().toString(36).toUpperCase()}`;
+
+    const baseUrl = getAppBaseUrl();
+    const { Invoice } = xenditClient;
+    const response = await Invoice.createInvoice({
+        data: {
+            externalId,
+            amount,
+            currency: "IDR",
+            description: `${name}${description ? ` - ${description}` : ""}`,
+            invoiceDuration: INVOICE_DURATION_SECONDS,
+        },
+    });
+
+    if (!response.invoiceUrl || !response.id) {
+        throw new Error("Xendit tidak mengembalikan invoice yang valid.");
+    }
+
+    const transaction = await prisma.customerTransaction.create({
+        data: {
+            businessId,
+            customerPhone,
+            name,
+            description,
+            amount,
+            status: "PENDING",
+            xenditExternalId: externalId,
+            xenditInvoiceId: response.id,
+            invoiceUrl: response.invoiceUrl,
+        },
+    });
+
+    return {
+        invoiceUrl: response.invoiceUrl,
+        paymentId: transaction.id,
+        externalId,
+    };
+}
+
+
 export async function handleXenditCallback(
     payload: XenditInvoiceCallbackPayload,
 ): Promise<void> {
@@ -168,57 +224,151 @@ export async function handleXenditCallback(
         where: { xenditExternalId: payload.external_id },
     });
 
-    if (!payment || payment.status === "PAID") return;
+    const customerTransaction = await prisma.customerTransaction.findUnique({
+        where: { xenditExternalId: payload.external_id },
+    });
+
+    // If neither record exists, nothing to process
+    if (!payment && !customerTransaction) return;
 
     if (payload.status === "PAID" || payload.status === "SETTLED") {
         const now = new Date();
         const paidAt = payload.paid_at ? new Date(payload.paid_at) : now;
 
-        if (payment.type === "TOPUP") {
-            // TOP UP: Add to user balance
-            await prisma.$transaction([
-                prisma.payment.update({
-                    where: { id: payment.id },
-                    data: { status: "PAID", paidAt },
-                }),
-                prisma.user.update({
-                    where: { id: payment.userId },
-                    data: { balance: { increment: payment.amount } },
-                }),
-            ]);
-        } else if (payment.type === "SUBSCRIPTION" && payment.businessId) {
-            // SUBSCRIPTION: Activate business plan
-            const plan = getPlan(payment.plan);
-            const periodEnd = new Date(now.getTime() + plan.intervalDays * 86_400_000);
+        // ── Handle Payment (Top-up / Subscription) ──────────────────────────
+        if (payment && payment.status !== "PAID") {
+            if (payment.type === "TOPUP") {
+                await prisma.$transaction(async (tx) => {
+                    const currentPayment = await tx.payment.findUnique({
+                        where: { id: payment.id },
+                    });
 
-            await prisma.$transaction([
-                prisma.payment.update({
-                    where: { id: payment.id },
-                    data: { status: "PAID", paidAt },
-                }),
-                prisma.subscription.update({
-                    where: { businessId: payment.businessId },
-                    data: {
-                        plan: payment.plan,
-                        status: "ACTIVE",
-                        currentPeriodStart: now,
-                        currentPeriodEnd: periodEnd,
-                        cancelAtPeriodEnd: false,
-                        canceledAt: null,
-                    },
-                }),
-            ]);
+                    if (!currentPayment || currentPayment.status === "PAID") {
+                        console.log(`[handleXenditCallback] Top-up ${payment.id} already processed.`);
+                        return;
+                    }
+
+                    await tx.payment.update({
+                        where: { id: payment.id },
+                        data: { status: "PAID", paidAt },
+                    });
+
+                    await tx.user.update({
+                        where: { id: payment.userId },
+                        data: { balance: { increment: payment.amount } },
+                    });
+                });
+            } else if (payment.type === "SUBSCRIPTION" && payment.businessId) {
+                await prisma.$transaction(async (tx) => {
+                    const currentPayment = await tx.payment.findUnique({
+                        where: { id: payment.id },
+                    });
+
+                    if (!currentPayment || currentPayment.status === "PAID") {
+                        console.log(`[handleXenditCallback] Subscription ${payment.id} already processed.`);
+                        return;
+                    }
+
+                    const plan = getPlan(payment.plan);
+                    const periodEnd = new Date(now.getTime() + plan.intervalDays * 86_400_000);
+
+                    await tx.payment.update({
+                        where: { id: payment.id },
+                        data: { status: "PAID", paidAt },
+                    });
+
+                    await tx.subscription.update({
+                        where: { businessId: payment.businessId! },
+                        data: {
+                            plan: payment.plan,
+                            status: "ACTIVE",
+                            currentPeriodStart: now,
+                            currentPeriodEnd: periodEnd,
+                            cancelAtPeriodEnd: false,
+                            canceledAt: null,
+                        },
+                    });
+                });
+            }
         }
+
+        // ── Handle Customer Transaction ─────────────────────────────────────
+        if (customerTransaction && customerTransaction.status !== "PAID") {
+            await prisma.$transaction(async (tx) => {
+                // Update transaction status
+                await tx.customerTransaction.update({
+                    where: { id: customerTransaction.id },
+                    data: { status: "PAID", paidAt },
+                });
+
+                // Find the business to get the owner (userId)
+                const business = await tx.business.findUnique({
+                    where: { id: customerTransaction.businessId },
+                    select: { userId: true },
+                });
+
+                if (business) {
+                    // Add balance to the owner
+                    await tx.user.update({
+                        where: { id: business.userId },
+                        data: { balance: { increment: customerTransaction.amount } },
+                    });
+                    console.log(`[handleXenditCallback] Credited ${customerTransaction.amount} to user ${business.userId} for transaction ${customerTransaction.id}`);
+                }
+            });
+
+            // Send WhatsApp Confirmation to Customer
+            try {
+                const whatsappAuth = await prisma.whatsAppAuth.findFirst({
+                    where: { 
+                        businessId: customerTransaction.businessId,
+                        status: "AUTHENTICATED",
+                        instanceKey: { not: null }
+                    }
+                });
+
+                if (whatsappAuth?.instanceKey) {
+                    const amountFormatted = `Rp ${new Intl.NumberFormat("id-ID").format(customerTransaction.amount)}`;
+                    const messageText = `✅ *Pembayaran Berhasil*\n\nTerima kasih, pembayaran sebesar *${amountFormatted}* untuk *${customerTransaction.name}* telah kami terima.`;
+                    
+                    await sendGowaMessage(customerTransaction.customerPhone, messageText, whatsappAuth.instanceKey);
+                    
+                    await prisma.chatLog.create({
+                        data: {
+                            businessId: customerTransaction.businessId,
+                            phone: customerTransaction.customerPhone,
+                            role: "AI",
+                            content: messageText,
+                        }
+                    });
+                    
+                    console.log(`[handleXenditCallback] Sent confirmation WA to ${customerTransaction.customerPhone}`);
+                }
+            } catch (err) {
+                console.error("[handleXenditCallback] Failed to send WA confirmation:", err);
+            }
+        }
+
         return;
     }
 
     if (payload.status === "EXPIRED" || payload.status === "FAILED") {
-        await prisma.payment.update({
-            where: { id: payment.id },
-            data: { status: payload.status as any },
-        });
+        if (payment) {
+            await prisma.payment.update({
+                where: { id: payment.id },
+                data: { status: payload.status as any },
+            });
+        }
+
+        if (customerTransaction) {
+            await prisma.customerTransaction.update({
+                where: { id: customerTransaction.id },
+                data: { status: payload.status as any },
+            });
+        }
     }
 }
+
 
 export async function verifyPaymentByExternalId(
     userId: string,
@@ -252,6 +402,55 @@ export async function verifyPaymentByExternalId(
     });
 
     return { status: callbackStatus };
+}
+
+/**
+ * Sync all PENDING customer transactions for a business by checking Xendit directly.
+ * Called when the dashboard loads the transaction list.
+ */
+export async function syncPendingCustomerTransactions(businessId: string): Promise<void> {
+    const pendingTxns = await prisma.customerTransaction.findMany({
+        where: { businessId, status: "PENDING" },
+        select: { id: true, xenditInvoiceId: true, xenditExternalId: true, amount: true },
+    });
+
+    if (pendingTxns.length === 0) return;
+
+    const { Invoice } = xenditClient;
+
+    await Promise.allSettled(
+        pendingTxns.map(async (txn) => {
+            if (!txn.xenditInvoiceId) return;
+
+            try {
+                const remote = await Invoice.getInvoiceById({ invoiceId: txn.xenditInvoiceId });
+                const remoteStatus = remote.status ?? "PENDING";
+
+                if (remoteStatus === "PENDING") return; // Still pending, skip
+
+                const callbackStatus: XenditInvoiceCallbackPayload["status"] =
+                    remoteStatus === "PAID" || remoteStatus === "SETTLED"
+                        ? "PAID"
+                        : remoteStatus === "EXPIRED"
+                            ? "EXPIRED"
+                            : "PENDING";
+
+                if (callbackStatus === "PENDING") return;
+
+                console.log(`[syncPendingTxn] ${txn.xenditExternalId} status=${callbackStatus}`);
+
+                await handleXenditCallback({
+                    id: remote.id ?? txn.xenditInvoiceId,
+                    external_id: remote.externalId ?? txn.xenditExternalId,
+                    status: callbackStatus,
+                    amount: remote.amount ?? txn.amount,
+                    paid_at: (remote as any).paidAt ?? (remote as any).paid_at,
+                });
+            } catch (err) {
+                console.error(`[syncPendingTxn] Failed for ${txn.xenditExternalId}:`, err);
+            }
+        })
+    );
 }
 
 export async function cancelSubscription(businessId: string): Promise<Subscription> {
