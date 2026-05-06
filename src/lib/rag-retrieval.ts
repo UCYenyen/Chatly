@@ -21,8 +21,11 @@ export async function retrieveRelevantChunks(
   if (!GEMINI_API_KEY || !query.trim()) return [];
 
   try {
-    const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
-    const embedRes = await embeddingModel.embedContent(query);
+    const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+    const embedRes = await embeddingModel.embedContent({
+      content: { role: "user", parts: [{ text: query }] },
+      outputDimensionality: 768,
+    } as unknown as Parameters<typeof embeddingModel.embedContent>[0]);
     const vector = embedRes.embedding.values;
     const vectorLiteral = `[${vector.join(",")}]`;
 

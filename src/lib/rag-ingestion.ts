@@ -65,11 +65,14 @@ export async function processAndSaveKnowledgeBase(
   }
 
   const embeddingModel = genAI.getGenerativeModel({
-    model: "text-embedding-004",
+    model: "gemini-embedding-001",
   });
 
   for (const chunk of chunks) {
-    const embedRes = await embeddingModel.embedContent(chunk);
+    const embedRes = await embeddingModel.embedContent({
+      content: { role: "user", parts: [{ text: chunk }] },
+      outputDimensionality: 768,
+    } as unknown as Parameters<typeof embeddingModel.embedContent>[0]);
     const vector = embedRes.embedding.values;
     const vectorLiteral = `[${vector.join(",")}]`;
     const id = randomUUID();
