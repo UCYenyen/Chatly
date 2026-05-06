@@ -8,6 +8,7 @@ services:
       - PORT=3000
       - NEXT_PUBLIC_APP_URL
       - BETTER_AUTH_SECRET
+      - XENDIT_CALLBACK_TOKEN
       - BETTER_AUTH_URL
       - GMAIL_USER
       - GMAIL_APP_PASSWORD
