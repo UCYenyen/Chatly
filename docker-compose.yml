@@ -27,6 +27,43 @@ services:
       - .env
     networks:
       - global_proxy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  prisma_studio:
+    image: node:20-alpine
+    container_name: chatly_prisma_studio
+    restart: on-failure
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
+    networks:
+      - global_proxy
+    ports:
+      - "5555:5555"
+    command: sh -c "corepack enable pnpm && pnpm prisma studio"
+    depends_on:
+      chatly_web:
+        condition: service_healthy
+    profiles:
+      - dev
 
 networks:
   global_proxy:

@@ -136,12 +136,19 @@ export async function runChatlyAIEngine(
     };
   }
 
-  // 3. Fetch conversation history (memory)
+  // 3. Fetch conversation history (memory).
+  // We exclude the most recently saved USER message (the one we just stored in the
+  // webhook handler) because it is passed separately as `incomingMessage` below.
+  // Fetching it here too would cause it to appear twice in the prompt.
   console.log("[ai-engine] Step 4: Fetching chat history...");
   let history: HistoryRow[];
   try {
     const recentLogs = await prisma.chatLog.findMany({
-      where: { businessId, phone: incomingPhone },
+      where: {
+        businessId,
+        phone: incomingPhone,
+        NOT: { role: "USER", content: incomingMessage },
+      },
       orderBy: { createdAt: "desc" },
       take: 6,
       select: { role: true, content: true },

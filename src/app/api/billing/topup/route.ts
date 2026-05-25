@@ -13,8 +13,12 @@ export async function POST(request: Request): Promise<NextResponse<TopUpResponse
         }
 
         const body = (await request.json()) as Partial<TopUpRequest>
-        if (!body.amount || body.amount < 10000) {
+        const rawAmount = body.amount
+        if (!rawAmount || rawAmount < 10000) {
             return NextResponse.json({ message: 'Jumlah top up tidak valid (min. 10.000)' }, { status: 400 })
+        }
+        if (!Number.isInteger(rawAmount)) {
+            return NextResponse.json({ message: 'Jumlah top up harus berupa bilangan bulat' }, { status: 400 })
         }
 
         const result = await createTopUpInvoice(

@@ -52,27 +52,23 @@ export const auth = betterAuth({
         },
       });
 
-      try {
-        await transporter.sendMail({
-          from: '"CHATLY" <no-reply@chatly.com>',
-          to: user.email,
-          subject: "Verifikasi Akun Anda",
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-              <h2>Selamat Datang, ${user.name}!</h2>
-              <p>Terima kasih telah mendaftar di Chatly. Silakan klik tombol di bawah ini untuk memverifikasi email Anda:</p>
-              <a href="${url}" style="background-color: #bff44c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Verifikasi Email
-              </a>
-              <p>Atau copy link ini: <br/> ${url}</p>
-              <p>Kami menunggu kehadiran Anda di Chatly!</p>
-            </div>
-          `,
-        });
-        console.log("Email verifikasi terkirim ke:", user.email);
-      } catch (error) {
-        console.error("Gagal mengirim email:", error);
-      }
+      await transporter.sendMail({
+        from: '"CHATLY" <no-reply@chatly.com>',
+        to: user.email,
+        subject: "Verifikasi Akun Anda",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>Selamat Datang, ${user.name}!</h2>
+            <p>Terima kasih telah mendaftar di Chatly. Silakan klik tombol di bawah ini untuk memverifikasi email Anda:</p>
+            <a href="${url}" style="background-color: #bff44c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Verifikasi Email
+            </a>
+            <p>Atau copy link ini: <br/> ${url}</p>
+            <p>Kami menunggu kehadiran Anda di Chatly!</p>
+          </div>
+        `,
+      });
+      console.log("Email verifikasi terkirim ke:", user.email);
     },
   },
   plugins: [

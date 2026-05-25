@@ -9,10 +9,10 @@ const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!WEBHOOK_SECRET) {
-    console.warn(
-      "[webhook] GOWA_WEBHOOK_SECRET is not set, skipping verification.",
+    console.error(
+      "[webhook] GOWA_WEBHOOK_SECRET is not set — rejecting all webhook requests.",
     );
-    return true;
+    return false;
   }
   if (!signature) {
     console.error("[webhook] No signature header found.");
@@ -299,7 +299,10 @@ export async function POST(request: Request) {
   }
 
   // To prevent race conditions with GoWA retries, save the USER message FIRST.
+  // The AI engine is only invoked if this create succeeds — if it throws P2002
+  // (unique constraint on messageId), this is a duplicate delivery and we stop here.
   console.log("[webhook] Saving USER chat log...");
+  let userLogSaved = false;
   try {
     await prisma.chatLog.create({
       data: {
@@ -307,9 +310,10 @@ export async function POST(request: Request) {
         phone: from,
         role: "USER",
         content: text,
-        messageId: messageId, // If a retry comes right after this, it will be caught by the findUnique above
+        messageId: messageId,
       },
     });
+    userLogSaved = true;
     console.log("[webhook] USER chat log saved OK");
   } catch (err: any) {
     // If it's a unique constraint violation (P2002), it's a duplicate from a race condition
@@ -318,6 +322,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, deduped: true });
     }
     console.error("[webhook] Failed to save USER chat log:", err);
+  }
+
+  // Do not invoke the AI engine if the user message was not saved (avoids duplicate responses)
+  if (!userLogSaved) {
+    return NextResponse.json({ ok: true });
   }
 
   if (!whatsappAuth.instanceKey) {

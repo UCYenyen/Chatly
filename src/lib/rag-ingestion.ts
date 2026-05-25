@@ -29,7 +29,8 @@ export interface IngestInput {
 
 export async function processAndSaveKnowledgeBase(
   businessId: string,
-  input: IngestInput
+  input: IngestInput,
+  { append = false }: { append?: boolean } = {},
 ): Promise<{ chunkCount: number }> {
   const extractionModel = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
@@ -53,8 +54,6 @@ export async function processAndSaveKnowledgeBase(
   ]);
   const extractedText = extractionResult.response.text();
 
-  await prisma.$executeRaw`DELETE FROM document_chunk WHERE "businessId" = ${businessId}`;
-
   const chunks = extractedText
     .split(/\n\s*\n/)
     .map((c) => c.trim())
@@ -68,20 +67,33 @@ export async function processAndSaveKnowledgeBase(
     model: "gemini-embedding-001",
   });
 
+  // Build all embeddings BEFORE touching the database.
+  // This way, if Gemini fails mid-way, the existing knowledge base is untouched.
+  const rows: Array<{ id: string; chunk: string; vectorLiteral: string }> = [];
   for (const chunk of chunks) {
     const embedRes = await embeddingModel.embedContent({
       content: { role: "user", parts: [{ text: chunk }] },
       outputDimensionality: 768,
     } as unknown as Parameters<typeof embeddingModel.embedContent>[0]);
     const vector = embedRes.embedding.values;
-    const vectorLiteral = `[${vector.join(",")}]`;
-    const id = randomUUID();
+    rows.push({
+      id: randomUUID(),
+      chunk,
+      vectorLiteral: `[${vector.join(",")}]`,
+    });
+  }
 
+  // All embeddings are ready — now atomically replace (or append) in the DB.
+  if (!append) {
+    await prisma.$executeRaw`DELETE FROM document_chunk WHERE "businessId" = ${businessId}`;
+  }
+
+  for (const { id, chunk, vectorLiteral } of rows) {
     await prisma.$executeRaw`
       INSERT INTO document_chunk (id, "businessId", content, embedding, "createdAt")
       VALUES (${id}::text, ${businessId}::text, ${chunk}::text, ${vectorLiteral}::vector, NOW())
     `;
   }
 
-  return { chunkCount: chunks.length };
+  return { chunkCount: rows.length };
 }

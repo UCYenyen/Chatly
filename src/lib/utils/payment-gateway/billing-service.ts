@@ -479,24 +479,40 @@ export async function paySubscriptionWithWallet(
 ): Promise<{ success: boolean; paymentId: string }> {
     const plan = getPlan(planId);
 
-    // 1. Get user to check balance
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
-
-    if (!user) throw new Error("User tidak ditemukan");
-    if (user.balance < plan.amount) {
-        throw new Error(`Saldo tidak mencukupi. Dibutuhkan ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(plan.amount)}, saldo Anda ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(user.balance)}`);
-    }
-
-    // 2. Process payment and subscription update in a transaction
     const now = new Date();
     const periodEnd = new Date(now.getTime() + plan.intervalDays * 86_400_000);
     const externalId = `WAL-${planId}-${businessId.slice(-6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
 
-    const [payment] = await prisma.$transaction([
+    // Use an interactive transaction so the balance check and decrement are atomic.
+    // If another concurrent payment drains the balance between our read and write,
+    // the transaction will see the updated balance and throw before any money moves.
+    const payment = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+            where: { id: userId },
+            select: { id: true, balance: true },
+        });
+
+        if (!user) throw new Error("User tidak ditemukan");
+        if (user.balance < plan.amount) {
+            const fmt = (n: number) =>
+                new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                }).format(n);
+            throw new Error(
+                `Saldo tidak mencukupi. Dibutuhkan ${fmt(plan.amount)}, saldo Anda ${fmt(user.balance)}`,
+            );
+        }
+
+        // Deduct balance atomically
+        await tx.user.update({
+            where: { id: userId },
+            data: { balance: { decrement: plan.amount } },
+        });
+
         // Create PAID payment record
-        prisma.payment.create({
+        const newPayment = await tx.payment.create({
             data: {
                 userId,
                 businessId,
@@ -508,14 +524,10 @@ export async function paySubscriptionWithWallet(
                 paidAt: now,
                 xenditExternalId: externalId,
             },
-        }),
-        // Deduct balance
-        prisma.user.update({
-            where: { id: userId },
-            data: { balance: { decrement: plan.amount } },
-        }),
+        });
+
         // Upsert subscription
-        prisma.subscription.upsert({
+        await tx.subscription.upsert({
             where: { businessId },
             update: {
                 plan: planId,
@@ -532,8 +544,10 @@ export async function paySubscriptionWithWallet(
                 currentPeriodStart: now,
                 currentPeriodEnd: periodEnd,
             },
-        }),
-    ]);
+        });
+
+        return newPayment;
+    });
 
     return { success: true, paymentId: payment.id };
 }

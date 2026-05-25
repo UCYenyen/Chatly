@@ -21,8 +21,10 @@ Package manager is **pnpm** (`pnpm-workspace.yaml` present). Use `pnpm`, not npm
 - `pnpm start` — production server
 
 Docker (production only — not for local dev):
-- `Dockerfile` builds the production image published as `ghcr.io/ucyenyen/chatly:latest`.
-- `docker-compose.yml` runs that prebuilt image (`chatly_prod_app`) on the external `global_proxy` network with env from `.env`. Use `pnpm dev` for local development.
+- `Dockerfile`: Multi-stage build (`build-deps` → `builder` → `runtime`) with pnpm cache mount optimization, health check on `/api/health`, security hardening (nextjs user), and resource limits.
+- `docker-compose.yml`: Runs `chatly_prod_app` on external `global_proxy` network with health checks and resource limits (1.0 CPU, 1GB memory). Includes optional `prisma_studio` service (dev profile) on port 5555 for database inspection.
+- Local dev: Use `pnpm dev`, not Docker. For Prisma Studio in docker: `docker-compose --profile dev up prisma_studio` (requires DATABASE_URL in `.env`).
+- Note: Dockerfile health check requires `/api/health` endpoint in Next.js app.
 
 Prisma:
 - Schema: `prisma/schema.prisma`; runtime config: `prisma.config.ts` (loads `DATABASE_URL` via `dotenv/config`).
@@ -63,3 +65,14 @@ No test runner is configured.
 - UI: Tailwind v4 (`@tailwindcss/postcss`), `tw-animate-css`, Radix UI, shadcn, Motion, GSAP, Embla, Vaul, Sonner, cmdk.
 - Forms: `react-hook-form` + `@hookform/resolvers` + `zod` v4.
 - Mail: `nodemailer`.
+
+## Available subagents
+
+**prisma-backend** (`.claude/agents/prisma-backend.md`): Specialized agent for all database work. Use for:
+- Writing Prisma queries and designing schema migrations
+- Building API route handlers that touch the database
+- Debugging query performance and vector similarity search
+- Understanding the Chatly data model (14 models, pgvector integration, cascade rules)
+- Tasks requiring deep knowledge of the Prisma 7 + PostgreSQL setup
+
+Invoke with `@prisma-backend` when working on database features.

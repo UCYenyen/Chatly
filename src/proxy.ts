@@ -49,13 +49,13 @@ export async function proxy(request: NextRequest) {
 
       if (isAdminQrRoute) {
         if (
-          !session ||
+          !session?.user ||
           (session.user.role !== "ADMIN" && session.user.role !== "ADMIN_QR")
         ) {
           return NextResponse.redirect(new URL("/", request.url));
         }
       } else {
-        if (!session || session.user.role !== "ADMIN") {
+        if (!session?.user || session.user.role !== "ADMIN") {
           return NextResponse.redirect(new URL("/", request.url));
         }
       }
@@ -77,5 +77,6 @@ export const config = {
     "/schedule/:path*",
     "/presension/:path*",
     "/admin/:path*",
+    "/profile/:path*",
   ],
 };

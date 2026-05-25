@@ -59,7 +59,7 @@ export async function POST(
       return NextResponse.json({ message: "Tidak ada file yang dikirim" }, { status: 400 });
     }
 
-    const uploadedNames: string[] = [];
+    // Validate all files before processing any of them
     for (const file of files) {
       if (!ALLOWED_MIME.has(file.type)) {
         return NextResponse.json(
@@ -73,12 +73,19 @@ export async function POST(
           { status: 400 },
         );
       }
+    }
 
+    const uploadedNames: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       const buffer = Buffer.from(await file.arrayBuffer());
-      const { chunkCount } = await processAndSaveKnowledgeBase(id, {
-        buffer,
-        mimeType: file.type,
-      });
+      // First file replaces existing chunks; subsequent files append so no
+      // file's chunks overwrite a previous file's chunks in the same upload.
+      const { chunkCount } = await processAndSaveKnowledgeBase(
+        id,
+        { buffer, mimeType: file.type },
+        { append: i > 0 },
+      );
       console.log(
         `[POST knowledge-files] business=${id} file=${file.name} chunks=${chunkCount}`,
       );
