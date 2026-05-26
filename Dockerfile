@@ -5,7 +5,12 @@ WORKDIR /app
 RUN corepack enable pnpm
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY prisma ./prisma
-RUN --mount=type=cache,target=/root/.pnpm-store pnpm i --frozen-lockfile
+# pnpm 11 errors when dependencies ship build scripts that were not run
+# (ERR_PNPM_IGNORED_BUILDS). We don't need them: Prisma's client is generated
+# explicitly below and its query engines are bundled in @prisma/engines, while
+# sharp ships prebuilt binaries. strict-dep-builds=false downgrades that to a
+# warning. NB: this only takes effect as a CLI flag, not via .npmrc.
+RUN --mount=type=cache,target=/root/.pnpm-store pnpm i --frozen-lockfile --config.strict-dep-builds=false
 
 # builder: compile Next.js and Prisma
 FROM node:24-alpine AS builder
@@ -15,9 +20,17 @@ RUN corepack enable pnpm
 COPY --from=build-deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm prisma generate
-RUN pnpm run build
-RUN pnpm prune --production
+# CI=true stops pnpm from prompting (no TTY in the build) before its
+# dependency-status check, which otherwise aborts with
+# ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY. The host CI var does not
+# propagate into the Docker build, so set it explicitly.
+ENV CI=true
+# verify-deps-before-run=false stops pnpm from running an implicit `install`
+# (which would re-trigger ERR_PNPM_IGNORED_BUILDS) before these commands; the
+# image already has node_modules from the build-deps stage.
+RUN pnpm --config.verify-deps-before-run=false prisma generate
+RUN pnpm --config.verify-deps-before-run=false run build
+RUN pnpm prune --production --config.strict-dep-builds=false
 
 # runtime: minimal production image
 FROM node:24-alpine AS runtime

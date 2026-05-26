@@ -23,7 +23,7 @@ export async function POST(request: Request): Promise<NextResponse<TopUpResponse
 
         const result = await createTopUpInvoice(
             { id: session.user.id, email: session.user.email },
-            body.amount
+            rawAmount
         )
 
         return NextResponse.json(result, { status: 201 })
