@@ -3,7 +3,7 @@ FROM node:24-alpine AS build-deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 RUN corepack enable pnpm
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY prisma ./prisma
 RUN --mount=type=cache,target=/root/.pnpm-store pnpm i --frozen-lockfile
 
