@@ -1,5 +1,5 @@
 # build-deps: install dependencies with layer caching
-FROM node:20-alpine AS build-deps
+FROM node:24-alpine AS build-deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 RUN corepack enable pnpm
@@ -8,7 +8,7 @@ COPY prisma ./prisma
 RUN --mount=type=cache,target=/root/.pnpm-store pnpm i --frozen-lockfile
 
 # builder: compile Next.js and Prisma
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 RUN corepack enable pnpm
@@ -20,7 +20,7 @@ RUN pnpm run build
 RUN pnpm prune --production
 
 # runtime: minimal production image
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 ENV NODE_ENV=production
