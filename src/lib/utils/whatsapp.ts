@@ -20,15 +20,21 @@ export function extractPhone(obj: unknown): string | null {
     (o.jid as string) ??
     null;
   if (typeof candidate !== "string") return null;
-  return candidate;
+  // Gowa returns the phone as a WhatsApp JID, e.g. "6281231847161@s.whatsapp.net"
+  // or "6281231847161:12@s.whatsapp.net". Strip the domain and device suffix so
+  // we store a clean phone number.
+  const cleaned = candidate.split("@")[0].split(":")[0].trim();
+  return cleaned.length > 0 ? cleaned : null;
 }
 
 /**
- * Check whether a Gowa device is currently logged in by calling
- * `GET /devices/:device_id/status` (per gowareadme.md v8 API).
+ * Check whether a Gowa device is currently logged in, and return its phone
+ * number when available.
  *
- * Falls back to `GET /app/status` with X-Device-Id header if the
- * per-device endpoint fails.
+ * Primary source is `GET /devices/:device_id` (device info), which returns both
+ * `state` and the `jid` carrying the phone number. The `/devices/:id/status`
+ * endpoint only reports login state (no phone), so it is a fallback, followed
+ * by `GET /app/status` with the X-Device-Id header.
  */
 export async function fetchGowaDeviceStatus(
   deviceId: string
@@ -39,7 +45,33 @@ export async function fetchGowaDeviceStatus(
     ...gowaAuthHeader(),
   };
 
-  // ── Primary: GET /devices/:device_id/status ─────────────────────────
+  // ── Primary: GET /devices/:device_id (device info) ──────────────────
+  // Unlike /devices/:id/status (which only returns is_logged_in / is_connected),
+  // this endpoint also returns the `jid` field that carries the phone number.
+  try {
+    const res = await fetch(`${GOWA_API_BASE}/devices/${deviceId}`, {
+      method: "GET",
+      headers: headersInit,
+      signal: AbortSignal.timeout(5000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      console.log("[gowa] /devices/:id =>", JSON.stringify(data));
+      const r = data.results ?? data;
+
+      // Gowa returns { state: "logged_in" | "disconnected", jid: "...", ... }
+      if (r.state === "logged_in") {
+        const phone = extractPhone(r) ?? extractPhone(r?.user) ?? null;
+        return { connected: true, phoneNumber: phone };
+      }
+      return { connected: false, phoneNumber: null };
+    }
+  } catch (err) {
+    console.warn("[gowa] /devices/:id error:", err);
+  }
+
+  // ── Fallback 1: GET /devices/:device_id/status ──────────────────────
+  // Only confirms login state; no phone number available here.
   try {
     const res = await fetch(`${GOWA_API_BASE}/devices/${deviceId}/status`, {
       method: "GET",
@@ -51,8 +83,7 @@ export async function fetchGowaDeviceStatus(
       console.log("[gowa] /devices/:id/status =>", JSON.stringify(data));
       const r = data.results ?? data;
 
-      // Gowa returns { is_logged_in: true/false } in its status response
-      if (r.is_logged_in === true || r.connected === true) {
+      if (r.is_logged_in === true || r.is_connected === true || r.connected === true) {
         const phone = extractPhone(r) ?? extractPhone(r?.user) ?? null;
         return { connected: true, phoneNumber: phone };
       }
@@ -62,7 +93,7 @@ export async function fetchGowaDeviceStatus(
     console.warn("[gowa] /devices/:id/status error:", err);
   }
 
-  // ── Fallback: GET /app/status ───────────────────────────────────────
+  // ── Fallback 2: GET /app/status ─────────────────────────────────────
   try {
     const res = await fetch(`${GOWA_API_BASE}/app/status`, {
       method: "GET",
@@ -74,7 +105,7 @@ export async function fetchGowaDeviceStatus(
       console.log("[gowa] /app/status =>", JSON.stringify(data));
       const r = data.results ?? data;
 
-      if (r.is_logged_in === true || r.connected === true) {
+      if (r.is_logged_in === true || r.is_connected === true || r.connected === true) {
         const phone = extractPhone(r) ?? extractPhone(r?.user) ?? null;
         return { connected: true, phoneNumber: phone };
       }
