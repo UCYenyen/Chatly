@@ -34,12 +34,13 @@ RUN pnpm prune --production --config.strict-dep-builds=false
 
 # runtime: minimal production image
 FROM node:24-alpine AS runtime
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl tzdata
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV TZ=Asia/Jakarta
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001 -G nodejs
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
