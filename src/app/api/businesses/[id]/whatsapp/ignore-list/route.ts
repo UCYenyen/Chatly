@@ -56,13 +56,20 @@ export async function GET(_request: Request, context: RouteContext) {
   const authResult = await authorizeBusiness(businessId);
   if (!authResult.ok) return authResult.response;
 
-  const contacts = await prisma.ignoredContact.findMany({
-    where: { businessId },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, phoneNumber: true, label: true, createdAt: true },
-  });
-
-  return NextResponse.json({ ignoreList: contacts.map(toDTO) });
+  try {
+    const contacts = await prisma.ignoredContact.findMany({
+      where: { businessId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, phoneNumber: true, label: true, createdAt: true },
+    });
+    return NextResponse.json({ ignoreList: contacts.map(toDTO) });
+  } catch (err) {
+    console.error("[ignore-list:GET] failed:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Gagal memuat daftar abaikan" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request, context: RouteContext) {

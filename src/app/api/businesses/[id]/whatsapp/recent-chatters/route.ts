@@ -26,27 +26,35 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const [grouped, ignored] = await Promise.all([
-    prisma.chatLog.groupBy({
-      by: ["phone"],
-      where: { businessId, role: "USER" },
-      _max: { createdAt: true },
-      orderBy: { _max: { createdAt: "desc" } },
-      take: RECENT_CHATTERS_LIMIT,
-    }),
-    prisma.ignoredContact.findMany({
-      where: { businessId },
-      select: { phoneNumber: true },
-    }),
-  ]);
+  try {
+    const [grouped, ignored] = await Promise.all([
+      prisma.chatLog.groupBy({
+        by: ["phone"],
+        where: { businessId, role: "USER" },
+        _max: { createdAt: true },
+        orderBy: { _max: { createdAt: "desc" } },
+        take: RECENT_CHATTERS_LIMIT,
+      }),
+      prisma.ignoredContact.findMany({
+        where: { businessId },
+        select: { phoneNumber: true },
+      }),
+    ]);
 
-  const ignoredSet = new Set(ignored.map((entry) => entry.phoneNumber));
+    const ignoredSet = new Set(ignored.map((entry) => entry.phoneNumber));
 
-  const recentChatters: RecentChatterDTO[] = grouped.map((row) => ({
-    phoneNumber: row.phone,
-    lastMessageAt: (row._max.createdAt ?? new Date(0)).toISOString(),
-    isIgnored: ignoredSet.has(row.phone),
-  }));
+    const recentChatters: RecentChatterDTO[] = grouped.map((row) => ({
+      phoneNumber: row.phone,
+      lastMessageAt: (row._max.createdAt ?? new Date(0)).toISOString(),
+      isIgnored: ignoredSet.has(row.phone),
+    }));
 
-  return NextResponse.json({ recentChatters });
+    return NextResponse.json({ recentChatters });
+  } catch (err) {
+    console.error("[recent-chatters:GET] failed:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Gagal memuat kontak terbaru" },
+      { status: 500 }
+    );
+  }
 }
