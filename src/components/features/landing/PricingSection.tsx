@@ -3,20 +3,25 @@
 import SpotlightCard from "@/components/personal/SpotlightCard"
 import { CheckCircle2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import { useRef } from "react"
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal"
 import { PLANS } from "@/lib/utils/payment-gateway/plans"
 import { describePlanFeatures } from "@/lib/utils/payment-gateway/plan-limits"
 import { formatIDR } from "@/components/features/billing/billing-format"
+import { authClient } from "@/lib/utils/auth/auth-client"
 import type { SubscriptionPlan } from "@prisma/client"
 
 export function PricingSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
+  const { data: session } = authClient.useSession()
   useGsapScrollReveal(sectionRef, {
     start: "top 84%",
     y: 10,
     fade: true,
   })
+
+  const startDestination = session ? "/dashboard" : "/sign-up"
 
   const PLAN_IDS: SubscriptionPlan[] = ["STARTER", "GROWTH", "PRO", "ENTERPRISE"]
 
@@ -91,13 +96,22 @@ export function PricingSection() {
             </div>
 
             <Button
+              asChild
               className={`relative z-10 w-full font-bold text-[12px] h-11 transition-transform active:scale-95 border rounded-sm mt-auto shadow-sm ${
                 plan.isPopular
                   ? 'bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] border-[#a4d730]'
                   : 'bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] border-outline-variant/20 tracking-wide'
               }`}
             >
-              {plan.buttonText}
+              {plan.id === "ENTERPRISE" ? (
+                <a href="mailto:chatlytype@gmail.com">
+                  {plan.buttonText}
+                </a>
+              ) : (
+                <Link href={startDestination}>
+                  {plan.buttonText}
+                </Link>
+              )}
             </Button>
           </SpotlightCard>
         ))}

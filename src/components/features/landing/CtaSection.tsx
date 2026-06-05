@@ -2,16 +2,21 @@
 
 import { Button } from "@/components/ui/button"
 import { BotMessageSquare } from "lucide-react"
+import Link from "next/link"
 import { useRef } from "react"
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal"
+import { authClient } from "@/lib/utils/auth/auth-client"
 
 export function CtaSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
+  const { data: session } = authClient.useSession()
   useGsapScrollReveal(sectionRef, {
     start: "top 86%",
     y: 10,
     fade: true,
   })
+
+  const startDestination = session ? "/dashboard" : "/sign-up"
 
   return (
     <section ref={sectionRef} className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 mb-24">
@@ -23,8 +28,10 @@ export function CtaSection() {
           <p className="text-[15px] text-[#c8ccff] leading-relaxed max-w-sm mb-8">
             Bergabunglah dengan 2.000+ bisnis yang menggunakan Chatly AI untuk memberikan pengalaman pelanggan premium sepanjang waktu.
           </p>
-          <Button className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 w-fit rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
-            Mulai Sekarang
+          <Button asChild className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-12 px-8 w-fit rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
+            <Link href={startDestination}>
+              Mulai Sekarang
+            </Link>
           </Button>
         </div>
 
@@ -39,8 +46,10 @@ export function CtaSection() {
               </p>
             </div>
             <div className="flex justify-end pt-1">
-              <Button className="bg-[#c8ccff] text-[#000865] hover:bg-white font-bold text-[12px] h-9 px-5 rounded-sm shadow-sm transition-transform active:scale-95">
-                Luncurkan Optimalisasi
+              <Button asChild className="bg-[#c8ccff] text-[#000865] hover:bg-white font-bold text-[12px] h-9 px-5 rounded-sm shadow-sm transition-transform active:scale-95">
+                <Link href={startDestination}>
+                  Luncurkan Optimalisasi
+                </Link>
               </Button>
             </div>
           </div>
