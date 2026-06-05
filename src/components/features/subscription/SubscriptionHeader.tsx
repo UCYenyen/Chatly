@@ -15,10 +15,10 @@ export function SubscriptionHeader() {
                     <CreditCard className="w-3 h-3" /> Langganan
                 </span>
             </div>
-            <h1 className="text-4xl font-headline font-black text-on-surface tracking-tight mt-2">
+            <h1 className="text-2xl sm:text-3xl font-headline font-bold text-on-surface tracking-tight mt-6">
                 Manajemen Paket
             </h1>
-            <p className="text-outline text-sm max-w-2xl leading-relaxed">
+            <p className="text-outline text-sm max-w-2xl leading-relaxed mt-2">
                 Kelola paket berlangganan untuk unit bisnis ini. Pastikan saldo akun global Anda mencukupi untuk perpanjangan otomatis.
             </p>
         </div>

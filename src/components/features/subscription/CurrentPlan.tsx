@@ -31,36 +31,35 @@ export function CurrentPlan() {
   }
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant/15 border-t-4 border-t-secondary-fixed p-8 xl:p-10 rounded-xl flex flex-col gap-8 shadow-2xl relative overflow-hidden h-full">
-      <div className="flex items-start justify-between relative z-10 w-full">
-        <div className="flex flex-col gap-2">
+    <div className="bg-surface-container-low border border-outline-variant/15 border-t-4 border-t-secondary-fixed p-5 sm:p-8 xl:p-10 w-full rounded-xl flex flex-col gap-6 sm:gap-8 shadow-2xl relative overflow-hidden h-full">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 relative z-10 w-full">
+        <div className="flex flex-col gap-2 w-full md:w-auto min-w-0">
           <span className="text-[10px] font-mono text-secondary-fixed uppercase tracking-widest font-bold">
             Paket Saat Ini
           </span>
-          <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-headline font-bold text-on-surface tracking-tight">
-              Paket {plan.name}
-            </h2>
-            <div
-              className={`rounded px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest font-mono shadow-sm border ${
-                isActive
-                  ? "bg-[#143600]/80 border-[#304400] text-secondary-fixed"
-                  : "bg-surface-container-high border-outline-variant/20 text-outline"
-              }`}
-            >
-              {sub?.status ?? "FREE"}
-            </div>
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-headline font-bold text-on-surface tracking-tight wrap-break-word">
+            Paket {plan.name}
+          </h2>
         </div>
-        <div className="flex items-end gap-1 flex-col md:flex-row md:items-baseline">
-          <span className="text-4xl font-headline font-bold text-on-surface tracking-tight">
-            {plan.amount === 0 ? "Gratis" : formatIDR(plan.amount)}
-          </span>
-          {plan.amount > 0 && <span className="text-outline text-[14px]">/bln</span>}
+        <div className="flex flex-col gap-3 w-full md:w-auto items-start md:items-end shrink-0">
+          <div
+            className={`rounded px-2.5 w-fit py-0.5 text-[10px] font-bold uppercase tracking-widest font-mono shadow-sm border ${isActive
+              ? "bg-[#143600]/80 border-[#304400] text-secondary-fixed"
+              : "bg-surface-container-high border-outline-variant/20 text-outline"
+              }`}
+          >
+            {sub?.status ?? "FREE"}
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl sm:text-4xl font-headline font-bold text-on-surface tracking-tight">
+              {plan.amount === 0 ? "Gratis" : formatIDR(plan.amount)}
+            </span>
+            {plan.amount > 0 && <span className="text-outline text-[14px]">/bln</span>}
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-16 pt-6 border-t border-outline-variant/10 relative z-10">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-16 pt-6 border-t border-outline-variant/10 relative z-10">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
             Tanggal Penagihan Berikutnya
@@ -88,13 +87,13 @@ export function CurrentPlan() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 mt-2 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 mt-2 relative z-10 *:w-full *:sm:w-auto">
         <PlansDialog />
         <button
           type="button"
           disabled={!isActive || isPending || sub?.cancelAtPeriodEnd}
           onClick={handleCancel}
-          className="bg-surface-container border border-outline-variant/15 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold text-[13px] h-11 px-6 rounded-md shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-surface-container border border-outline-variant/15 text-outline hover:text-on-surface hover:bg-surface-container-high font-bold text-[13px] h-11 px-6 rounded-md shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
         >
           {sub?.cancelAtPeriodEnd
             ? "Akan Dibatalkan"

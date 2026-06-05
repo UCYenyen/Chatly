@@ -1,32 +1,26 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { Home } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 
 export function TrainingHeader() {
   return (
-    <div className="flex flex-col gap-6 w-full border-b border-outline-variant/10 pb-10">
+    <div className="flex flex-col gap-6 w-full border-b border-outline-variant/10 pb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4 sm:gap-0">
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="text-xl font-headline font-bold text-on-surface tracking-wide">
-            Pusat Pengetahuan
+        <div className="flex items-center gap-2 text-[12px] font-mono text-outline uppercase tracking-widest font-bold">
+          <Link href="/dashboard" className="hover:text-secondary-fixed transition-colors flex items-center gap-1.5">
+            <Home className="w-3 h-3" /> Utama
+          </Link>
+          <span>/</span>
+          <span className="text-on-surface flex items-center gap-1.5">
+            <BrainCircuit className="w-3 h-3" /> Pelatihan
           </span>
-          <Badge className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 rounded-sm px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest font-mono border-0">
-            Model V2.4 Aktif
-          </Badge>
-        </div>
-        <div className="flex items-center gap-4 sm:gap-6 self-start sm:self-auto mt-2 sm:mt-0">
-          <Button variant="ghost" className="text-[13px] text-outline hover:text-on-surface font-medium transition-colors">
-            Batalkan
-          </Button>
-          <Button className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[13px] h-9 px-6 rounded-sm shadow-md">
-            Simpan Perubahan
-          </Button>
         </div>
       </div>
-      <div className="flex flex-col gap-4 mt-4">
-        <h1 className="text-4xl font-headline font-bold text-on-surface">
+      <div className="flex flex-col gap-2 mt-2">
+        <h1 className="text-2xl sm:text-3xl font-headline font-bold tracking-tight text-on-surface">
           Latih Kecerdasan Anda
         </h1>
-        <p className="text-[15px] text-outline leading-relaxed max-w-3xl">
+        <p className="text-sm text-outline leading-relaxed max-w-2xl">
           Sempurnakan cara AI Anda berinteraksi dengan pelanggan di Acme Corp.
           Unggah dokumen, atur batasan perilaku, dan tentukan dokumen pelatihan
           inti.

@@ -13,6 +13,7 @@ import {
     MoreHorizontal,
     LogOut,
     ArrowLeft,
+    HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -40,6 +41,7 @@ import { CreateBusinessModal } from "./CreateBusinessModal";
 import { authClient } from "@/lib/utils/auth/auth-client";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { useWalletContext } from "@/components/features/billing/WalletProvider";
+import { useTour } from "@/components/features/tour/TourProvider";
 import { formatIDR } from "@/components/features/billing/billing-format";
 
 export default function Sidebar() {
@@ -51,6 +53,7 @@ export default function Sidebar() {
     const businessId = params?.businessId as string | undefined;
     const { businesses, activeBusiness, setActiveBusinessId, isLoading } =
         useBusinessContext();
+    const { start: startTour } = useTour();
 
     const handleSignOut = async (): Promise<void> => {
         await authClient.signOut({
@@ -179,6 +182,7 @@ export default function Sidebar() {
                 <CreateBusinessModal>
                     <Button
                         variant={"default"}
+                        data-tour="business-create"
                         className="py-6 rounded-sm uppercase text-[10px] tracking-[0.2em] font-black"
                     >
                         <Plus className="w-4 h-4" />
@@ -191,7 +195,10 @@ export default function Sidebar() {
                             const isActive =
                                 pathname === item.path || pathname?.startsWith(item.path);
                             return (
-                                <SidebarMenuItem key={item.name}>
+                                <SidebarMenuItem
+                                    key={item.name}
+                                    data-tour={`sidebar-item-${item.name.toLowerCase()}`}
+                                >
                                     <SidebarMenuButton
                                         asChild
                                         isActive={isActive}
@@ -216,6 +223,16 @@ export default function Sidebar() {
 
             <SidebarFooter className="p-4 pt-0 bg-transparent border-0 space-y-4">
                 <SidebarMenu className="space-y-1">
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            data-tour="tour-reopen"
+                            onClick={() => startTour()}
+                            className="flex items-center gap-3 px-4 py-3 rounded-sm text-[13px] font-medium text-outline hover:bg-surface-container hover:text-on-surface transition-all duration-200 h-auto border border-outline-variant/10"
+                        >
+                            <HelpCircle className="w-4 h-4 shrink-0" />
+                            <span>Tutorial / Bantuan</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
                     <div className="pt-4 mt-2 border-t border-outline-variant/15">
                         <SidebarMenuItem>
                             <DropdownMenu>

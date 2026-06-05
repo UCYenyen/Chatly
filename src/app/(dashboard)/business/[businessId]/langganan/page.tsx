@@ -12,18 +12,14 @@ export default async function SubscriptionPage({ params }: PageProps) {
 
     return (
         <SubscriptionProvider businessId={businessId}>
-            <div className="p-8 lg:p-12 xl:p-14 w-full mx-auto max-w-[1500px] flex flex-col min-h-full gap-8">
+            <div className="p-4 pt-6 md:p-8 md:pt-8 lg:p-10 w-full mx-auto max-w-[1600px] flex flex-col min-h-full gap-8">
                 <SubscriptionHeader />
 
                 <div className="mt-2">
                     <ActiveBusinessBanner scopeLabel="Langganan Bisnis" />
                 </div>
 
-                <div className="grid grid-cols-12 gap-6 xl:gap-8 shrink-0">
-                    <div className="col-span-12 xl:col-span-8">
-                        <CurrentPlan />
-                    </div>
-                </div>
+                <CurrentPlan />
 
                 <div className="flex-1" />
             </div>

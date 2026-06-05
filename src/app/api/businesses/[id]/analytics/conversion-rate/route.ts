@@ -52,6 +52,14 @@ export async function GET(
     const totalBuyingCustomers = buyingCustomersData.length;
     const buyingCustomers = buyingCustomersData.map(c => c.customerPhone);
 
+    const engagedCustomersData = await prisma.analyticsEvent.findMany({
+      where: { businessId },
+      distinct: ['phone'],
+      select: { phone: true }
+    });
+
+    const totalEngagedCustomers = engagedCustomersData.length;
+
     // Calculate conversion rate
     const conversionRate = totalChatCustomers > 0
       ? (totalBuyingCustomers / totalChatCustomers) * 100
@@ -95,6 +103,7 @@ export async function GET(
 
     return NextResponse.json({
       totalChatCustomers,
+      totalEngagedCustomers,
       totalBuyingCustomers,
       conversionRate: Math.round(conversionRate * 100) / 100, // 2 decimal places
       totalTransactions,

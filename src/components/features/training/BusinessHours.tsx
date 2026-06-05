@@ -66,16 +66,16 @@ export function BusinessHours() {
   };
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant/15 p-8 rounded-xl flex flex-col shadow-xl h-fit">
+    <div className="bg-surface-container-low border border-outline-variant/15 p-5 sm:p-8 rounded-xl flex flex-col shadow-xl h-fit min-w-0">
       <div className="flex items-center gap-3 mb-6">
-        <Clock className="w-5 h-5 text-secondary-fixed" fill="currentColor" fillOpacity={0.2} />
-        <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide">
+        <Clock className="w-5 h-5 shrink-0 text-secondary-fixed" fill="currentColor" fillOpacity={0.2} />
+        <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide wrap-break-word min-w-0">
           Jam Operasional Handover
         </h2>
       </div>
 
-      <div className="flex flex-col gap-2 mb-6">
-        <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">
+      <div data-tour="notification-phone" className="flex flex-col gap-2 mb-6 min-w-0">
+        <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold wrap-break-word">
           Nomor WhatsApp Notifikasi Handover
         </span>
         <Input
@@ -91,15 +91,15 @@ export function BusinessHours() {
       </div>
 
       <div className="flex items-start justify-between gap-4 p-4 rounded-md border border-outline-variant/15 bg-[#08111d] mb-6">
-        <div className="flex flex-col">
-          <span className="text-[13px] font-bold text-on-surface">
+        <div className="flex flex-col min-w-0">
+          <span className="text-[13px] font-bold text-on-surface wrap-break-word">
             Batasi handover ke admin sesuai jam buka
           </span>
-          <span className="text-[11px] text-outline mt-1 leading-relaxed">
+          <span className="text-[11px] text-outline mt-1 leading-relaxed wrap-break-word">
             Di luar jam ini, pelanggan tidak akan dialihkan ke admin dan tetap dilayani AI.
           </span>
         </div>
-        <Switch checked={enabled} onCheckedChange={setEnabled} />
+        <Switch checked={enabled} onCheckedChange={setEnabled} className="shrink-0" />
       </div>
 
       <div className={enabled ? "flex flex-col gap-5" : "flex flex-col gap-5 opacity-50 pointer-events-none"}>
@@ -131,7 +131,7 @@ export function BusinessHours() {
               return (
                 <div
                   key={day}
-                  className="flex items-center gap-3 p-3 rounded-md border border-outline-variant/15 bg-[#08111d]"
+                  className="flex items-center gap-3 flex-wrap p-3 rounded-md border border-outline-variant/15 bg-[#08111d]"
                 >
                   <span className="w-16 text-[13px] font-bold text-on-surface shrink-0">
                     {DAY_LABELS[day]}
@@ -139,23 +139,24 @@ export function BusinessHours() {
                   <Switch
                     checked={!config.closed}
                     onCheckedChange={(open) => setDayClosed(day, !open)}
+                    className="shrink-0"
                   />
                   {config.closed ? (
                     <span className="text-[12px] text-outline">Tutup</span>
                   ) : (
-                    <div className="flex items-center gap-2 ml-auto">
+                    <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
                       <Input
                         type="time"
                         value={config.open}
                         onChange={(e) => setDayTime(day, "open", e.target.value)}
-                        className="w-28"
+                        className="flex-1 min-w-0 sm:flex-none sm:w-28"
                       />
-                      <span className="text-outline text-[12px]">—</span>
+                      <span className="text-outline text-[12px] shrink-0">—</span>
                       <Input
                         type="time"
                         value={config.close}
                         onChange={(e) => setDayTime(day, "close", e.target.value)}
-                        className="w-28"
+                        className="flex-1 min-w-0 sm:flex-none sm:w-28"
                       />
                     </div>
                   )}

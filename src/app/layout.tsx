@@ -18,6 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 import { TransitionProvider } from "@/components/providers/TransitionProvider";
+import { TourProvider } from "@/components/features/tour/TourProvider";
 
 export const metadata: Metadata = {
   title: "Chatly",
@@ -45,7 +46,7 @@ export default function RootLayout({
       <body className="min-h-full flex">
         <main className="flex-1 w-full flex flex-col h-full bg-background overflow-auto relative">
           <TransitionProvider>
-            {children}
+            <TourProvider>{children}</TourProvider>
             {/* <SplashCursor SPLAT_FORCE={1000} COLOR="#bff44c" />   */}
             <Toaster richColors position="bottom-right" duration={3000} closeButton />
           </TransitionProvider>

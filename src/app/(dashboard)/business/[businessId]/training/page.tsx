@@ -17,12 +17,10 @@ export default function TrainingPage() {
     const { isPaid, isLoading } = useBusinessSubscription(businessId);
 
     return (
-        <div className="p-8 lg:p-12 xl:p-14 w-full mx-auto max-w-[1500px] flex flex-col min-h-full">
+        <div className="p-4 pt-6 md:p-8 md:pt-8 lg:p-10 w-full mx-auto max-w-[1600px] flex flex-col min-h-full">
             <TrainingHeader />
 
-            <div className="mt-6">
-                <ActiveBusinessBanner scopeLabel="Pelatihan AI" />
-            </div>
+            <ActiveBusinessBanner scopeLabel="Pelatihan AI" />
 
             <FeatureLockOverlay
                 isLocked={isLoading ? false : !isPaid}

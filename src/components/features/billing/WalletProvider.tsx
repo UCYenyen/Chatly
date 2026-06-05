@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useWallet } from '@/hooks/use-wallet'
+import { useTour } from '@/components/features/tour/TourProvider'
 import { Suspense } from 'react'
 import type { WalletStateResponse, TopUpRequest, TopUpResponse } from '@/types/wallet.md'
 
@@ -19,6 +20,7 @@ const WalletContext = createContext<WalletContextValue | null>(null)
 function WalletParamsHandler({ refresh }: { refresh: () => Promise<void> }) {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const { goCongrats } = useTour()
     const handledRef = useRef<boolean>(false)
 
     useEffect(() => {
@@ -38,9 +40,10 @@ function WalletParamsHandler({ refresh }: { refresh: () => Promise<void> }) {
                 } finally {
                     await refresh()
                     router.replace('/billing')
+                    goCongrats()
                 }
             })()
-    }, [searchParams, refresh, router])
+    }, [searchParams, refresh, router, goCongrats])
 
     return null
 }

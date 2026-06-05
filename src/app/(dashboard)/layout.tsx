@@ -4,6 +4,7 @@ import { BusinessProvider } from "@/components/features/business/BusinessProvide
 
 
 import { WalletProvider } from "@/components/features/billing/WalletProvider";
+import { TourBusinessDriver } from "@/components/features/tour/TourBusinessDriver";
 
 export default function RootLayout({
   children,
@@ -12,6 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <BusinessProvider>
+      <TourBusinessDriver />
       <WalletProvider>
         <SidebarProvider>
           <Sidebar />

@@ -13,26 +13,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { ConversionRateCardSkeleton } from "./ConversionRateCardSkeleton"
-
-interface ConversionData {
-  totalChatCustomers: number
-  totalBuyingCustomers: number
-  conversionRate: number
-  totalTransactions: number
-  totalRevenue: number
-  details: {
-    chatCustomers: string[]
-    buyingCustomers: string[]
-    transactions: Array<{
-      id: string
-      customerPhone: string
-      name: string
-      amount: number
-      status: string
-      createdAt: string
-    }>
-  }
-}
+import type { ConversionRateResponse } from "@/types/analytics.md"
 
 type DetailView = null | "chat" | "buyers" | "transactions"
 
@@ -40,7 +21,7 @@ export function ConversionRateCard() {
   const params = useParams()
   const businessId = (params?.businessId || params?.id) as string
 
-  const [data, setData] = useState<ConversionData | null>(null)
+  const [data, setData] = useState<ConversionRateResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [detailView, setDetailView] = useState<DetailView>(null)
