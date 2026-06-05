@@ -1,6 +1,15 @@
 import { getTransporter } from "@/lib/utils/mailer";
 import type { MonthlyReportData, ReportFile } from "@/types/report.md";
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function sendMonthlyReport(
   toEmail: string,
   data: MonthlyReportData,
@@ -14,7 +23,7 @@ export async function sendMonthlyReport(
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>Laporan Transaksi ${data.periodLabel}</h2>
-        <p>Berikut laporan transaksi untuk <strong>${data.businessName}</strong> periode ${data.periodLabel}.</p>
+        <p>Berikut laporan transaksi untuk <strong>${escapeHtml(data.businessName)}</strong> periode ${data.periodLabel}.</p>
         <ul>
           <li>Total transaksi: ${data.summary.totalTransactions}</li>
           <li>Transaksi dibayar: ${data.summary.paidTransactions}</li>

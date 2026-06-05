@@ -153,7 +153,6 @@ export async function PATCH(
       data.monthlyReportFormat = body.monthlyReportFormat;
     }
 
-    console.log("[PATCH /api/businesses/:id] data:", JSON.stringify(data, null, 2));
     const updated = await prisma.business.update({ where: { id }, data });
     return NextResponse.json(toBusinessDTO(updated));
   } catch (error) {

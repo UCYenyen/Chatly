@@ -16,10 +16,18 @@ function escapeCsv(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
+function guardFormula(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
+function sanitizeCsvCell(value: string): string {
+  return escapeCsv(guardFormula(value));
+}
+
 function buildCsv(data: MonthlyReportData): string {
   const lines: string[] = [];
-  lines.push(`Laporan Transaksi,${escapeCsv(data.businessName)}`);
-  lines.push(`Periode,${escapeCsv(data.periodLabel)}`);
+  lines.push(`Laporan Transaksi,${sanitizeCsvCell(data.businessName)}`);
+  lines.push(`Periode,${sanitizeCsvCell(data.periodLabel)}`);
   lines.push("");
   lines.push("Ringkasan");
   lines.push(`Total Transaksi,${data.summary.totalTransactions}`);
@@ -31,13 +39,13 @@ function buildCsv(data: MonthlyReportData): string {
   for (const row of data.rows) {
     lines.push(
       [
-        escapeCsv(row.date),
-        escapeCsv(row.name),
-        escapeCsv(row.customerPhone),
-        escapeCsv(row.description),
+        sanitizeCsvCell(row.date),
+        sanitizeCsvCell(row.name),
+        sanitizeCsvCell(row.customerPhone),
+        sanitizeCsvCell(row.description),
         String(row.amount),
-        escapeCsv(row.currency),
-        escapeCsv(row.status),
+        sanitizeCsvCell(row.currency),
+        sanitizeCsvCell(row.status),
       ].join(","),
     );
   }
@@ -65,8 +73,13 @@ async function buildXlsx(data: MonthlyReportData): Promise<Buffer> {
   ]);
   for (const row of data.rows) {
     sheet.addRow([
-      row.date, row.name, row.customerPhone, row.description,
-      row.amount, row.currency, row.status,
+      guardFormula(row.date),
+      guardFormula(row.name),
+      guardFormula(row.customerPhone),
+      guardFormula(row.description),
+      row.amount,
+      guardFormula(row.currency),
+      guardFormula(row.status),
     ]);
   }
 

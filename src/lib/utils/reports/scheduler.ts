@@ -9,19 +9,38 @@ import { getMonthlyReportData } from "./report-data";
 import { buildReportFile } from "./report-file";
 import { sendMonthlyReport } from "./report-mailer";
 
+const REPORT_TIMEZONE = "Asia/Jakarta";
+
 export type SendReportFn = (
   email: string,
   data: MonthlyReportData,
   file: ReportFile,
 ) => Promise<void>;
 
+function yearMonthInTimezone(
+  timeZone: string,
+  date: Date,
+): { year: number; month: number } {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+  });
+  let year = 0;
+  let month = 0;
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type === "year") year = Number(part.value);
+    if (part.type === "month") month = Number(part.value);
+  }
+  return { year, month };
+}
+
 export function previousMonth(now: Date): {
   year: number;
   month: number;
   period: string;
 } {
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth() + 1;
+  const { year, month } = yearMonthInTimezone(REPORT_TIMEZONE, now);
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
   return {
@@ -84,13 +103,14 @@ export async function runMonthlyReports(
   });
 
   for (const business of businesses) {
+    if (!business.monthlyReportEmail) continue;
     try {
       await runReportForBusiness({
         businessId: business.id,
         year,
         month,
         format: business.monthlyReportFormat,
-        email: business.monthlyReportEmail as string,
+        email: business.monthlyReportEmail,
         deleteAfterSend: true,
         send,
       });
@@ -102,8 +122,12 @@ export async function runMonthlyReports(
 }
 
 export function startReportScheduler(): void {
-  cron.schedule("0 2 * * *", () => {
-    void runMonthlyReports();
-  });
+  cron.schedule(
+    "0 2 * * *",
+    () => {
+      void runMonthlyReports();
+    },
+    { timezone: REPORT_TIMEZONE },
+  );
   console.log("[monthly-report] scheduler started");
 }
