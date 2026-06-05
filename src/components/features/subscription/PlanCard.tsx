@@ -22,15 +22,23 @@ export function PlanCard({ plan, isCurrent }: PlanCardProps) {
   const { refresh: refreshSub } = useSubscriptionContext();
   const { refresh: refreshWallet } = useWalletContext();
   const isFree = plan.id === "FREE";
+  const isEnterprise = plan.id === "ENTERPRISE";
+  const WHATSAPP_NUMBER = "6281231847161";
 
   const handleClick = async (): Promise<void> => {
-    if (isFree || isCurrent) return;
+    if (isFree || isCurrent || isEnterprise) return;
     const ok = await startCheckout(plan.id as Exclude<PlanDefinition["id"], "FREE">);
     if (ok) {
       toast.success(`Berhasil berlangganan paket ${plan.name}`);
       void refreshSub();
       void refreshWallet();
     }
+  };
+
+  const handleContactWhatsApp = (): void => {
+    const message = `Halo, saya tertarik dengan paket ${plan.name}. Bisakah Anda memberikan lebih banyak informasi tentang harga dan ketersediaan?`;
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, "_blank");
   };
 
   return (
@@ -57,9 +65,9 @@ export function PlanCard({ plan, isCurrent }: PlanCardProps) {
 
       <div className="flex items-baseline gap-1">
         <span className="text-2xl sm:text-2xl md:text-3xl font-headline font-bold text-on-surface tracking-tight">
-          {isFree ? "Gratis" : formatIDR(plan.amount)}
+          {isFree ? "Gratis" : isEnterprise ? "Custom" : formatIDR(plan.amount)}
         </span>
-        {!isFree && <span className="text-outline text-[11px] sm:text-[12px] md:text-[13px]">/bln</span>}
+        {!isFree && !isEnterprise && <span className="text-outline text-[11px] sm:text-[12px] md:text-[13px]">/bln</span>}
       </div>
 
       <ul className="flex flex-col gap-1.5 sm:gap-2">
@@ -79,11 +87,11 @@ export function PlanCard({ plan, isCurrent }: PlanCardProps) {
 
       <Button
         type="button"
-        disabled={isFree || isCurrent || isPending}
-        onClick={handleClick}
+        disabled={isFree || isCurrent || (isPending && !isEnterprise)}
+        onClick={isEnterprise ? handleContactWhatsApp : handleClick}
         className="mt-auto h-9 sm:h-10 md:h-11 rounded-md bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 px-3 sm:px-4 text-[11px] sm:text-[12px] md:text-[13px] font-bold shadow-lg transition-transform disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isCurrent ? "Paket Saat Ini" : isFree ? "Tidak Tersedia" : isPending ? "Menyiapkan..." : "Pilih Paket"}
+        {isCurrent ? "Paket Saat Ini" : isFree ? "Tidak Tersedia" : isEnterprise ? "Hubungi WhatsApp" : isPending ? "Menyiapkan..." : "Pilih Paket"}
       </Button>
 
       {error && <p className="text-[10px] sm:text-[11px] text-error">{error}</p>}
