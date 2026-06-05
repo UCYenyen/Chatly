@@ -3,7 +3,7 @@ import { admin } from "better-auth/plugins";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "@/lib/utils/prisma";
 import { createAuthMiddleware, APIError } from "better-auth/api"
-import nodemailer from "nodemailer";
+import { getTransporter } from "@/lib/utils/mailer";
 
 const ERROR_TRANSLATIONS: Record<string, string> = {
     "User already exists": "Email ini sudah terdaftar",
@@ -44,13 +44,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_APP_PASSWORD,
-        },
-      });
+      const transporter = getTransporter();
 
       await transporter.sendMail({
         from: '"CHATLY" <no-reply@chatly.com>',
