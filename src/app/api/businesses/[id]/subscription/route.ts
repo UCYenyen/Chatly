@@ -69,7 +69,8 @@ export async function POST(
         }
 
         const body = (await request.json()) as CreateSubscriptionRequest
-        if (!body.plan || (body.plan !== "PRO" && body.plan !== "BUSINESS")) {
+        const validPlans = ["STARTER", "GROWTH", "PRO", "ENTERPRISE"];
+        if (!body.plan || !validPlans.includes(body.plan)) {
             return NextResponse.json({ message: 'Plan tidak valid' }, { status: 400 })
         }
 

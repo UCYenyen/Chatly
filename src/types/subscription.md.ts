@@ -17,7 +17,7 @@ export interface PlanDefinition {
   description: string;
   amount: number;
   currency: "IDR";
-  interval: "month";
+  interval: "month" | "year";
   intervalDays: number;
   features: PlanFeature[];
   highlighted?: boolean;

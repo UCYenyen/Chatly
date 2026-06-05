@@ -17,7 +17,7 @@ import { PlanCard } from "./PlanCard";
 import { useSubscriptionContext } from "./SubscriptionProvider";
 import type { SubscriptionPlan } from "@prisma/client";
 
-const PLAN_ORDER: ReadonlyArray<SubscriptionPlan> = ["FREE", "PRO", "BUSINESS"];
+const PLAN_ORDER: ReadonlyArray<SubscriptionPlan> = ["FREE", "STARTER", "GROWTH", "PRO", "ENTERPRISE"];
 
 export function PlansDialog() {
   const { data } = useSubscriptionContext();

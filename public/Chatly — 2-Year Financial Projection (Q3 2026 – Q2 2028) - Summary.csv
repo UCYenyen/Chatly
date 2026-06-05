@@ -1,0 +1,60 @@
+,Chatly — Financial Projection Summary (Q3 2026 – Q2 2028),,,,,,,,
+,All figures in IDR million (Rp jt). Built on real cost structure from Team Ga Tau Malu Cambridge A-Level breakeven sheet.,,,,,,,,
+,Variable Cost per client from sheet: Starter Rp 16.7K · Growth Rp 55.7K · Pro Rp 167K. Fixed Cost Rp 16.1jt/month baseline.,,,,,,,,
+,,,,,,,,,
+,INCREMENTAL REVENUE,Q3 2026,Q4 2026,Q1 2027,Q2 2027,Q3 2027,Q4 2027,Q1 2028,Q2 2028
+,,,,,,,,,
+,  Starter Subscriptions (Rp 149K/mo),Rp 6.0,Rp 22.1,Rp 51.4,Rp 83.7,Rp 122.4,Rp 167.4,Rp 252.4,Rp 343.7
+,  Growth Subscriptions (Rp 349K/mo),Rp 7.1,Rp 25.8,Rp 60.2,Rp 104.7,Rp 159.1,Rp 244.3,Rp 442.5,Rp 614.5
+,  Pro Subscriptions (Rp 749K/mo),Rp 6.1,Rp 22.3,Rp 50.4,Rp 87.7,Rp 169.0,Rp 259.7,Rp 491.6,Rp 686.5
+,"  Enterprise (custom, avg Rp 2.5jt/mo)",Rp 0.0,Rp 0.6,Rp 1.6,Rp 4.2,Rp 8.1,Rp 12.4,Rp 23.9,Rp 33.5
+,  Implementation Fees (one-time),Rp 2.4,Rp 4.0,Rp 8.4,Rp 12.0,Rp 18.0,Rp 24.0,Rp 35.0,Rp 49.0
+,Total Incremental Revenue,Rp 15.3,Rp 51.3,Rp 134.0,Rp 230.4,Rp 372.9,Rp 570.0,Rp 951.8,"Rp 1,345.2"
+,,,,,,,,,
+,End-of-Quarter Active Clients,30,80,150,250,400,600,850,"1,200"
+,Customer Mix (Starter/Growth/Pro/Ent),60/30/9/1,60/30/9/1,40/45/13/2,40/45/13/2,40/45/13/2,40/45/13/2,30/50/17/3,30/50/17/3
+,,,,,,,,,
+,INCREMENTAL COSTS,Q3 2026,Q4 2026,Q1 2027,Q2 2027,Q3 2027,Q4 2027,Q1 2028,Q2 2028
+,,,,,,,,,
+,"  Variable Cost (AI tokens, Gemini 2.5 Flash+Pro)",Rp 2.1,Rp 7.7,Rp 21.9,Rp 38.1,Rp 61.8,Rp 95.1,Rp 165.8,Rp 234.4
+,  Personnel (8 founders + new hires),Rp 48.0,Rp 48.0,Rp 84.0,Rp 132.0,Rp 180.0,Rp 228.0,Rp 276.0,Rp 324.0
+,  Hosting + Domain (Contabo VPS),Rp 0.4,Rp 0.4,Rp 0.4,Rp 0.4,Rp 0.4,Rp 0.4,Rp 0.4,Rp 0.4
+,"  Marketing (Meta+Google Ads, content, GTM)",Rp 15.0,Rp 24.0,Rp 36.0,Rp 60.0,Rp 90.0,Rp 120.0,Rp 150.0,Rp 180.0
+,Total Incremental Costs,Rp 65.5,Rp 80.1,Rp 142.3,Rp 230.5,Rp 332.2,Rp 443.5,Rp 592.2,Rp 738.8
+,,,,,,,,,
+,QUARTERLY CASHFLOW (pre-tax),(Rp 50.2),(Rp 28.8),(Rp 8.3),(Rp 0.0),Rp 40.7,Rp 126.5,Rp 359.7,Rp 606.4
+,Cumulative Cashflow,(Rp 50.2),(Rp 79.1),(Rp 87.4),(Rp 87.4),(Rp 46.7),Rp 79.8,Rp 439.4,"Rp 1,045.9"
+,,,,,,,,,
+,,,,,,,,,
+,KEY METRICS,,,,,,,,
+,,,,,,,,,
+,Pre-seed investment (assumed),Rp 500 jt,,,,,,,
+,"NPV (2-yr, quarterly discounted @ WACC 15%, post-tax)",Rp 101 jt,,,,,,,
+,Annualized IRR,25.80%,,,,,,,
+,2-year ROI on Rp 500 jt seed,159%,,,,,,,
+,Avg EBITDA Margin (2-year),28.50%,,,,,,,
+,Annualized Revenue Growth (Y1→Y2),19.6×,,,,,,,
+,ARR Growth (Q4 2026 → Q4 2027),11.1×,,,,,,,
+,ARR End of Year 2 (Q4 2027),Rp 2.28 M,,,,,,,
+,"ARR End of Q2 2028 (1,200 clients)",Rp 5.38 M,,,,,,,
+,Break-even quarter (cumulative CF positive),Q4 2027,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,UNIT ECONOMICS (per your Cambridge A-Level cost sheet),,,,,,,,
+,,,,,,,,,
+,Tier,Monthly Price,Monthly VC,Contribution/unit,Contribution Ratio,BEP (clients @ Rp 16.1jt FC),,,
+,Starter,"Rp 149,000","Rp 16,695","Rp 132,305",88.80%,122,,,
+,Growth,"Rp 349,000","Rp 55,651","Rp 293,349",84.10%,55,,,
+,Pro,"Rp 749,000","Rp 166,954","Rp 582,046",77.70%,28,,,
+,,,,,,,,,
+,,,,,,,,,
+,NOTES & ASSUMPTIONS,,,,,,,,
+,,,,,,,,,
+,1. Pricing & VC: Sourced from Team Ga Tau Malu cost sheet (Cambridge A-Level framework).,,,,,,,,
+,"2. Customer growth: Conservative ramp from 30 (Q3 2026) to 1,200 (Q2 2028). Hits stated Year 1 target of ~200 paying users.",,,,,,,,
+,3. Mix evolution: Y1 60/30/9/1 → Y2 40/45/13/2 → Y3 30/50/17/3 (Starter/Growth/Pro/Enterprise).,,,,,,,,
+,"4. Personnel: Baseline 8 founders × Rp 2jt/mo. Hire ramp: +1 Senior Eng (Q1 27), +2 Sales/Mkt (Q2 27), +1 CS Lead (Q3 27), +2/quarter thereafter.",,,,,,,,
+,5. Implementation fees: 40% of NEW Growth+ customers pay Rp 500K one-time onboarding fee.,,,,,,,,
+,6. Tax: 22% corporate tax on positive EBITDA per UU HPP 2021 (applied to NPV/IRR/ROI computations).,,,,,,,,
+,7. WACC 15% chosen as typical pre-seed/seed hurdle rate for SEA SaaS.,,,,,,,,
+,8. Variable Cost per client uses your sheet's blended Rp 5.57/message × messages-per-tier. Enterprise estimated at Rp 500K/mo (5× Pro).,,,,,,,,

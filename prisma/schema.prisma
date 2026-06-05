@@ -258,8 +258,10 @@ model WhatsAppAuth {
 
 enum SubscriptionPlan {
   FREE
+  STARTER
+  GROWTH
   PRO
-  BUSINESS
+  ENTERPRISE
 }
 
 enum SubscriptionStatus {
