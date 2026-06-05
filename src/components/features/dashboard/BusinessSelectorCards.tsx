@@ -107,15 +107,15 @@ export function BusinessSelectorCards() {
                     <Button
                         type="button"
                         variant="outline"
-                        className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 hover:bg-surface-container/50 hover:border-secondary-fixed/50 p-6 rounded-xl flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 min-h-[220px]"
+                        className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 hover:bg-surface-container/50 hover:border-secondary-fixed/50 p-6 rounded-xl flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 min-h-[220px] w-full"
                     >
                         <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-secondary-fixed group-hover:border-secondary-fixed transition-colors shadow-sm">
                             <Plus className="w-6 h-6 text-outline group-hover:text-on-secondary-fixed transition-colors" />
                         </div>
-                        <span className="font-bold text-[15px] text-on-surface mb-1 text-center">
+                        <span className="font-bold text-[15px] text-on-surface mb-2 text-center line-clamp-2 px-2 leading-snug">
                             Tambahkan Bisnis Baru
                         </span>
-                        <span className="text-[12px] text-outline text-center max-w-[160px]">
+                        <span className="text-[12px] text-outline text-center px-3 line-clamp-3 leading-relaxed">
                             Buka instans baru untuk divisi atau merek lain.
                         </span>
                     </Button>
