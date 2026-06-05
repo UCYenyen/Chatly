@@ -39,6 +39,7 @@ model Business {
   aiTone         String?
   knowledgeBase  String?
   knowledgeFiles String[]         @default([])
+  ignoreAllContacts Boolean       @default(false)
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   intents        BusinessIntent[]
   payments       Payment[]

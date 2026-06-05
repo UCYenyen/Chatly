@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -45,6 +47,8 @@ type AddContactValues = z.infer<typeof addContactSchema>;
 export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
   const {
     ignoreList,
+    ignoreAll,
+    setIgnoreAll,
     contacts,
     isContactsLoading,
     contactsError,
@@ -98,6 +102,19 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
     if (open) void loadContacts();
   };
 
+  const onToggleIgnoreAll = async (checked: boolean) => {
+    try {
+      await setIgnoreAll(checked);
+      toast.success(
+        checked
+          ? "Bot dijeda — semua pesan masuk akan diabaikan"
+          : "Bot aktif kembali"
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal memperbarui pengaturan");
+    }
+  };
+
   return (
     <Card className="bg-surface-container-low border-outline-variant/20">
       <CardHeader>
@@ -112,6 +129,24 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-6">
+        <div className="flex items-start gap-3 rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-3">
+          <Checkbox
+            id="ignore-all"
+            checked={ignoreAll}
+            onCheckedChange={(checked) => onToggleIgnoreAll(checked === true)}
+            className="mt-0.5"
+          />
+          <div className="flex flex-col gap-0.5">
+            <Label htmlFor="ignore-all" className="text-on-surface">
+              Abaikan semua pesan masuk
+            </Label>
+            <p className="text-xs text-outline">
+              Jeda bot untuk semua kontak. Saat aktif, bot tidak membalas
+              siapa pun dan pengaturan ini mengabaikan daftar di bawah.
+            </p>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-2">
           <Popover open={pickerOpen} onOpenChange={handlePickerOpenChange}>
             <PopoverTrigger asChild>

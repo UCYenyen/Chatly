@@ -22,6 +22,7 @@ export interface WhatsAppContactsResponse {
 
 export interface IgnoreListResponse {
   ignoreList: IgnoredContactDTO[];
+  ignoreAll: boolean;
 }
 
 export interface RecentChattersResponse {

@@ -12,6 +12,8 @@ import type {
 
 interface UseContactIgnoreListResult {
   ignoreList: IgnoredContactDTO[];
+  ignoreAll: boolean;
+  setIgnoreAll: (enabled: boolean) => Promise<void>;
   recentChatters: RecentChatterDTO[];
   contacts: WhatsAppContactDTO[];
   isContactsLoading: boolean;
@@ -37,6 +39,7 @@ export function useContactIgnoreList(
   businessId: string
 ): UseContactIgnoreListResult {
   const [ignoreList, setIgnoreList] = useState<IgnoredContactDTO[]>([]);
+  const [ignoreAll, setIgnoreAllState] = useState(false);
   const [recentChatters, setRecentChatters] = useState<RecentChatterDTO[]>([]);
   const [contacts, setContacts] = useState<WhatsAppContactDTO[]>([]);
   const [isContactsLoading, setIsContactsLoading] = useState(false);
@@ -67,6 +70,7 @@ export function useContactIgnoreList(
         "Gagal memuat kontak terbaru"
       );
       setIgnoreList(ignoreData.ignoreList ?? []);
+      setIgnoreAllState(ignoreData.ignoreAll ?? false);
       setRecentChatters(chattersData.recentChatters ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -96,6 +100,28 @@ export function useContactIgnoreList(
       setIsContactsLoading(false);
     }
   }, [businessId, isContactsLoading]);
+
+  const setIgnoreAll = useCallback(
+    async (enabled: boolean) => {
+      setIgnoreAllState(enabled);
+      try {
+        const res = await fetch(
+          `/api/businesses/${businessId}/whatsapp/ignore-list`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ignoreAll: enabled }),
+            credentials: "include",
+          }
+        );
+        await parseJsonResponse(res, "Gagal memperbarui pengaturan");
+      } catch (err) {
+        setIgnoreAllState(!enabled);
+        throw err;
+      }
+    },
+    [businessId]
+  );
 
   const addContact = useCallback(
     async (phoneNumber: string, label?: string) => {
@@ -137,6 +163,8 @@ export function useContactIgnoreList(
 
   return {
     ignoreList,
+    ignoreAll,
+    setIgnoreAll,
     recentChatters,
     contacts,
     isContactsLoading,

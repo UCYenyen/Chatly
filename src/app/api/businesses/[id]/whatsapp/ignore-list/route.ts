@@ -57,12 +57,21 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!authResult.ok) return authResult.response;
 
   try {
-    const contacts = await prisma.ignoredContact.findMany({
-      where: { businessId },
-      orderBy: { createdAt: "desc" },
-      select: { id: true, phoneNumber: true, label: true, createdAt: true },
+    const [contacts, business] = await Promise.all([
+      prisma.ignoredContact.findMany({
+        where: { businessId },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, phoneNumber: true, label: true, createdAt: true },
+      }),
+      prisma.business.findUnique({
+        where: { id: businessId },
+        select: { ignoreAllContacts: true },
+      }),
+    ]);
+    return NextResponse.json({
+      ignoreList: contacts.map(toDTO),
+      ignoreAll: business?.ignoreAllContacts ?? false,
     });
-    return NextResponse.json({ ignoreList: contacts.map(toDTO) });
   } catch (err) {
     console.error("[ignore-list:GET] failed:", err);
     return NextResponse.json(
@@ -70,6 +79,33 @@ export async function GET(_request: Request, context: RouteContext) {
       { status: 500 }
     );
   }
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const { id: businessId } = await context.params;
+  const authResult = await authorizeBusiness(businessId);
+  if (!authResult.ok) return authResult.response;
+
+  let body: { ignoreAll?: unknown };
+  try {
+    body = (await request.json()) as { ignoreAll?: unknown };
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (typeof body.ignoreAll !== "boolean") {
+    return NextResponse.json(
+      { error: "Field 'ignoreAll' harus boolean" },
+      { status: 400 }
+    );
+  }
+
+  await prisma.business.update({
+    where: { id: businessId },
+    data: { ignoreAllContacts: body.ignoreAll },
+  });
+
+  return NextResponse.json({ ignoreAll: body.ignoreAll });
 }
 
 export async function POST(request: Request, context: RouteContext) {

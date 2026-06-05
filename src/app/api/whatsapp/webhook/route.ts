@@ -287,15 +287,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const ignored = await prisma.ignoredContact.findUnique({
-      where: {
-        businessId_phoneNumber: {
-          businessId: whatsappAuth.businessId,
-          phoneNumber: from,
+    const [business, ignored] = await Promise.all([
+      prisma.business.findUnique({
+        where: { id: whatsappAuth.businessId },
+        select: { ignoreAllContacts: true },
+      }),
+      prisma.ignoredContact.findUnique({
+        where: {
+          businessId_phoneNumber: {
+            businessId: whatsappAuth.businessId,
+            phoneNumber: from,
+          },
         },
-      },
-      select: { id: true },
-    });
+        select: { id: true },
+      }),
+    ]);
+    if (business?.ignoreAllContacts) {
+      console.log(`[webhook] ignoreAllContacts is ON — dropping message from ${from} (no trace).`);
+      return NextResponse.json({ ok: true, ignored: true });
+    }
     if (ignored) {
       console.log(`[webhook] Ignored contact ${from} — dropping message (no trace).`);
       return NextResponse.json({ ok: true, ignored: true });
