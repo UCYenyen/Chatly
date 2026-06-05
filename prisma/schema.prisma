@@ -44,7 +44,11 @@ model Business {
   handoverHoursEnabled Boolean    @default(false)
   timezone       String?
   businessHours  Json?
-  notificationPhone String?
+  notificationPhone    String?
+  monthlyReportEnabled Boolean      @default(false)
+  monthlyReportEmail   String?
+  monthlyReportFormat  ReportFormat @default(XLSX)
+  lastReportPeriod     String?
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   intents        BusinessIntent[]
   payments       Payment[]
@@ -362,4 +366,9 @@ enum WhatsAppAuthStatus {
   AUTHENTICATED
   EXPIRED
   DISCONNECTED
+}
+
+enum ReportFormat {
+  CSV
+  XLSX
 }
