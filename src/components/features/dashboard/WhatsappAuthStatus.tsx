@@ -33,8 +33,8 @@ export function WhatsappAuthStatus({
       case "AUTHENTICATED":
         return {
           icon: CheckCircle2,
-          color: "text-green-600",
-          bgColor: "bg-transparentc",
+          color: "text-success",
+          bgColor: "bg-transparent",
           label: "Terautentikasi",
           description: `Nomor: ${auth.phoneNumber || "Loading..."}`,
         };
@@ -49,15 +49,15 @@ export function WhatsappAuthStatus({
       case "EXPIRED":
         return {
           icon: AlertCircle,
-          color: "text-red-600",
-          bgColor: "bg-red-50",
+          color: "text-error",
+          bgColor: "bg-error-container",
           label: "Sesi Berakhir",
           description: "Silakan login ulang",
         };
       case "DISCONNECTED":
         return {
           icon: AlertCircle,
-          color: "text-orange-600",
+          color: "text-warning",
           bgColor: "bg-transparent",
           label: "Terputus",
           description: auth.disconnectedAt

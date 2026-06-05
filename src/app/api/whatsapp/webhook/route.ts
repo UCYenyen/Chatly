@@ -63,8 +63,9 @@ interface GowaWebhookPayload {
 }
 
 function extractText(p: GowaWebhookPayload["payload"]): string {
+  const body = 'body' in p && typeof p.body === 'string' ? (p.body as string) : undefined;
   return (
-    (p as any).body ??
+    body ??
     p.message?.conversation ??
     p.message?.text ??
     p.message?.extendedTextMessage?.text ??
@@ -189,9 +190,10 @@ export async function POST(request: Request) {
 
     if (missingPhoneAuths.length === 1) {
       whatsappAuth = missingPhoneAuths[0];
+      const deviceIdForUpdate = typeof payload.device_id === 'string' ? payload.device_id : device_id;
       await prisma.whatsAppAuth.update({
         where: { id: whatsappAuth.id },
-        data: { phoneNumber: (payload as any).device_id },
+        data: { phoneNumber: deviceIdForUpdate },
       });
       whatsappAuth.phoneNumber = device_id;
       console.log(`[webhook] Auto-linked unknown device_id ${device_id} to missing phone auth ${whatsappAuth.id}`);
@@ -250,7 +252,8 @@ export async function POST(request: Request) {
   }
 
   // Guard 1: GoWA sets is_from_me / from_me on outgoing messages.
-  if (payload.from_me || payload.is_from_me || (payload as any).fromMe) {
+  const fromMe = 'fromMe' in payload && typeof payload.fromMe === 'boolean' ? (payload.fromMe as boolean) : false;
+  if (payload.from_me || payload.is_from_me || fromMe) {
     console.log(`[webhook] Ignoring from_me message`);
     return NextResponse.json({ ok: true });
   }
@@ -302,14 +305,16 @@ export async function POST(request: Request) {
     });
     userLogSaved = true;
     console.log("[webhook] USER chat log saved OK");
-  } catch (err: any) {
+  } catch (err: unknown) {
     // If it's a unique constraint violation (P2002), it's a duplicate from a concurrent
     // webhook (GoWA retry or network race condition). Atomically safe.
-    if (err.code === "P2002") {
+    const error = err instanceof Error ? err : new Error(String(err));
+    const code = err && typeof err === 'object' && 'code' in err ? (err as { code: string }).code : null;
+    if (code === "P2002") {
       console.log(`[webhook] Atomic dedup: race condition duplicate messageId=${messageId} (idempotent)`);
       return NextResponse.json({ ok: true, deduped: true });
     }
-    console.error("[webhook] Failed to save USER chat log:", err);
+    console.error("[webhook] Failed to save USER chat log:", error);
   }
 
   // Do not invoke the AI engine if the user message was not saved (avoids duplicate responses)
@@ -445,11 +450,12 @@ export async function POST(request: Request) {
     } else {
       console.log("[webhook] No reply to send (empty response)");
     }
-  } catch (err) {
-    console.error("[webhook] AI pipeline error:", err);
-    console.error("[webhook] Error name:", (err as any)?.name);
-    console.error("[webhook] Error message:", (err as any)?.message);
-    console.error("[webhook] Error stack:", (err as any)?.stack);
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    console.error("[webhook] AI pipeline error:", error);
+    console.error("[webhook] Error name:", error.name);
+    console.error("[webhook] Error message:", error.message);
+    console.error("[webhook] Error stack:", error.stack);
   }
 
   return NextResponse.json({ ok: true });

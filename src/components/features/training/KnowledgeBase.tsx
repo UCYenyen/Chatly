@@ -195,7 +195,7 @@ export function KnowledgeBase() {
                                     </div>
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
-                                        className="p-1 hover:bg-surface-container-high rounded-full text-outline hover:text-red-400 transition-colors"
+                                        className="p-1 hover:bg-surface-container-high rounded-full text-outline hover:text-error transition-colors"
                                     >
                                         <X className="w-3.5 h-3.5" />
                                     </button>

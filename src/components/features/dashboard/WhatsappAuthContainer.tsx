@@ -59,9 +59,9 @@ export function WhatsappAuthContainer({
       <WhatsappAuthStatus auth={auth} isLoading={isLoading} />
 
       {error && !isWaitingForAuth && (
-        <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
-          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="flex items-start gap-3 p-4 bg-error-container rounded-lg border border-error">
+          <AlertCircle className="w-5 h-5 text-error mt-0.5" />
+          <p className="text-sm text-error">{error}</p>
         </div>
       )}
 

@@ -24,12 +24,12 @@ const STATUS_LABEL: Record<PaymentStatus, string> = {
 function statusClass(status: PaymentStatus): string {
   switch (status) {
     case "PAID":
-      return "bg-[#143600]/80 border-[#304400] text-secondary-fixed";
+      return "bg-success/15 border-success/30 text-success";
     case "PENDING":
       return "bg-surface-container-high border-outline-variant/20 text-outline";
     case "FAILED":
     case "EXPIRED":
-      return "bg-red-950/60 border-red-900/60 text-red-300";
+      return "bg-error/15 border-error/30 text-error";
   }
 }
 

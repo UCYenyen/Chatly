@@ -3,7 +3,6 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText as GSAPSplitText } from 'gsap/SplitText';
 import { useGSAP } from '@gsap/react';
-import { JSX } from 'react';
 
 gsap.registerPlugin(ScrollTrigger, GSAPSplitText);
 
@@ -225,7 +224,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
             inner.setAttribute('data-final-y', String(finalY));
           }
 
-          if (colorFrom) (inner.style as any).color = colorFrom;
+          if (colorFrom) inner.style.color = colorFrom;
           wrappersRef.current.push(wrap);
         });
       };
@@ -288,7 +287,16 @@ const Shuffle: React.FC<ShuffleProps> = ({
         });
 
         const addTween = (targets: HTMLElement[], at: number) => {
-          const vars: any = {
+          interface TweenVars {
+            duration: number;
+            ease: string | ((t: number) => number);
+            force3D: boolean;
+            stagger: number;
+            y?: (i: number, t: HTMLElement) => number;
+            x?: (i: number, t: HTMLElement) => number;
+          }
+
+          const vars: TweenVars = {
             duration,
             ease,
             force3D: true,
@@ -300,7 +308,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
             vars.x = (i: number, t: HTMLElement) => parseFloat(t.getAttribute('data-final-x') || '0');
           }
 
-          tl.to(targets, vars, at);
+          tl.to(targets, vars as gsap.TweenVars, at);
 
           if (colorFrom && colorTo) tl.to(targets, { color: colorTo, duration, ease }, at);
         };
@@ -315,7 +323,15 @@ const Shuffle: React.FC<ShuffleProps> = ({
         } else {
           strips.forEach(strip => {
             const d = Math.random() * maxDelay;
-            const vars: any = {
+            interface RandomTweenVars {
+              duration: number;
+              ease: string | ((t: number) => number);
+              force3D: boolean;
+              y?: number;
+              x?: number;
+            }
+
+            const vars: RandomTweenVars = {
               duration,
               ease,
               force3D: true
@@ -325,7 +341,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
             } else {
               vars.x = parseFloat(strip.getAttribute('data-final-x') || '0');
             }
-            tl.to(strip, vars, d);
+            tl.to(strip, vars as gsap.TweenVars, d);
             if (colorFrom && colorTo) tl.fromTo(strip, { color: colorFrom }, { color: colorTo, duration, ease }, d);
           });
         }
@@ -415,9 +431,25 @@ const Shuffle: React.FC<ShuffleProps> = ({
     () => `${baseTw} ${ready ? 'visible' : 'invisible'} ${className}`.trim(),
     [baseTw, ready, className]
   );
-  const Tag = (tag || 'p') as keyof JSX.IntrinsicElements;
 
-  return React.createElement(Tag, { ref: ref as any, className: classes, style: commonStyle }, text);
+  switch (tag || 'p') {
+    case 'h1':
+      return <h1 ref={ref as React.Ref<HTMLHeadingElement>} className={classes} style={commonStyle}>{text}</h1>;
+    case 'h2':
+      return <h2 ref={ref as React.Ref<HTMLHeadingElement>} className={classes} style={commonStyle}>{text}</h2>;
+    case 'h3':
+      return <h3 ref={ref as React.Ref<HTMLHeadingElement>} className={classes} style={commonStyle}>{text}</h3>;
+    case 'h4':
+      return <h4 ref={ref as React.Ref<HTMLHeadingElement>} className={classes} style={commonStyle}>{text}</h4>;
+    case 'h5':
+      return <h5 ref={ref as React.Ref<HTMLHeadingElement>} className={classes} style={commonStyle}>{text}</h5>;
+    case 'h6':
+      return <h6 ref={ref as React.Ref<HTMLHeadingElement>} className={classes} style={commonStyle}>{text}</h6>;
+    case 'span':
+      return <span ref={ref as React.Ref<HTMLSpanElement>} className={classes} style={commonStyle}>{text}</span>;
+    default:
+      return <p ref={ref as React.Ref<HTMLParagraphElement>} className={classes} style={commonStyle}>{text}</p>;
+  }
 };
 
 export default Shuffle;

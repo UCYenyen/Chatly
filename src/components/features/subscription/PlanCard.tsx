@@ -86,7 +86,7 @@ export function PlanCard({ plan, isCurrent }: PlanCardProps) {
         {isCurrent ? "Paket Saat Ini" : isFree ? "Tidak Tersedia" : isPending ? "Menyiapkan..." : "Pilih Paket"}
       </Button>
 
-      {error && <p className="text-[10px] sm:text-[11px] text-red-400">{error}</p>}
+      {error && <p className="text-[10px] sm:text-[11px] text-error">{error}</p>}
     </div>
   );
 }

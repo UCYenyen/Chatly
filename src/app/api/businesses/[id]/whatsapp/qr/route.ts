@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
 import { fetchGowaDeviceStatus } from "@/lib/utils/whatsapp";
+import type { WhatsAppAuthStatus } from "@prisma/client";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -39,13 +40,19 @@ export async function GET(_request: Request, context: RouteContext) {
   if (whatsappAuth.instanceKey) {
     const info = await fetchGowaDeviceStatus(whatsappAuth.instanceKey);
     if (info.connected) {
-      const updateData: any = {
+      const updateData: {
+        status: WhatsAppAuthStatus;
+        qrCode: null;
+        qrCodeExpiry: null;
+        lastConnected: Date;
+        phoneNumber?: string;
+      } = {
         status: "AUTHENTICATED",
         qrCode: null,
         qrCodeExpiry: null,
         lastConnected: new Date(),
       };
-      
+
       if (info.phoneNumber) {
         updateData.phoneNumber = info.phoneNumber;
       }
