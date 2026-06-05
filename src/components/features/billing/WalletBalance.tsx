@@ -6,6 +6,7 @@ import { useWalletContext } from './WalletProvider'
 import { formatIDR } from './billing-format'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 
 export function WalletBalance() {
@@ -39,7 +40,7 @@ export function WalletBalance() {
                     <div className="flex items-center gap-3">
                         <Wallet className="w-8 h-8 text-secondary-fixed" />
                         <h2 className="text-4xl font-headline font-bold text-on-surface tracking-tight">
-                            {isLoading ? '...' : formatIDR(data?.balance ?? 0)}
+                            {isLoading ? <Skeleton className="h-10 w-40" /> : formatIDR(data?.balance ?? 0)}
                         </h2>
                     </div>
                 </div>

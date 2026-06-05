@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import {
     ArrowRight,
     Plus,
@@ -12,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { CreateBusinessModal } from "@/components/personal/CreateBusinessModal";
 import { DeleteBusinessModal } from "@/components/personal/DeleteBusinessModal";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
+import { BusinessSelectorCardsSkeleton } from "./BusinessSelectorCardsSkeleton";
 import { cn } from "@/lib/utils";
 import type { BusinessDTO } from "@/types/business.md";
 
@@ -40,7 +40,7 @@ export function BusinessSelectorCards() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
                 {isLoading && businesses.length === 0 && (
-                    <div className="col-span-full text-[13px] text-outline">Memuat bisnis...</div>
+                    <BusinessSelectorCardsSkeleton />
                 )}
 
                 {businesses.map((biz) => {

@@ -3,12 +3,13 @@
 import { Download, ExternalLink, ListFilter, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useWalletContext } from "./WalletProvider";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { formatIDR, formatShortDateID } from "./billing-format";
 import { useCancelPayment } from "@/hooks/use-cancel-payment";
 import { downloadReceipt } from "@/lib/utils/receipt-generator";
-import type { PaymentDTO, WalletStateResponse } from "@/types/wallet.md";
+import type { PaymentDTO } from "@/types/wallet.md";
 import type { PaymentStatus } from "@prisma/client";
 
 function isCancelable(status: PaymentStatus): boolean {
@@ -90,11 +91,34 @@ export function TransactionHistory() {
           </thead>
           <tbody className="text-[13px]">
             {isLoading && (
-              <tr>
-                <td colSpan={5} className="px-8 py-10 text-center text-outline">
-                  Memuat...
-                </td>
-              </tr>
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="border-b border-outline-variant/5">
+                    <td className="px-8 py-7">
+                      <Skeleton className="h-4 w-32" />
+                    </td>
+                    <td className="px-4 py-7">
+                      <div className="flex flex-col gap-1.5">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-3 w-32" />
+                        <Skeleton className="h-3 w-40" />
+                      </div>
+                    </td>
+                    <td className="px-4 py-7">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="px-4 py-7">
+                      <Skeleton className="h-6 w-16 rounded-sm" />
+                    </td>
+                    <td className="px-8 py-7 text-right">
+                      <div className="flex justify-end gap-1">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </>
             )}
             {!isLoading && payments.length === 0 && (
               <tr>

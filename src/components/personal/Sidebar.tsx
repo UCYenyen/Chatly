@@ -26,6 +26,7 @@ import {
     SidebarGroup,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -63,9 +64,6 @@ export default function Sidebar() {
     };
 
     const user = session?.user;
-    const balanceLabel = isWalletLoading
-        ? "Memuat..."
-        : formatIDR(walletData?.balance ?? 0);
 
     const initials = user?.name
         ? user.name
@@ -127,13 +125,15 @@ export default function Sidebar() {
                                             <p className="text-[10px] uppercase tracking-widest text-secondary-fixed mb-1 font-label">
                                                 Pengalih Bisnis
                                             </p>
-                                            <p className="font-bold text-secondary-fixed truncate text-sm">
-                                                {activeBusiness
-                                                    ? activeBusiness.name
-                                                    : isLoading
-                                                        ? "Memuat..."
+                                            {!activeBusiness && isLoading ? (
+                                                <Skeleton className="h-5 w-32" />
+                                            ) : (
+                                                <p className="font-bold text-secondary-fixed truncate text-sm">
+                                                    {activeBusiness
+                                                        ? activeBusiness.name
                                                         : "Belum ada bisnis"}
-                                            </p>
+                                                </p>
+                                            )}
                                         </div>
                                         <ChevronsUpDown className="w-4 h-4 text-outline group-hover:text-secondary-fixed transition-colors shrink-0 ml-2" />
                                     </div>
@@ -237,8 +237,13 @@ export default function Sidebar() {
                                             <span className="truncate font-bold text-on-surface">
                                                 {user?.name || "User"}
                                             </span>
-                                            <span className="truncate text-[11px] text-outline mt-0.5">
-                                                Saldo: {balanceLabel}
+                                            <span className="truncate text-[11px] text-outline mt-0.5 flex items-center gap-1.5">
+                                                Saldo:{" "}
+                                                {isWalletLoading ? (
+                                                    <Skeleton className="h-3 w-16" />
+                                                ) : (
+                                                    formatIDR(walletData?.balance ?? 0)
+                                                )}
                                             </span>
                                         </div>
                                         <MoreHorizontal className="ml-auto size-4 text-outline" />

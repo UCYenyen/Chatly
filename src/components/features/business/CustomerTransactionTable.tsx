@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { ExternalLink, ListFilter, RefreshCcw, Search, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatIDR, formatDateTimeID } from "@/components/features/billing/billing-format";
+import { CustomerTransactionTableSkeleton } from "./CustomerTransactionTableSkeleton";
 import type { PaymentStatus } from "@prisma/client";
 import type { CustomerTransaction } from "@prisma/client";
 
@@ -75,11 +77,7 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
   );
 
   if (!isMounted) {
-    return (
-      <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-2xl flex flex-col overflow-hidden w-full h-[400px] items-center justify-center">
-        <RefreshCcw className="w-8 h-8 animate-spin text-secondary-fixed/20" />
-      </div>
-    );
+    return <CustomerTransactionTableSkeleton />;
   }
 
   return (
@@ -137,14 +135,34 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
           </thead>
           <tbody className="text-[13px]">
             {isLoading && (
-              <tr>
-                <td colSpan={6} className="px-8 py-20 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <RefreshCcw className="w-6 h-6 animate-spin text-secondary-fixed" />
-                    <span className="text-outline font-inter text-[13px]">Memuat data transaksi...</span>
-                  </div>
-                </td>
-              </tr>
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="border-b border-outline-variant/5">
+                    <td className="px-8 py-6">
+                      <Skeleton className="h-4 w-32" />
+                    </td>
+                    <td className="px-4 py-7">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="px-4 py-6">
+                      <div className="flex flex-col gap-2">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-48" />
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                    </td>
+                    <td className="px-4 py-6">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="px-4 py-6">
+                      <Skeleton className="h-7 w-20 rounded-full" />
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <Skeleton className="h-8 w-24 ml-auto" />
+                    </td>
+                  </tr>
+                ))}
+              </>
             )}
             {!isLoading && filtered.length === 0 && (
               <tr>
@@ -172,7 +190,7 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
                       {tx.name}
                     </span>
                     {tx.description && (
-                        <span className="text-[12px] text-outline/80 leading-snug">"{tx.description}"</span>
+                        <span className="text-[12px] text-outline/80 leading-snug">&quot;{tx.description}&quot;</span>
                     )}
                     <span className="text-[10px] font-mono text-outline/50 mt-1 uppercase bg-surface-container-high/50 w-fit px-1.5 py-0.5 rounded-sm border border-outline-variant/10">{tx.xenditExternalId}</span>
                   </div>

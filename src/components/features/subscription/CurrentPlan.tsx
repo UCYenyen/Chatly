@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useSubscriptionContext } from "./SubscriptionProvider";
 import { PlansDialog } from "./PlansDialog";
+import { CurrentPlanSkeleton } from "./CurrentPlanSkeleton";
 import { useCancelSubscription } from "@/hooks/use-cancel-subscription";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { formatIDR, formatDateID } from "../billing/billing-format";
@@ -25,6 +26,10 @@ export function CurrentPlan() {
     if (ok) await refresh();
   };
 
+  if (isLoading) {
+    return <CurrentPlanSkeleton />;
+  }
+
   return (
     <div className="bg-surface-container-low border border-outline-variant/15 border-t-4 border-t-secondary-fixed p-8 xl:p-10 rounded-xl flex flex-col gap-8 shadow-2xl relative overflow-hidden h-full">
       <div className="flex items-start justify-between relative z-10 w-full">
@@ -43,7 +48,7 @@ export function CurrentPlan() {
                   : "bg-surface-container-high border-outline-variant/20 text-outline"
               }`}
             >
-              {isLoading ? "MEMUAT" : (sub?.status ?? "FREE")}
+              {sub?.status ?? "FREE"}
             </div>
           </div>
         </div>

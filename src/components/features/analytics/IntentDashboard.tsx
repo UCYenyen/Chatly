@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
+import { IntentDashboardSkeleton } from "./IntentDashboardSkeleton"
 
 interface BusinessIntent {
   id: string
@@ -209,6 +210,10 @@ export function IntentDashboard() {
 
   if (!mounted) return null
 
+  if (isLoading) {
+    return <IntentDashboardSkeleton />
+  }
+
   return (
     <div className="flex flex-col w-full gap-8">
       {/* Top Section: Intent Input and Selection */}
@@ -242,12 +247,7 @@ export function IntentDashboard() {
         <div className="flex flex-col gap-4 relative z-10">
           <span className="text-[11px] font-mono text-secondary uppercase tracking-widest font-bold ml-1">Pilih Niat untuk Dilihat</span>
 
-          {isLoading ? (
-            <div className="flex items-center gap-2 text-outline text-[13px]">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Memuat niat...</span>
-            </div>
-          ) : trackedIntents.length === 0 ? (
+          {trackedIntents.length === 0 ? (
             <span className="text-[13px] text-outline italic opacity-60">Belum ada niat yang dilacak.</span>
           ) : (
             <div className="relative w-full max-w-sm overflow-visible z-40">

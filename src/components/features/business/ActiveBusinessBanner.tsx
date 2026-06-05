@@ -3,6 +3,7 @@
 import { Rocket } from "lucide-react";
 import Link from "next/link";
 import { useBusinessContext } from "./BusinessProvider";
+import { ActiveBusinessBannerSkeleton } from "./ActiveBusinessBannerSkeleton";
 
 interface ActiveBusinessBannerProps {
   scopeLabel: string;
@@ -12,11 +13,7 @@ export function ActiveBusinessBanner({ scopeLabel }: ActiveBusinessBannerProps) 
   const { activeBusiness, businesses, isLoading } = useBusinessContext();
 
   if (isLoading && !activeBusiness) {
-    return (
-      <div className="flex items-center gap-3 rounded-xl border border-outline-variant/15 bg-surface-container-low px-5 py-3 text-[12px] text-outline">
-        Memuat bisnis aktif...
-      </div>
-    );
+    return <ActiveBusinessBannerSkeleton />;
   }
 
   if (!activeBusiness) {

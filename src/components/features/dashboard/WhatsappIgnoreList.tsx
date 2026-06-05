@@ -30,6 +30,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { IgnoreListItemSkeleton, ContactItemSkeleton } from "./WhatsappIgnoreListSkeleton";
 
 interface WhatsappIgnoreListProps {
   businessId: string;
@@ -168,8 +169,10 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
                 <CommandInput placeholder="Cari nama atau nomor..." />
                 <CommandList>
                   {isContactsLoading ? (
-                    <div className="flex items-center gap-2 px-3 py-4 text-sm text-outline">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Memuat kontak...
+                    <div className="flex flex-col gap-2 px-2 py-4">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <ContactItemSkeleton key={i} />
+                      ))}
                     </div>
                   ) : contactsError ? (
                     <div className="px-3 py-4 text-sm text-error">
@@ -241,9 +244,11 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
             Daftar abaikan ({ignoreList.length})
           </p>
           {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-outline">
-              <Loader2 className="w-4 h-4 animate-spin" /> Memuat...
-            </div>
+            <ul className="flex flex-col gap-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <IgnoreListItemSkeleton key={i} />
+              ))}
+            </ul>
           ) : ignoreList.length === 0 ? (
             <p className="text-sm text-outline">Belum ada kontak yang diabaikan.</p>
           ) : (

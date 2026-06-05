@@ -2,6 +2,7 @@
 
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { WhatsappAuthStatusSkeleton } from "./WhatsappAuthStatusSkeleton";
 import type { WhatsAppAuthDTO } from "@/types/whatsapp.md";
 
 interface WhatsappAuthStatusProps {
@@ -14,14 +15,7 @@ export function WhatsappAuthStatus({
   isLoading,
 }: WhatsappAuthStatusProps) {
   if (isLoading) {
-    return (
-      <Card className="bg-surface-container border-outline-variant/20">
-        <CardContent className="flex items-center gap-3 p-4">
-          <Clock className="w-5 h-5 text-outline animate-spin" />
-          <span className="text-sm text-outline">Memuat status...</span>
-        </CardContent>
-      </Card>
-    );
+    return <WhatsappAuthStatusSkeleton />;
   }
 
   if (!auth) {

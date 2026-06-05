@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { TrendingUp, Loader2, ArrowRight } from "lucide-react"
+import { TrendingUp, ArrowRight } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
+import { ConversionRateCardSkeleton } from "./ConversionRateCardSkeleton"
 
 interface ConversionData {
   totalChatCustomers: number
@@ -71,13 +72,7 @@ export function ConversionRateCard() {
   }, [businessId])
 
   if (isLoading) {
-    return (
-      <div className="bg-surface-container-low border border-outline-variant/15 p-8 rounded-xl flex flex-col justify-center h-full shadow-2xl min-h-[220px]">
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="w-6 h-6 animate-spin text-secondary-fixed" />
-        </div>
-      </div>
-    )
+    return <ConversionRateCardSkeleton />
   }
 
   if (error || !data) {
