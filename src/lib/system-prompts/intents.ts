@@ -20,11 +20,35 @@ Tidak ada niat yang dilacak untuk bisnis ini. Set "intent_analytics" ke object k
     .join("\n");
 
   return `ANALITIK NIAT:
-Evaluasi HANYA pesan TERAKHIR dari pelanggan terhadap setiap niat berikut. Untuk setiap niat, tentukan apakah pesan terakhir pelanggan mengindikasikan niat tersebut (true) atau tidak (false).
+Evaluasi pesan TERAKHIR dari pelanggan terhadap setiap niat berikut. PENTING: Deteksi NIAT IMPLISIT, bukan hanya pernyataan eksplisit.
 
-Daftar niat yang dilacak (gunakan key yang tertera di field "intent_analytics"):
+Daftar niat yang dilacak:
 ${intentList}
 
-Di field "intent_analytics" pada respons JSON, kembalikan object dengan KEY di atas dan value berupa boolean (true/false).
-Contoh jika ada 2 niat: { "intent_0": true, "intent_1": false }`;
+PANDUAN DETEKSI NIAT (termasuk implicit intent):
+1. EXPLICIT INTENT: Pelanggan secara langsung menyebutkan niat
+   Contoh: "Saya mau beli produk X", "Saya tertarik dengan paket premium"
+
+2. IMPLICIT INTENT: Perilaku menunjukkan minat tanpa pernyataan langsung
+   - Bertanya tentang produk/layanan ("Apa itu produk X?", "Bagaimana cara kerja layanan ini?")
+   - Tanya harga/biaya ("Berapa harganya?", "Apa paket yang paling murah?")
+   - Tanya fitur/spesifikasi ("Apa saja yang termasuk dalam paket ini?")
+   - Tanya ketersediaan ("Apakah tersedia untuk wilayah saya?")
+   - Membandingkan opsi ("Mana yang lebih baik, paket A atau B?")
+   - Tanya syarat/ketentuan ("Apa persyaratan untuk berlangganan?")
+   - Tanya durasi/waktu ("Berapa lama pengiriman?", "Berapa lama garansinya?")
+   - Tanya proses ("Bagaimana cara order?", "Apa yang perlu saya lakukan?")
+   - Tanya informasi lanjutan setelah penjelasan ("Bisa cicilan?", "Apa ada diskon?")
+
+CONTOH DETEKSI:
+- "Apa itu produk X?" → TRUE untuk intent "minat produk X"
+- "Berapa biaya paket premium?" → TRUE untuk intent "minat paket premium"
+- "Bisa gak dikirim ke Surabaya?" → TRUE untuk intent "minat pengiriman/availability"
+- "Saya hanya browsing" → FALSE untuk semua intent (kecuali user tetap bertanya detail)
+
+Di field "intent_analytics", kembalikan object dengan KEY di atas dan value boolean.
+Set ke TRUE jika ada bukti minat/ketertarikan (implicit atau explicit).
+Set ke FALSE jika tidak ada indikasi minat sama sekali.
+
+Contoh: { "intent_0": true, "intent_1": false, "intent_2": true }`;
 }

@@ -2,6 +2,7 @@
 
 import { Download, ExternalLink, ListFilter, X } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useWalletContext } from "./WalletProvider";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { formatIDR, formatShortDateID } from "./billing-format";
@@ -55,12 +56,14 @@ export function TransactionHistory() {
     <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-2xl flex flex-col overflow-hidden w-full">
       <div className="p-8 pb-8 flex items-center justify-between border-b border-outline-variant/10">
         <h2 className="text-[16px] font-headline font-bold text-on-surface">Riwayat Transaksi</h2>
-        <button
+        <Button
           type="button"
-          className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors p-2 rounded shadow-sm text-outline hover:text-on-surface active:scale-95"
+          variant="ghost"
+          size="icon"
+          className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors text-outline hover:text-on-surface"
         >
           <ListFilter className="w-[18px] h-[18px]" />
-        </button>
+        </Button>
       </div>
 
       <div className="overflow-x-auto">
@@ -134,23 +137,27 @@ export function TransactionHistory() {
                       </a>
                     )}
                     {isCancelable(tx.status) && (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleCancel(tx)}
                         disabled={pendingId === tx.id}
                         aria-label="Batalkan transaksi"
-                        className="text-outline hover:text-destructive transition-colors active:scale-95 p-2 rounded-full hover:bg-surface-container disabled:opacity-50"
+                        className="text-outline hover:text-destructive transition-colors disabled:opacity-50"
                       >
                         <X className="w-[18px] h-[18px]" />
-                      </button>
+                      </Button>
                     )}
-                    <button
+                    <Button
                       type="button"
-                      className="text-outline hover:text-on-surface transition-colors active:scale-95 p-2 rounded-full hover:bg-surface-container"
+                      variant="ghost"
+                      size="icon"
+                      className="text-outline hover:text-on-surface transition-colors"
                       aria-label="Unduh invoice"
                     >
                       <Download className="w-[18px] h-[18px]" />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>

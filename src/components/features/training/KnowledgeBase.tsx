@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { BookOpen, UploadCloud, FileText, X, Save, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { useUpdateBusiness } from "@/hooks/use-update-business";
 import { toast } from "sonner";
@@ -121,11 +122,11 @@ export function KnowledgeBase() {
                             {charCount} Karakter
                         </span>
                     </div>
-                    <textarea
+                    <Textarea
                         value={knowledge}
                         onChange={(e) => setKnowledge(e.target.value)}
                         placeholder="Masukkan informasi detail tentang bisnis Anda di sini..."
-                        className="w-full bg-[#08111d] border border-outline-variant/10 rounded-md p-6 text-[13px] text-on-surface placeholder:text-outline/40 resize-none h-[200px] focus:outline-none focus:border-secondary-fixed/50 custom-scrollbar leading-[1.8] shadow-inner transition-all"
+                        className="w-full bg-surface-container-highest border border-outline-variant/10 rounded-md p-6 text-[13px] text-on-surface placeholder:text-outline/40 resize-none h-[200px] focus:outline-none focus:border-secondary-fixed/50 custom-scrollbar leading-[1.8] shadow-inner transition-all"
                     />
                 </div>
             </div>
@@ -168,12 +169,14 @@ export function KnowledgeBase() {
                                         <FileText className="w-4 h-4 text-secondary-fixed shrink-0" />
                                         <span className="text-[12px] font-medium text-on-surface truncate">{fileName}</span>
                                     </div>
-                                    <button 
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={(e) => { e.stopPropagation(); removeExistingFile(fileName); }}
-                                        className="p-1 hover:bg-surface-container-high rounded-full text-outline hover:text-red-400 transition-colors"
+                                        className="p-1 hover:bg-surface-container-high rounded-full text-outline hover:text-error transition-colors"
                                     >
                                         <X className="w-3.5 h-3.5" />
-                                    </button>
+                                    </Button>
                                 </div>
                             ))}
                         </div>

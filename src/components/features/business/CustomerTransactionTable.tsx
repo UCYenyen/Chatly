@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { ExternalLink, ListFilter, RefreshCcw, Search, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatIDR, formatDateTimeID } from "@/components/features/billing/billing-format";
 import type { PaymentStatus } from "@prisma/client";
 import type { CustomerTransaction } from "@prisma/client";
@@ -93,27 +95,31 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
         <div className="flex items-center gap-3">
           <div className="relative group">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-secondary-fixed transition-colors" />
-            <input 
-              type="text" 
+            <Input
+              type="text"
               placeholder="Cari transaksi..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-surface-container border border-outline-variant/15 rounded-sm pl-9 pr-4 py-2 text-[13px] text-on-surface placeholder:text-outline/60 focus:outline-none focus:ring-1 focus:ring-secondary-fixed/30 focus:border-secondary-fixed/40 transition-all min-w-[240px]"
+              className="bg-surface-container border border-outline-variant/15 rounded-sm pl-9 pr-4 py-2 text-[13px] text-on-surface placeholder:text-outline/60 focus:ring-1 focus:ring-secondary-fixed/30 focus:border-secondary-fixed/40 transition-all min-w-[240px]"
             />
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={fetchTransactions}
-            className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors p-2.5 rounded shadow-sm text-outline hover:text-on-surface active:scale-95 flex items-center gap-2"
+            className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors text-outline hover:text-on-surface"
           >
             <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors p-2.5 rounded shadow-sm text-outline hover:text-on-surface active:scale-95"
+            variant="ghost"
+            size="icon"
+            className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors text-outline hover:text-on-surface"
           >
             <ListFilter className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 

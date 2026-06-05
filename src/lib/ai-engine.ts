@@ -104,7 +104,16 @@ export async function runChatlyAIEngine(
   let retrievedChunks: string[] = [];
   try {
     retrievedChunks = await retrieveRelevantChunks(businessId, incomingMessage, 5);
-    console.log(`[ai-engine] Step 2.5 OK: retrieved ${retrievedChunks.length} chunks`);
+    if (retrievedChunks.length === 0) {
+      console.warn(
+        "[ai-engine] Step 2.5 WARNING: No knowledge chunks found for businessId=" + businessId +
+        " message='" + incomingMessage.slice(0, 50) + "...' — " +
+        "Customer will receive generic AI response without knowledge augmentation. " +
+        "Check if business has uploaded knowledge documents."
+      );
+    } else {
+      console.log(`[ai-engine] Step 2.5 OK: retrieved ${retrievedChunks.length}/5 chunks`);
+    }
   } catch (err) {
     console.error("[ai-engine] Step 2.5 FAILED (continuing without RAG):", err);
   }
@@ -166,7 +175,7 @@ export async function runChatlyAIEngine(
   for (const [key, intentName] of Object.entries(keyToIntent)) {
     intentProperties[key] = {
       type: SchemaType.BOOLEAN,
-      description: `Apakah pesan terakhir pelanggan mengindikasikan: "${intentName}"`,
+      description: `Apakah pesan terakhir pelanggan mengindikasikan minat terhadap "${intentName}" (explicit atau implicit: tanya harga, fitur, cara kerja, ketersediaan, proses order, dll)?`,
     };
   }
 
@@ -179,7 +188,7 @@ export async function runChatlyAIEngine(
       },
       intent_analytics: {
         type: SchemaType.OBJECT,
-        description: "Evaluasi niat pelanggan berdasarkan pesan terakhir.",
+        description: "Evaluasi niat pelanggan berdasarkan pesan terakhir. PENTING: Deteksi implicit intent juga (misal: bertanya tentang produk = minat produk, tanya harga = minat beli), bukan hanya explicit statement.",
         properties: intentNames.length > 0 ? intentProperties : {
           _empty: {
             type: SchemaType.BOOLEAN,

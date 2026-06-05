@@ -1,4 +1,5 @@
 import { Plus, Monitor, Smartphone, Copy, XSquare } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function SecretKeysTable() {
   return (
@@ -8,10 +9,10 @@ export function SecretKeysTable() {
           <h2 className="text-xl font-headline font-bold text-on-surface">Kunci Rahasia</h2>
           <p className="text-[13px] text-outline">Kunci API rahasia Anda tercantum di bawah ini. Jangan bagikan ini secara publik.</p>
         </div>
-        <button className="flex items-center gap-2 bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] font-bold text-[13px] h-[38px] px-6 rounded-sm shadow-md transition-transform active:scale-95 border border-[#a4d730]">
+        <Button className="flex items-center gap-2 bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[13px] h-[38px] px-6 rounded-sm shadow-md transition-transform active:scale-95 border border-secondary-fixed">
           <Plus className="w-4 h-4" />
           <span>Buat Kunci Baru</span>
-        </button>
+        </Button>
       </div>
 
       <div className="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-xl overflow-hidden mt-1">
@@ -41,8 +42,8 @@ export function SecretKeysTable() {
               <td className="px-4 py-7 text-outline font-medium tracking-wide">12 Okt, 2023</td>
               <td className="px-8 py-7">
                 <div className="flex items-center justify-end gap-3.5">
-                  <button className="text-outline hover:text-on-surface transition-colors active:scale-95"><Copy className="w-[18px] h-[18px]" /></button>
-                  <button className="text-[#c17f7f] hover:text-error transition-colors active:scale-95"><XSquare className="w-[18px] h-[18px]" /></button>
+                  <Button variant="ghost" size="icon" className="text-outline hover:text-on-surface transition-colors active:scale-95"><Copy className="w-[18px] h-[18px]" /></Button>
+                  <Button variant="ghost" size="icon" className="text-error hover:text-error/80 transition-colors active:scale-95"><XSquare className="w-[18px] h-[18px]" /></Button>
                 </div>
               </td>
             </tr>
@@ -63,8 +64,8 @@ export function SecretKeysTable() {
               <td className="px-4 py-7 text-outline font-medium tracking-wide">04 Jan, 2024</td>
               <td className="px-8 py-7">
                 <div className="flex items-center justify-end gap-3.5">
-                  <button className="text-outline hover:text-on-surface transition-colors active:scale-95"><Copy className="w-[18px] h-[18px]" /></button>
-                  <button className="text-[#c17f7f] hover:text-error transition-colors active:scale-95"><XSquare className="w-[18px] h-[18px]" /></button>
+                  <Button variant="ghost" size="icon" className="text-outline hover:text-on-surface transition-colors active:scale-95"><Copy className="w-[18px] h-[18px]" /></Button>
+                  <Button variant="ghost" size="icon" className="text-error hover:text-error/80 transition-colors active:scale-95"><XSquare className="w-[18px] h-[18px]" /></Button>
                 </div>
               </td>
             </tr>

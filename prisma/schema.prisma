@@ -45,6 +45,10 @@ model Business {
   subscription   Subscription?
   whatsappAuth   WhatsAppAuth[]
   customerTransactions CustomerTransaction[]
+  documentChunks DocumentChunk[]
+  chatLogs       ChatLog[]
+  conversationStates ConversationState[]
+  analyticsEvents AnalyticsEvent[]
 
   @@index([userId])
   @@map("business")
@@ -183,6 +187,7 @@ model DocumentChunk {
   content    String
   embedding  Unsupported("vector")
   createdAt  DateTime              @default(now())
+  business   Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@index([businessId])
   @@map("document_chunk")
@@ -196,6 +201,7 @@ model ChatLog {
   content    String
   messageId  String?     @unique
   createdAt  DateTime    @default(now())
+  business   Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@index([businessId, phone, createdAt])
   @@map("chat_log")
@@ -208,6 +214,7 @@ model ConversationState {
   mode       ConversationMode  @default(AI)
   updatedAt  DateTime          @updatedAt
   createdAt  DateTime          @default(now())
+  business   Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -222,6 +229,7 @@ model AnalyticsEvent {
   mentionedProduct String?
   messageContent   String?
   createdAt        DateTime @default(now())
+  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@index([businessId, phone, intentCategory, mentionedProduct, createdAt])
   @@map("analytics_event")

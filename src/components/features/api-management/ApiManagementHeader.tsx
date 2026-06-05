@@ -1,4 +1,5 @@
 import { Bell, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function ApiManagementHeader() {
   return (
@@ -14,9 +15,9 @@ export function ApiManagementHeader() {
           <div className="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_5px_rgba(164,215,48,0.8)]"></div>
           <span className="text-[13px] text-outline font-medium tracking-wide">Status API: Operasional</span>
         </div>
-        <button className="text-outline hover:text-on-surface transition-colors cursor-pointer active:scale-95 ml-2">
+        <Button variant="ghost" size="icon" className="text-outline hover:text-on-surface transition-colors ml-2">
           <Bell className="w-[18px] h-[18px] fill-current" />
-        </button>
+        </Button>
         <div className="w-8 h-8 rounded-md bg-surface-container-high border border-outline-variant/15 flex items-center justify-center cursor-pointer hover:bg-surface-container hover:border-outline-variant/30 transition-colors shadow-sm active:scale-95">
           <User className="w-[17px] h-[17px] text-outline" />
         </div>

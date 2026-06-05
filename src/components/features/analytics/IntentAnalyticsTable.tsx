@@ -1,4 +1,5 @@
 import { Download, CheckCircle2, XCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function IntentAnalyticsTable() {
   const rows = [
@@ -40,9 +41,9 @@ export function IntentAnalyticsTable() {
             <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold mb-1">Jumlah Niat Benar</span>
             <span className="text-2xl font-bold text-secondary-fixed">2.481</span>
           </div>
-          <button className="text-outline hover:text-on-surface transition-colors p-2 rounded-full hover:bg-surface-container ml-2">
+          <Button variant="ghost" size="icon" className="text-outline hover:text-on-surface transition-colors ml-2">
             <Download className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -63,13 +64,13 @@ export function IntentAnalyticsTable() {
                 <td className="px-4 py-7 text-on-surface font-medium pr-10">{row.intent}</td>
                 <td className="px-4 py-7">
                   {row.verification ? (
-                    <div className="inline-flex items-center gap-1.5 bg-[#143600]/80 border border-[#304400] text-secondary-fixed px-2.5 py-1 rounded shadow-sm">
-                      <CheckCircle2 className="w-3.5 h-3.5 fill-secondary-fixed text-[#143600]" />
+                    <div className="inline-flex items-center gap-1.5 bg-success/20 border border-success text-success px-2.5 py-1 rounded shadow-sm">
+                      <CheckCircle2 className="w-3.5 h-3.5 fill-success" />
                       <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Benar</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1.5 bg-[#4a0005]/80 border border-error-container text-error px-2.5 py-1 rounded shadow-sm">
-                      <XCircle className="w-3.5 h-3.5 fill-error text-[#4a0005]" />
+                    <div className="inline-flex items-center gap-1.5 bg-error/20 border border-error text-error px-2.5 py-1 rounded shadow-sm">
+                      <XCircle className="w-3.5 h-3.5 fill-error" />
                       <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Salah</span>
                     </div>
                   )}

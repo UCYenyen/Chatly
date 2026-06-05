@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button"
+
 export function TokenUsage() {
   return (
     <div className="bg-surface-container-low border border-outline-variant/15 p-10 rounded-xl flex flex-col h-[280px] shadow-2xl relative overflow-hidden">
@@ -7,12 +9,12 @@ export function TokenUsage() {
           <p className="text-[13px] text-outline">Di semua penyedia LLM</p>
         </div>
         <div className="flex items-center gap-1 bg-surface-container-high rounded-full p-1 border border-outline-variant/10 shadow-inner">
-          <button className="px-5 py-1.5 text-[10px] font-mono text-outline hover:text-on-surface uppercase tracking-widest rounded-full transition-colors font-bold">
+          <Button variant="ghost" className="px-5 py-1.5 text-[10px] font-mono text-outline hover:text-on-surface uppercase tracking-widest rounded-full transition-colors font-bold">
             7 Hari
-          </button>
-          <button className="px-5 py-1.5 text-[10px] font-mono bg-[#3545d6] text-white uppercase tracking-widest rounded-full shadow-md font-bold">
+          </Button>
+          <Button className="px-5 py-1.5 text-[10px] font-mono bg-primary text-white uppercase tracking-widest rounded-full shadow-md font-bold hover:bg-primary/90">
             30 Hari
-          </button>
+          </Button>
         </div>
       </div>
       

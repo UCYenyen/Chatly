@@ -9,15 +9,15 @@ export function TrainingHeader() {
           <span className="text-xl font-headline font-bold text-on-surface tracking-wide">
             Pusat Pengetahuan
           </span>
-          <Badge className="bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] rounded-sm px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest font-mono border-0">
+          <Badge className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 rounded-sm px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest font-mono border-0">
             Model V2.4 Aktif
           </Badge>
         </div>
         <div className="flex items-center gap-4 sm:gap-6 self-start sm:self-auto mt-2 sm:mt-0">
-          <button className="text-[13px] text-outline hover:text-on-surface font-medium transition-colors">
+          <Button variant="ghost" className="text-[13px] text-outline hover:text-on-surface font-medium transition-colors">
             Batalkan
-          </button>
-          <Button className="bg-[#a4d730] text-[#253600] hover:bg-[#87b800] hover:text-[#141f00] font-bold text-[13px] h-9 px-6 rounded-sm shadow-md">
+          </Button>
+          <Button className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[13px] h-9 px-6 rounded-sm shadow-md">
             Simpan Perubahan
           </Button>
         </div>

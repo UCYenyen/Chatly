@@ -14,7 +14,7 @@ export function AiInsight() {
       </div>
       
       <div className="absolute right-0 bottom-0 bg-surface-container border-t border-l border-outline-variant/20 rounded-tl-xl p-3.5 px-5 flex items-center gap-4 shadow-[-5px_-5px_20px_rgba(0,0,0,0.2)]">
-        <div className="bg-[#3545d6] p-2 rounded-md shadow-lg">
+        <div className="bg-primary p-2 rounded-md shadow-lg">
           <Zap className="w-4 h-4 text-white fill-white" />
         </div>
         <div className="flex flex-col">

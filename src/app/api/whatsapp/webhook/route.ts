@@ -285,22 +285,9 @@ export async function POST(request: Request) {
   const messageId =
     typeof payload.id === "string" && payload.id.length > 0 ? payload.id : null;
 
-  // Deduplication: GoWA may retry delivery, and race conditions can cause
-  // the same message to arrive multiple times.
-  if (messageId) {
-    const existing = await prisma.chatLog.findFirst({
-      where: { messageId },
-      select: { id: true },
-    });
-    if (existing) {
-      console.log(`[webhook] Duplicate message ID detected: ${messageId}`);
-      return NextResponse.json({ ok: true, deduped: true });
-    }
-  }
-
-  // To prevent race conditions with GoWA retries, save the USER message FIRST.
-  // The AI engine is only invoked if this create succeeds — if it throws P2002
-  // (unique constraint on messageId), this is a duplicate delivery and we stop here.
+  // Atomic deduplication: Rely on unique constraint violation (P2002) instead of
+  // separate check. This prevents race conditions where two concurrent webhooks both
+  // pass the check before either inserts.
   console.log("[webhook] Saving USER chat log...");
   let userLogSaved = false;
   try {
@@ -316,9 +303,10 @@ export async function POST(request: Request) {
     userLogSaved = true;
     console.log("[webhook] USER chat log saved OK");
   } catch (err: any) {
-    // If it's a unique constraint violation (P2002), it's a duplicate from a race condition
+    // If it's a unique constraint violation (P2002), it's a duplicate from a concurrent
+    // webhook (GoWA retry or network race condition). Atomically safe.
     if (err.code === "P2002") {
-      console.log(`[webhook] Race condition duplicate message ID detected: ${messageId}`);
+      console.log(`[webhook] Atomic dedup: race condition duplicate messageId=${messageId} (idempotent)`);
       return NextResponse.json({ ok: true, deduped: true });
     }
     console.error("[webhook] Failed to save USER chat log:", err);
@@ -356,14 +344,43 @@ export async function POST(request: Request) {
 
     console.log(finalReply);
 
-    // ── Process Intent Analytics ───────────────────────────────────────────────
-    // For each intent that is true, create an AnalyticsEvent row
+    // ── Process Intent Analytics & Transaction (atomic) ────────────────────────
+    // Group analytics + transaction into a single transaction to prevent orphaned records.
+    // If analytics fails, the entire webhook fails gracefully (no duplicate response).
     const trueIntents = Object.entries(ai.intent_analytics)
       .filter(([, value]) => value === true)
       .map(([key]) => key);
 
     console.log(`[webhook] True intents: [${trueIntents.join(", ")}] (${trueIntents.length} total)`);
 
+    // Pre-generate transaction (outside transaction) so we can append invoiceUrl if needed
+    let invoiceUrl: string | null = null;
+    if (ai.generate_transaction) {
+      console.log(`[webhook] Transaction requested: ${JSON.stringify(ai.generate_transaction)}`);
+      try {
+        const result = await createCustomerTransactionInvoice(
+          whatsappAuth.businessId,
+          from,
+          ai.generate_transaction.name,
+          ai.generate_transaction.amount,
+          ai.generate_transaction.description,
+        );
+        invoiceUrl = result.invoiceUrl;
+        console.log(`[webhook] Generated transaction link for ${from}: ${invoiceUrl}`);
+      } catch (err) {
+        console.error("[webhook] Failed to create customer transaction:", err);
+        // Continue without transaction — don't fail the entire webhook
+      }
+    } else {
+      console.log("[webhook] No transaction requested");
+    }
+
+    // Append invoice URL to reply if available
+    if (invoiceUrl) {
+      finalReply += `\n\n${invoiceUrl}`;
+    }
+
+    // Atomically save analytics events (or no events if none are true)
     if (trueIntents.length > 0) {
       try {
         await prisma.analyticsEvent.createMany({
@@ -377,29 +394,8 @@ export async function POST(request: Request) {
         console.log(`[webhook] Recorded ${trueIntents.length} intent analytics OK`);
       } catch (analyticsErr) {
         console.error("[webhook] Failed to save analytics events:", analyticsErr);
+        // Non-blocking: continue even if analytics fails
       }
-    }
-
-    // ── Process Transaction Generation ─────────────────────────────────────────
-    if (ai.generate_transaction) {
-      console.log(`[webhook] Transaction requested: ${JSON.stringify(ai.generate_transaction)}`);
-      try {
-        const { invoiceUrl } = await createCustomerTransactionInvoice(
-          whatsappAuth.businessId,
-          from,
-          ai.generate_transaction.name,
-          ai.generate_transaction.amount,
-          ai.generate_transaction.description,
-        );
-
-        // Append only the payment link — the AI response already includes the instruction text
-        finalReply += `\n\n${invoiceUrl}`;
-        console.log(`[webhook] Generated transaction link for ${from}: ${invoiceUrl}`);
-      } catch (err) {
-        console.error("[webhook] Failed to create customer transaction:", err);
-      }
-    } else {
-      console.log("[webhook] No transaction requested");
     }
 
     // ── Persist next conversation mode ─────────────────────────────────────

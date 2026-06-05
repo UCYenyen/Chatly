@@ -72,13 +72,14 @@ export function WalletBalance() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {[50000, 100000, 250000, 500000].map((val) => (
-                        <button
+                        <Button
                             key={val}
                             onClick={() => setAmount(val.toString())}
+                            variant="outline"
                             className="text-[11px] font-bold px-3 py-1.5 rounded-md border border-outline-variant/20 hover:border-secondary-fixed hover:text-secondary-fixed transition-colors bg-surface-container"
                         >
                             +{formatIDR(val)}
-                        </button>
+                        </Button>
                     ))}
                 </div>
             </div>

@@ -10,6 +10,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { CreateBusinessModal } from "@/components/personal/CreateBusinessModal";
 import { DeleteBusinessModal } from "@/components/personal/DeleteBusinessModal";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
@@ -81,13 +82,15 @@ export function BusinessSelectorCards() {
                             <div className="mt-8 pt-4 border-t border-outline-variant/10 flex items-center justify-between">
                                 <div onClick={(e) => e.stopPropagation()}>
                                     <DeleteBusinessModal business={biz}>
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="ghost"
+                                            size="icon"
                                             aria-label={`Hapus ${biz.name}`}
-                                            className="text-outline hover:text-destructive transition-colors p-1 rounded disabled:opacity-50 cursor-pointer"
+                                            className="text-outline hover:text-destructive transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        </Button>
                                     </DeleteBusinessModal>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -101,12 +104,13 @@ export function BusinessSelectorCards() {
                 })}
 
                 <CreateBusinessModal>
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 hover:bg-surface-container/50 hover:border-secondary-fixed/50 p-6 rounded-xl flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 min-h-[220px]"
                     >
-                        <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-[#bff44c] group-hover:border-[#a4d730] transition-colors shadow-sm">
-                            <Plus className="w-6 h-6 text-outline group-hover:text-[#141f00] transition-colors" />
+                        <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-secondary-fixed group-hover:border-secondary-fixed transition-colors shadow-sm">
+                            <Plus className="w-6 h-6 text-outline group-hover:text-on-secondary-fixed transition-colors" />
                         </div>
                         <span className="font-bold text-[15px] text-on-surface mb-1 text-center">
                             Tambahkan Bisnis Baru
@@ -114,7 +118,7 @@ export function BusinessSelectorCards() {
                         <span className="text-[12px] text-outline text-center max-w-[160px]">
                             Buka instans baru untuk divisi atau merek lain.
                         </span>
-                    </button>
+                    </Button>
                 </CreateBusinessModal>
             </div>
         </div>

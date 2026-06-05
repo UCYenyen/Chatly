@@ -1,5 +1,6 @@
 import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter";
 import { IntentDashboard } from "@/components/features/analytics/IntentDashboard";
+import { ConversionRateCard } from "@/components/features/analytics/ConversionRateCard";
 import { ActiveBusinessBanner } from "@/components/features/business/ActiveBusinessBanner";
 
 export default function AnalyticsPage() {
@@ -9,6 +10,12 @@ export default function AnalyticsPage() {
         <ActiveBusinessBanner scopeLabel="Analitik" />
       </div>
 
+      {/* Conversion Rate Card */}
+      <div className="mb-8 w-full">
+        <ConversionRateCard />
+      </div>
+
+      {/* Intent Dashboard */}
       <div className="flex-1 mb-8 w-full">
         <IntentDashboard />
       </div>

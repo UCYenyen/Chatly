@@ -8,7 +8,7 @@ export function CodePanels() {
         <div className="flex items-center justify-between px-4 py-3 bg-surface-container border-b border-outline-variant/10">
           <div className="flex gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-error"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-warning"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-secondary-fixed"></div>
           </div>
           <span className="text-[10px] font-mono text-outline uppercase tracking-widest">

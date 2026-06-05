@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 export function BillingInfo() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 xl:gap-8 w-full">
@@ -5,9 +7,9 @@ export function BillingInfo() {
       <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl p-8 shadow-2xl shrink-0">
         <div className="flex items-center justify-between mb-6">
           <span className="text-[15px] font-headline font-bold text-on-surface">Alamat Penagihan</span>
-          <button className="text-[10px] font-mono text-secondary-fixed uppercase tracking-widest font-bold hover:text-secondary transition-colors">
+          <Button variant="ghost" className="text-[10px] font-mono text-secondary-fixed uppercase tracking-widest font-bold hover:text-secondary-fixed/80 transition-colors h-auto p-0">
             Perbarui
-          </button>
+          </Button>
         </div>
         <div className="flex flex-col gap-1.5 text-[13.5px] text-outline leading-relaxed">
           <span className="font-bold text-on-surface mb-0.5">Alex Thompson</span>
@@ -21,9 +23,9 @@ export function BillingInfo() {
       <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl p-8 shadow-2xl shrink-0">
         <div className="flex items-center justify-between mb-6">
           <span className="text-[15px] font-headline font-bold text-on-surface">Informasi Pajak</span>
-          <button className="text-[10px] font-mono text-secondary-fixed uppercase tracking-widest font-bold hover:text-secondary transition-colors">
+          <Button variant="ghost" className="text-[10px] font-mono text-secondary-fixed uppercase tracking-widest font-bold hover:text-secondary-fixed/80 transition-colors h-auto p-0">
             Edit
-          </button>
+          </Button>
         </div>
         
         <div className="flex flex-col gap-5">
