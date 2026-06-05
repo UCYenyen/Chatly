@@ -181,8 +181,8 @@ export function BusinessSelectorCards() {
                         <span className="font-bold text-[15px] text-on-surface mb-2 text-center line-clamp-2 px-2 leading-snug">
                             Upgrade Diperlukan
                         </span>
-                        <span className="text-[12px] text-outline text-center px-3 line-clamp-3 leading-relaxed">
-                            Berlangganan ke paket berbayar untuk membuat bisnis baru.
+                        <span className="text-[12px] text-outline text-center px-3 line-clamp-2 leading-relaxed">
+                            Upgrade ke paket berbayar
                         </span>
                     </Button>
                 )}
