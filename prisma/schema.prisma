@@ -49,6 +49,7 @@ model Business {
   chatLogs       ChatLog[]
   conversationStates ConversationState[]
   analyticsEvents AnalyticsEvent[]
+  ignoredContacts IgnoredContact[]
 
   @@index([userId])
   @@map("business")
@@ -87,6 +88,19 @@ model BusinessIntent {
 
   @@index([businessId])
   @@map("business_intent")
+}
+
+model IgnoredContact {
+  id          String   @id @default(cuid())
+  businessId  String
+  phoneNumber String
+  label       String?
+  createdAt   DateTime @default(now())
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, phoneNumber])
+  @@index([businessId])
+  @@map("ignored_contact")
 }
 
 model Subscription {

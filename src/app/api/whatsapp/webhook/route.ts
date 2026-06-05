@@ -4,6 +4,7 @@ import prisma from "@/lib/utils/prisma";
 import { sendGowaMessage } from "@/lib/utils/whatsapp";
 import { runChatlyAIEngine } from "@/lib/ai-engine";
 import { createCustomerTransactionInvoice } from "@/lib/utils/payment-gateway/billing-service";
+import { canonicalizePhone } from "@/lib/utils/phone";
 
 const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
 
@@ -75,7 +76,7 @@ function extractText(p: GowaWebhookPayload["payload"]): string {
 }
 
 function normalizePhone(jid: string): string {
-  return jid.split("@")[0]?.split(":")[0] ?? jid;
+  return canonicalizePhone(jid) ?? (jid.split("@")[0]?.split(":")[0] ?? jid);
 }
 
 // Gowa can embed the connected phone in several locations inside the payload.
@@ -283,6 +284,24 @@ export async function POST(request: Request) {
   if (!from || !text) {
     console.log(`[webhook] Early return: empty from or text. from=${from}, text=${text}`);
     return NextResponse.json({ ok: true });
+  }
+
+  try {
+    const ignored = await prisma.ignoredContact.findUnique({
+      where: {
+        businessId_phoneNumber: {
+          businessId: whatsappAuth.businessId,
+          phoneNumber: from,
+        },
+      },
+      select: { id: true },
+    });
+    if (ignored) {
+      console.log(`[webhook] Ignored contact ${from} — dropping message (no trace).`);
+      return NextResponse.json({ ok: true, ignored: true });
+    }
+  } catch (err) {
+    console.error("[webhook] Ignore-list lookup failed (fail-open, continuing):", err);
   }
 
   const messageId =

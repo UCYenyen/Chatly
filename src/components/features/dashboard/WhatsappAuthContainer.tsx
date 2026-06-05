@@ -7,6 +7,7 @@ import { WhatsappAuthTypeSelector } from "./WhatsappAuthTypeSelector";
 import { WhatsappQrDisplay } from "./WhatsappQrDisplay";
 import { WhatsappAuthStatus } from "./WhatsappAuthStatus";
 import { WhatsappLogoutButton } from "./WhatsappLogoutButton";
+import { WhatsappIgnoreList } from "./WhatsappIgnoreList";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 
@@ -57,6 +58,8 @@ export function WhatsappAuthContainer({
       </div>
 
       <WhatsappAuthStatus auth={auth} isLoading={isLoading} />
+
+      {isAuthenticated && <WhatsappIgnoreList businessId={businessId} />}
 
       {error && !isWaitingForAuth && (
         <div className="flex items-start gap-3 p-4 bg-error-container rounded-lg border border-error">

@@ -8,5 +8,6 @@ export { useCancelSubscription } from "./use-cancel-subscription";
 export { useCreateBusiness } from "./use-create-business";
 export { useUpdateBusiness } from "./use-update-business";
 export { useWhatsAppAuth } from "./use-whatsapp-auth";
+export { useContactIgnoreList } from "./use-contact-ignore-list";
 export { useGsapScrollReveal } from "./use-gsap-scroll-reveal";
 export { useSubscription } from "./use-subscription";
