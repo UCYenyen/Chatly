@@ -42,6 +42,8 @@ jobs:
           echo "XENDIT_SECRET_KEY=${{ secrets.XENDIT_SECRET_KEY }}" >> .env.production
           echo "NEXT_PUBLIC_XENDIT_KEY=${{ secrets.NEXT_PUBLIC_XENDIT_KEY }}" >> .env.production
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env.production
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env.production
+          echo "AI_PROVIDER=groq" >> .env.production
           echo "GOWA_API_BASE=${{ secrets.GOWA_API_BASE }}" >> .env.production
           echo "GOWA_BASIC_AUTH_USER=${{ secrets.GOWA_BASIC_AUTH_USER }}" >> .env.production
           echo "GOWA_BASIC_AUTH_PASS=${{ secrets.GOWA_BASIC_AUTH_PASS }}" >> .env.production
@@ -84,6 +86,22 @@ jobs:
           script: |
             cd /var/www/websites/bryan/chatly
 
+            # Ensure AI provider env vars exist in the runtime .env (read by docker-compose env_file)
+            touch .env
+            GROQ_KEY="${{ secrets.GROQ_API_KEY }}"
+            if [ -n "$GROQ_KEY" ]; then
+              if grep -q '^GROQ_API_KEY=' .env; then
+                sed -i "s|^GROQ_API_KEY=.*|GROQ_API_KEY=$GROQ_KEY|" .env
+              else
+                echo "GROQ_API_KEY=$GROQ_KEY" >> .env
+              fi
+            fi
+            if grep -q '^AI_PROVIDER=' .env; then
+              sed -i "s|^AI_PROVIDER=.*|AI_PROVIDER=groq|" .env
+            else
+              echo "AI_PROVIDER=groq" >> .env
+            fi
+
             # Login to GHCR on the VPS
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
@@ -91,7 +109,7 @@ jobs:
             docker compose pull
 
             # Restart containers with the new image
-            docker compose up -d
+            docker compose up -d --force-recreate
 
             # Clean up old images to save disk space
             docker image prune -f
