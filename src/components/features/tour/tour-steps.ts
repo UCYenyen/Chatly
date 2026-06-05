@@ -93,6 +93,16 @@ export const TOUR_STEPS: TourStep[] = [
     allowSkip: true,
   },
   {
+    id: "training-monthly-report",
+    route: "/business/:id/training",
+    targetSelector: '[data-tour="monthly-report"]',
+    title: "Laporan Bulanan Otomatis",
+    body: "Atur laporan bulanan otomatis: pilih email tujuan dan format (CSV atau XLSX). Sistem mengirim laporan transaksi bulan sebelumnya setiap bulan, lalu menghapus data transaksi bulan tersebut dari sistem (file email menjadi arsipnya).",
+    placement: "bottom",
+    advance: "next-button",
+    allowSkip: true,
+  },
+  {
     id: "sidebar-langganan",
     route: "/business/:id/training",
     targetSelector: '[data-tour="sidebar-item-langganan"]',
