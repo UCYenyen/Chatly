@@ -24,6 +24,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "exceljs": "^4.4.0",
     "gsap": "^3.13.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.8.0",
@@ -32,6 +33,7 @@
     "next": "16.2.3",
     "next-themes": "^0.4.6",
     "next-transition-router": "^0.2.11",
+    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.5",
     "ogl": "^1.0.11",
     "pdf-parse": "^2.4.5",
@@ -55,6 +57,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
