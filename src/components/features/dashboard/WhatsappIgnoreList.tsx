@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, X, UserX, Loader2 } from "lucide-react";
+import { Plus, X, UserX, Loader2, ChevronsUpDown } from "lucide-react";
 import { useContactIgnoreList } from "@/hooks/use-contact-ignore-list";
 import {
   Card,
@@ -15,7 +16,18 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { RecentChatterDTO } from "@/types/ignore-list.md";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 interface WhatsappIgnoreListProps {
   businessId: string;
@@ -30,28 +42,27 @@ const addContactSchema = z.object({
 
 type AddContactValues = z.infer<typeof addContactSchema>;
 
-function formatLastChat(iso: string): string {
-  const then = new Date(iso).getTime();
-  const diffDays = Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24));
-  if (diffDays <= 0) return "hari ini";
-  if (diffDays === 1) return "kemarin";
-  return `${diffDays} hari lalu`;
-}
-
 export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
   const {
     ignoreList,
-    recentChatters,
+    contacts,
+    isContactsLoading,
+    contactsError,
+    loadContacts,
     isLoading,
     error,
     addContact,
     removeContact,
   } = useContactIgnoreList(businessId);
 
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   const form = useForm<AddContactValues>({
     resolver: zodResolver(addContactSchema),
     defaultValues: { phoneNumber: "" },
   });
+
+  const ignoredSet = new Set(ignoreList.map((c) => c.phoneNumber));
 
   const onAdd = async (values: AddContactValues) => {
     try {
@@ -63,10 +74,11 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
     }
   };
 
-  const onIgnoreChatter = async (chatter: RecentChatterDTO) => {
+  const onPickContact = async (phoneNumber: string, name: string | null) => {
+    setPickerOpen(false);
     try {
-      await addContact(chatter.phoneNumber);
-      toast.success(`${chatter.phoneNumber} diabaikan`);
+      await addContact(phoneNumber, name ?? undefined);
+      toast.success(`${name ?? phoneNumber} diabaikan`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal mengabaikan kontak");
     }
@@ -81,7 +93,10 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
     }
   };
 
-  const visibleChatters = recentChatters.filter((chatter) => !chatter.isIgnored);
+  const handlePickerOpenChange = (open: boolean) => {
+    setPickerOpen(open);
+    if (open) void loadContacts();
+  };
 
   return (
     <Card className="bg-surface-container-low border-outline-variant/20">
@@ -97,31 +112,92 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-6">
-        <form
-          onSubmit={form.handleSubmit(onAdd)}
-          className="flex flex-col gap-2"
-        >
-          <div className="flex gap-2">
-            <Input
-              placeholder="Tambah nomor untuk diabaikan, mis. 0812..."
-              disabled={form.formState.isSubmitting}
-              {...form.register("phoneNumber")}
-            />
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-              Tambah
-            </Button>
-          </div>
-          {form.formState.errors.phoneNumber && (
-            <p className="text-sm text-error">
-              {form.formState.errors.phoneNumber.message}
-            </p>
-          )}
-        </form>
+        <div className="flex flex-col gap-2">
+          <Popover open={pickerOpen} onOpenChange={handlePickerOpenChange}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={pickerOpen}
+                className="w-full justify-between"
+              >
+                Pilih dari kontak WhatsApp
+                <ChevronsUpDown className="w-4 h-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-(--radix-popover-trigger-width) p-0"
+              align="start"
+            >
+              <Command>
+                <CommandInput placeholder="Cari nama atau nomor..." />
+                <CommandList>
+                  {isContactsLoading ? (
+                    <div className="flex items-center gap-2 px-3 py-4 text-sm text-outline">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Memuat kontak...
+                    </div>
+                  ) : contactsError ? (
+                    <div className="px-3 py-4 text-sm text-error">
+                      {contactsError}
+                    </div>
+                  ) : (
+                    <>
+                      <CommandEmpty>Tidak ada kontak ditemukan.</CommandEmpty>
+                      {contacts
+                        .filter((c) => !ignoredSet.has(c.phoneNumber))
+                        .map((contact) => (
+                          <CommandItem
+                            key={contact.phoneNumber}
+                            value={`${contact.name ?? ""} ${contact.phoneNumber}`}
+                            onSelect={() =>
+                              onPickContact(contact.phoneNumber, contact.name)
+                            }
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-sm text-on-surface">
+                                {contact.name ?? contact.phoneNumber}
+                              </span>
+                              {contact.name && (
+                                <span className="text-xs text-outline">
+                                  {contact.phoneNumber}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                    </>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          <form
+            onSubmit={form.handleSubmit(onAdd)}
+            className="flex flex-col gap-2"
+          >
+            <div className="flex gap-2">
+              <Input
+                placeholder="Atau ketik nomor manual, mis. 0812..."
+                disabled={form.formState.isSubmitting}
+                {...form.register("phoneNumber")}
+              />
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                Tambah
+              </Button>
+            </div>
+            {form.formState.errors.phoneNumber && (
+              <p className="text-sm text-error">
+                {form.formState.errors.phoneNumber.message}
+              </p>
+            )}
+          </form>
+        </div>
 
         {error && <p className="text-sm text-error">{error}</p>}
 
@@ -165,39 +241,6 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
             </ul>
           )}
         </div>
-
-        {visibleChatters.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-on-surface">
-              Kontak yang pernah chat
-            </p>
-            <ul className="flex flex-col gap-2">
-              {visibleChatters.map((chatter) => (
-                <li
-                  key={chatter.phoneNumber}
-                  className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-on-surface">
-                      {chatter.phoneNumber}
-                    </span>
-                    <span className="text-xs text-outline">
-                      chat terakhir {formatLastChat(chatter.lastMessageAt)}
-                    </span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onIgnoreChatter(chatter)}
-                  >
-                    <UserX className="w-4 h-4" />
-                    Abaikan
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

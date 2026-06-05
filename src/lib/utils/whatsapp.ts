@@ -1,7 +1,71 @@
+import { canonicalizePhone } from "@/lib/utils/phone";
+import type { WhatsAppContactDTO } from "@/types/ignore-list.md";
+
 const rawGowaBase = process.env.GOWA_API_BASE || "http://localhost:3001";
 const GOWA_API_BASE = rawGowaBase.replace(/\/+$/, "");
 const GOWA_BASIC_AUTH_USER = process.env.GOWA_BASIC_AUTH_USER;
 const GOWA_BASIC_AUTH_PASS = process.env.GOWA_BASIC_AUTH_PASS;
+
+const GOWA_CONTACTS_LIMIT = 500;
+const PERSONAL_JID_SUFFIX = "@s.whatsapp.net";
+
+interface GowaContactRow {
+  jid?: string;
+  name?: string;
+}
+
+function parseGowaContacts(payload: unknown): WhatsAppContactDTO[] {
+  if (!payload || typeof payload !== "object") return [];
+  const results = (payload as { results?: unknown }).results;
+  const data =
+    results && typeof results === "object"
+      ? (results as { data?: unknown }).data
+      : undefined;
+  if (!Array.isArray(data)) return [];
+
+  const seen = new Set<string>();
+  const contacts: WhatsAppContactDTO[] = [];
+
+  for (const row of data as GowaContactRow[]) {
+    const jid = typeof row?.jid === "string" ? row.jid : "";
+    if (!jid.endsWith(PERSONAL_JID_SUFFIX)) continue;
+    const phoneNumber = canonicalizePhone(jid);
+    if (!phoneNumber || seen.has(phoneNumber)) continue;
+    seen.add(phoneNumber);
+    const name = typeof row?.name === "string" ? row.name.trim() : "";
+    contacts.push({ phoneNumber, name: name.length > 0 ? name : null });
+  }
+
+  contacts.sort((a, b) => {
+    if (!!a.name === !!b.name) {
+      return (a.name ?? a.phoneNumber).localeCompare(b.name ?? b.phoneNumber);
+    }
+    return a.name ? -1 : 1;
+  });
+
+  return contacts.slice(0, GOWA_CONTACTS_LIMIT);
+}
+
+export async function fetchGowaContacts(
+  instanceKey: string
+): Promise<WhatsAppContactDTO[]> {
+  const res = await fetch(`${GOWA_API_BASE}/user/my/contacts`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "X-Device-Id": instanceKey,
+      ...gowaAuthHeader(),
+    },
+    signal: AbortSignal.timeout(25000),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Gowa contacts request failed (${res.status})`);
+  }
+
+  const payload: unknown = await res.json();
+  return parseGowaContacts(payload);
+}
 
 export function gowaAuthHeader(): Record<string, string> {
   if (!GOWA_BASIC_AUTH_USER || !GOWA_BASIC_AUTH_PASS) return {};

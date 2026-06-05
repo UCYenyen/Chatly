@@ -11,6 +11,15 @@ export interface RecentChatterDTO {
   isIgnored: boolean;
 }
 
+export interface WhatsAppContactDTO {
+  phoneNumber: string;
+  name: string | null;
+}
+
+export interface WhatsAppContactsResponse {
+  contacts: WhatsAppContactDTO[];
+}
+
 export interface IgnoreListResponse {
   ignoreList: IgnoredContactDTO[];
 }

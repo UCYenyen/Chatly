@@ -1,16 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   IgnoredContactDTO,
   RecentChatterDTO,
+  WhatsAppContactDTO,
   IgnoreListResponse,
   RecentChattersResponse,
+  WhatsAppContactsResponse,
 } from "@/types/ignore-list.md";
 
 interface UseContactIgnoreListResult {
   ignoreList: IgnoredContactDTO[];
   recentChatters: RecentChatterDTO[];
+  contacts: WhatsAppContactDTO[];
+  isContactsLoading: boolean;
+  contactsError: string | null;
+  loadContacts: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
   addContact: (phoneNumber: string, label?: string) => Promise<void>;
@@ -32,6 +38,10 @@ export function useContactIgnoreList(
 ): UseContactIgnoreListResult {
   const [ignoreList, setIgnoreList] = useState<IgnoredContactDTO[]>([]);
   const [recentChatters, setRecentChatters] = useState<RecentChatterDTO[]>([]);
+  const [contacts, setContacts] = useState<WhatsAppContactDTO[]>([]);
+  const [isContactsLoading, setIsContactsLoading] = useState(false);
+  const [contactsError, setContactsError] = useState<string | null>(null);
+  const contactsLoadedRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +74,28 @@ export function useContactIgnoreList(
       setIsLoading(false);
     }
   }, [businessId]);
+
+  const loadContacts = useCallback(async () => {
+    if (contactsLoadedRef.current || isContactsLoading) return;
+    setIsContactsLoading(true);
+    setContactsError(null);
+    try {
+      const res = await fetch(
+        `/api/businesses/${businessId}/whatsapp/contacts`,
+        { credentials: "include" }
+      );
+      const data = await parseJsonResponse<WhatsAppContactsResponse>(
+        res,
+        "Gagal memuat kontak WhatsApp"
+      );
+      setContacts(data.contacts ?? []);
+      contactsLoadedRef.current = true;
+    } catch (err) {
+      setContactsError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setIsContactsLoading(false);
+    }
+  }, [businessId, isContactsLoading]);
 
   const addContact = useCallback(
     async (phoneNumber: string, label?: string) => {
@@ -106,6 +138,10 @@ export function useContactIgnoreList(
   return {
     ignoreList,
     recentChatters,
+    contacts,
+    isContactsLoading,
+    contactsError,
+    loadContacts,
     isLoading,
     error,
     addContact,
