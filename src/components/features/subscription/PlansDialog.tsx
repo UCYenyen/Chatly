@@ -38,7 +38,7 @@ export function PlansDialog() {
           Ubah Paket
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-[calc(100vw-2rem)] sm:max-w-2xl md:max-w-4xl bg-surface-container-low/95 backdrop-blur-xl border-outline-variant/20 shadow-2xl p-0 overflow-y-auto max-h-[90vh]">
+      <DialogContent showCloseButton={false} className="w-full max-w-[calc(100vw-2rem)] sm:max-w-2xl md:max-w-4xl bg-surface-container-low/95 backdrop-blur-xl border-outline-variant/20 shadow-2xl p-0 overflow-y-auto max-h-[90vh]">
         <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent pointer-events-none" />
 
         {isLoading ? (

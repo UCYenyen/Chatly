@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
+import { SubscriptionProvider } from "@/components/features/subscription/SubscriptionProvider";
 
 export default function BusinessLayout({
   children,
@@ -23,5 +24,5 @@ export default function BusinessLayout({
     }
   }, [businessId, activeBusinessId, setActiveBusinessId, businesses, isLoading]);
 
-  return <>{children}</>;
+  return <SubscriptionProvider businessId={businessId}>{children}</SubscriptionProvider>;
 }

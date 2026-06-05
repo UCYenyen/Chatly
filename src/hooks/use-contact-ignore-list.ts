@@ -28,9 +28,11 @@ interface UseContactIgnoreListResult {
 
 async function parseJsonResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
   const raw = await res.text();
-  const data = raw ? (JSON.parse(raw) as T & { error?: string }) : ({} as T & { error?: string });
+  const data = raw
+    ? (JSON.parse(raw) as T & { error?: string; message?: string })
+    : ({} as T & { error?: string; message?: string });
   if (!res.ok) {
-    throw new Error(data.error || `${fallbackMessage} (HTTP ${res.status})`);
+    throw new Error(data.error || data.message || `${fallbackMessage} (HTTP ${res.status})`);
   }
   return data;
 }

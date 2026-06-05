@@ -3,6 +3,12 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
 import { canonicalizePhone } from "@/lib/utils/phone";
+import {
+  PlanLimitError,
+  enforceNumericLimit,
+  getBusinessPlan,
+  planLimitResponse,
+} from "@/lib/utils/payment-gateway/plan-guard";
 import type {
   IgnoredContactDTO,
   AddIgnoredContactRequest,
@@ -129,6 +135,21 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const label = body.label?.trim() || null;
+
+  const existingContact = await prisma.ignoredContact.findUnique({
+    where: { businessId_phoneNumber: { businessId, phoneNumber } },
+    select: { id: true },
+  });
+  if (!existingContact) {
+    const plan = await getBusinessPlan(businessId);
+    const ignoredCount = await prisma.ignoredContact.count({ where: { businessId } });
+    try {
+      enforceNumericLimit(plan, "ignoredContacts", ignoredCount, "kontak dikecualikan");
+    } catch (error) {
+      if (error instanceof PlanLimitError) return planLimitResponse(error);
+      throw error;
+    }
+  }
 
   const contact = await prisma.ignoredContact.upsert({
     where: { businessId_phoneNumber: { businessId, phoneNumber } },

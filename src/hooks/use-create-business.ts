@@ -13,7 +13,7 @@ interface ApiError {
 interface UseCreateBusinessResult {
   isPending: boolean;
   error: string | null;
-  createBusiness: (input: CreateBusinessRequest) => Promise<BusinessDTO | null>;
+  createBusiness: (input: CreateBusinessRequest) => Promise<BusinessDTO>;
 }
 
 export function useCreateBusiness(): UseCreateBusinessResult {
@@ -21,7 +21,7 @@ export function useCreateBusiness(): UseCreateBusinessResult {
   const [error, setError] = useState<string | null>(null);
 
   const createBusiness = useCallback(
-    async (input: CreateBusinessRequest): Promise<BusinessDTO | null> => {
+    async (input: CreateBusinessRequest): Promise<BusinessDTO> => {
       setIsPending(true);
       setError(null);
       try {
@@ -33,12 +33,13 @@ export function useCreateBusiness(): UseCreateBusinessResult {
         });
         if (!res.ok) {
           const body = (await res.json()) as ApiError;
-          throw new Error(body.message);
+          throw new Error(body.message || "Gagal membuat bisnis");
         }
         return (await res.json()) as BusinessDTO;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Gagal membuat bisnis");
-        return null;
+        const message = err instanceof Error ? err.message : "Gagal membuat bisnis";
+        setError(message);
+        throw new Error(message);
       } finally {
         setIsPending(false);
       }

@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
+import {
+  PlanLimitError,
+  enforceFeature,
+  getBusinessPlan,
+  planLimitResponse,
+} from "@/lib/utils/payment-gateway/plan-guard";
+import { DEFAULT_AI_TONE } from "@/lib/utils/payment-gateway/plan-limits";
 import type {
   BusinessDTO,
   UpdateBusinessRequest,
@@ -72,6 +79,10 @@ export async function PATCH(
       data.knowledgeBase = body.knowledgeBase;
     }
     if (body.aiTone !== undefined) {
+      if (body.aiTone && body.aiTone !== DEFAULT_AI_TONE) {
+        const plan = await getBusinessPlan(id);
+        enforceFeature(plan, "customPersonality", "Kepribadian AI kustom");
+      }
       data.aiTone = body.aiTone;
     }
     if (Array.isArray(body.knowledgeFiles)) {
@@ -82,6 +93,9 @@ export async function PATCH(
     const updated = await prisma.business.update({ where: { id }, data });
     return NextResponse.json(toDTO(updated));
   } catch (error) {
+    if (error instanceof PlanLimitError) {
+      return planLimitResponse(error);
+    }
     const message = error instanceof Error ? error.message : "Kesalahan tidak diketahui";
     console.error("[PATCH /api/businesses/:id]", error);
     return NextResponse.json({ message }, { status: 500 });

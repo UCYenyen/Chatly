@@ -28,7 +28,7 @@ export function TrainingHeader() {
         </h1>
         <p className="text-[15px] text-outline leading-relaxed max-w-3xl">
           Sempurnakan cara AI Anda berinteraksi dengan pelanggan di Acme Corp.
-          Unggah dokumen, atur batasan perilaku, dan tentukan basis pengetahuan
+          Unggah dokumen, atur batasan perilaku, dan tentukan dokumen pelatihan
           inti.
         </p>
       </div>

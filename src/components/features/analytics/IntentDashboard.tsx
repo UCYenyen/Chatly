@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { Plus, Download, CheckCircle2, Trash2, Loader2, AlertTriangle, MessageSquare, Users, ChevronDown, Search } from "lucide-react"
+import { Plus, Download, CheckCircle2, Trash2, Loader2, AlertTriangle, MessageSquare, Users, ChevronDown, Search, Lock } from "lucide-react"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -22,8 +22,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
+import { usePlanGate } from "@/hooks"
 import { IntentDashboardSkeleton } from "./IntentDashboardSkeleton"
 
 interface BusinessIntent {
@@ -46,6 +53,7 @@ interface IntentStats {
 
 export function IntentDashboard() {
   const params = useParams()
+  const gate = usePlanGate()
   const businessId = (params?.businessId || params?.id) as string
 
   const [mounted, setMounted] = useState(false)
@@ -369,9 +377,27 @@ export function IntentDashboard() {
                 </h2>
                 <p className="text-[13px] text-outline">Percakapan pengguna yang sesuai dengan niat ini</p>
               </div>
-              <Button variant="ghost" size="icon" className="text-outline hover:text-on-surface rounded-xl hover:bg-surface-container-high transition-all">
-                <Download className="w-5 h-5" />
-              </Button>
+              {gate.hasFeature("dataExport") ? (
+                <Button variant="ghost" size="icon" className="text-outline hover:text-on-surface rounded-xl hover:bg-surface-container-high transition-all">
+                  <Download className="w-5 h-5" />
+                </Button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled
+                        className="text-outline/50 rounded-xl cursor-not-allowed"
+                      >
+                        <Lock className="w-5 h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Ekspor CSV tersedia di paket Starter</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
 
             <div className="flex-1 overflow-x-auto relative z-10">

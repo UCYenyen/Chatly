@@ -1,7 +1,19 @@
+"use client"
+
 import { Sparkles, Zap } from "lucide-react"
+import { usePlanGate } from "@/hooks"
+import { FeatureLock } from "@/components/features/subscription/FeatureLock"
 
 export function AiInsight() {
+  const gate = usePlanGate()
+  const locked = !gate.isLoading && !gate.hasFeature("aiInsight")
+
   return (
+    <FeatureLock
+      locked={locked}
+      requiredPlan={gate.requiredPlanForFeature("aiInsight")}
+      featureName="Wawasan AI"
+    >
     <div className="bg-surface-container-low border border-outline-variant/15 border-l-4 border-l-secondary-fixed p-6 rounded-xl relative shadow-2xl overflow-hidden h-full flex items-start min-h-[160px]">
       <div className="flex gap-4">
         <Sparkles className="w-5 h-5 text-secondary-fixed flex-shrink-0 mt-1 fill-secondary-fixed" />
@@ -23,5 +35,6 @@ export function AiInsight() {
         </div>
       </div>
     </div>
+    </FeatureLock>
   )
 }

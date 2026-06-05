@@ -1,7 +1,19 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
+import { usePlanGate } from "@/hooks"
+import { FeatureLock } from "@/components/features/subscription/FeatureLock"
 
 export function TokenUsage() {
+  const gate = usePlanGate()
+  const locked = !gate.isLoading && !gate.hasFeature("advancedAnalytics")
+
   return (
+    <FeatureLock
+      locked={locked}
+      requiredPlan={gate.requiredPlanForFeature("advancedAnalytics")}
+      featureName="Penggunaan Token"
+    >
     <div className="bg-surface-container-low border border-outline-variant/15 p-10 rounded-xl flex flex-col h-[280px] shadow-2xl relative overflow-hidden">
       <div className="flex items-start justify-between relative z-10 w-full shrink-0">
         <div>
@@ -32,5 +44,6 @@ export function TokenUsage() {
         <div className="w-full bg-surface-container-highest rounded-t h-[30%] opacity-80"></div>
       </div>
     </div>
+    </FeatureLock>
   )
 }

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { useCheckout } from "@/hooks/use-checkout";
 import { formatIDR } from "../billing/billing-format";
+import { describePlanFeatures } from "@/lib/utils/payment-gateway/plan-limits";
 import type { PlanDefinition } from "@/types/subscription.md";
 
 interface PlanCardProps {
@@ -71,7 +72,7 @@ export function PlanCard({ plan, isCurrent }: PlanCardProps) {
       </div>
 
       <ul className="flex flex-col gap-1.5 sm:gap-2">
-        {plan.features.map((f) => (
+        {describePlanFeatures(plan.id).map((f) => (
           <li key={f.label} className="flex items-start gap-2 text-[10px] sm:text-[11px] md:text-[13px] min-w-0">
             {f.included ? (
               <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-secondary-fixed shrink-0 mt-0.5" />

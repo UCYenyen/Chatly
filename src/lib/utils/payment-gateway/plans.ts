@@ -1,4 +1,5 @@
 import type { PlanDefinition, SubscriptionPlan } from "@/types/subscription.md";
+import { describePlanFeatures } from "./plan-limits";
 
 const MONTH_DAYS = 30;
 const YEAR_DAYS = 365;
@@ -12,13 +13,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDefinition> = {
     currency: "IDR",
     interval: "month",
     intervalDays: MONTH_DAYS,
-    features: [
-      { label: "100 pesan / bulan", included: true },
-      { label: "1 channel WhatsApp", included: true },
-      { label: "Analitik dasar", included: true },
-      { label: "Dukungan email", included: false },
-      { label: "SLA Support", included: false },
-    ],
+    features: describePlanFeatures("FREE"),
   },
   STARTER: {
     id: "STARTER",
@@ -28,13 +23,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDefinition> = {
     currency: "IDR",
     interval: "month",
     intervalDays: MONTH_DAYS,
-    features: [
-      { label: "10.000 pesan / bulan", included: true },
-      { label: "5 channel terhubung", included: true },
-      { label: "Analitik lanjutan", included: true },
-      { label: "Dukungan email", included: true },
-      { label: "SLA Support", included: false },
-    ],
+    features: describePlanFeatures("STARTER"),
   },
   GROWTH: {
     id: "GROWTH",
@@ -45,13 +34,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDefinition> = {
     interval: "month",
     intervalDays: MONTH_DAYS,
     highlighted: true,
-    features: [
-      { label: "Pesan tak terbatas", included: true },
-      { label: "15 channel terhubung", included: true },
-      { label: "Analitik real-time + ekspor", included: true },
-      { label: "Dukungan prioritas email", included: true },
-      { label: "SLA Support", included: false },
-    ],
+    features: describePlanFeatures("GROWTH"),
   },
   PRO: {
     id: "PRO",
@@ -61,13 +44,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDefinition> = {
     currency: "IDR",
     interval: "month",
     intervalDays: MONTH_DAYS,
-    features: [
-      { label: "Pesan tak terbatas", included: true },
-      { label: "Channel tak terbatas", included: true },
-      { label: "Analitik real-time + ekspor advanced", included: true },
-      { label: "Dukungan prioritas 24/7", included: true },
-      { label: "SLA Support 99.9% uptime", included: true },
-    ],
+    features: describePlanFeatures("PRO"),
   },
   ENTERPRISE: {
     id: "ENTERPRISE",
@@ -77,13 +54,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDefinition> = {
     currency: "IDR",
     interval: "month",
     intervalDays: MONTH_DAYS,
-    features: [
-      { label: "Pesan tak terbatas", included: true },
-      { label: "Channel tak terbatas", included: true },
-      { label: "Analitik custom dashboard", included: true },
-      { label: "Dedicated support team", included: true },
-      { label: "SLA Support 99.99% uptime", included: true },
-    ],
+    features: describePlanFeatures("ENTERPRISE"),
   },
 };
 
@@ -97,13 +68,7 @@ export const PLANS_YEARLY: Record<SubscriptionPlan, PlanDefinition | null> = {
     currency: "IDR",
     interval: "year",
     intervalDays: YEAR_DAYS,
-    features: [
-      { label: "10.000 pesan / bulan", included: true },
-      { label: "5 channel terhubung", included: true },
-      { label: "Analitik lanjutan", included: true },
-      { label: "Dukungan email", included: true },
-      { label: "SLA Support", included: false },
-    ],
+    features: describePlanFeatures("STARTER"),
   },
   GROWTH: {
     id: "GROWTH",
@@ -114,13 +79,7 @@ export const PLANS_YEARLY: Record<SubscriptionPlan, PlanDefinition | null> = {
     interval: "year",
     intervalDays: YEAR_DAYS,
     highlighted: true,
-    features: [
-      { label: "Pesan tak terbatas", included: true },
-      { label: "15 channel terhubung", included: true },
-      { label: "Analitik real-time + ekspor", included: true },
-      { label: "Dukungan prioritas email", included: true },
-      { label: "SLA Support", included: false },
-    ],
+    features: describePlanFeatures("GROWTH"),
   },
   PRO: {
     id: "PRO",
@@ -130,13 +89,7 @@ export const PLANS_YEARLY: Record<SubscriptionPlan, PlanDefinition | null> = {
     currency: "IDR",
     interval: "year",
     intervalDays: YEAR_DAYS,
-    features: [
-      { label: "Pesan tak terbatas", included: true },
-      { label: "Channel tak terbatas", included: true },
-      { label: "Analitik real-time + ekspor advanced", included: true },
-      { label: "Dukungan prioritas 24/7", included: true },
-      { label: "SLA Support 99.9% uptime", included: true },
-    ],
+    features: describePlanFeatures("PRO"),
   },
   ENTERPRISE: {
     id: "ENTERPRISE",
@@ -146,13 +99,7 @@ export const PLANS_YEARLY: Record<SubscriptionPlan, PlanDefinition | null> = {
     currency: "IDR",
     interval: "year",
     intervalDays: YEAR_DAYS,
-    features: [
-      { label: "Pesan tak terbatas", included: true },
-      { label: "Channel tak terbatas", included: true },
-      { label: "Analitik custom dashboard", included: true },
-      { label: "Dedicated support team", included: true },
-      { label: "SLA Support 99.99% uptime", included: true },
-    ],
+    features: describePlanFeatures("ENTERPRISE"),
   },
 };
 

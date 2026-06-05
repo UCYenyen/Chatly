@@ -3,6 +3,12 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
 import { processAndSaveKnowledgeBase } from "@/lib/rag-ingestion";
+import {
+  PlanLimitError,
+  enforceNumericLimit,
+  getBusinessPlan,
+  planLimitResponse,
+} from "@/lib/utils/payment-gateway/plan-guard";
 import type { BusinessDTO } from "@/types/business.md";
 import type { Business } from "@prisma/client";
 
@@ -59,6 +65,15 @@ export async function POST(
       return NextResponse.json({ message: "Tidak ada file yang dikirim" }, { status: 400 });
     }
 
+    const plan = await getBusinessPlan(id);
+    enforceNumericLimit(
+      plan,
+      "knowledgeDocuments",
+      existing.knowledgeFiles.length,
+      "dokumen pelatihan",
+      files.length,
+    );
+
     // Validate all files before processing any of them
     for (const file of files) {
       if (!ALLOWED_MIME.has(file.type)) {
@@ -100,6 +115,9 @@ export async function POST(
 
     return NextResponse.json(toDTO(updated));
   } catch (error) {
+    if (error instanceof PlanLimitError) {
+      return planLimitResponse(error);
+    }
     const message = error instanceof Error ? error.message : "Kesalahan tidak diketahui";
     console.error("[POST /api/businesses/:id/knowledge-files]", error);
     return NextResponse.json({ message }, { status: 500 });

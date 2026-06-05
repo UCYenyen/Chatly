@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { BookOpen, UploadCloud, FileText, X, Save, FilePlus } from "lucide-react";
+import { usePlanGate } from "@/hooks";
+import { BookOpen, UploadCloud, FileText, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 export function KnowledgeBase() {
     const { activeBusiness, refresh } = useBusinessContext();
     const { updateBusiness, isPending } = useUpdateBusiness(activeBusiness?.id ?? null);
+    const gate = usePlanGate();
 
     const [knowledge, setKnowledge] = useState("");
     const [files, setFiles] = useState<File[]>([]);
@@ -49,7 +51,7 @@ export function KnowledgeBase() {
 
         const updated = await updateBusiness({ knowledgeBase: knowledge });
         if (!updated) {
-            toast.error("Gagal memperbarui basis pengetahuan");
+            toast.error("Gagal memperbarui dokumen pelatihan");
             return;
         }
 
@@ -67,9 +69,10 @@ export function KnowledgeBase() {
                 );
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({ message: "Upload gagal" }));
-                    throw new Error(err.message || "Upload gagal");
+                    const errorMsg = err.message || "Upload gagal";
+                    throw new Error(errorMsg);
                 }
-                toast.success("Dokumen berhasil diproses ke basis pengetahuan", {
+                toast.success("Dokumen berhasil diproses ke dokumen pelatihan", {
                     id: ingestToast,
                 });
                 setFiles([]);
@@ -79,7 +82,7 @@ export function KnowledgeBase() {
                 return;
             }
         } else {
-            toast.success("Basis pengetahuan berhasil diperbarui");
+            toast.success("Dokumen pelatihan berhasil diperbarui");
         }
 
         await refresh();
@@ -101,7 +104,7 @@ export function KnowledgeBase() {
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <BookOpen className="w-5 h-5 text-secondary-fixed" fill="currentColor" fillOpacity={0.2} />
-                        <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide">Basis Pengetahuan & Data</h2>
+                        <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide">Dokumen Pelatihan & Data</h2>
                     </div>
                     <Button 
                         onClick={handleSave}
@@ -133,13 +136,37 @@ export function KnowledgeBase() {
 
             <div className="px-8 pb-8 flex flex-col gap-6">
                 <div className="pt-6 border-t border-outline-variant/10">
-                    <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold block mb-4">
-                        Dokumen Pendukung (PDF/Gambar)
-                    </span>
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">
+                            Dokumen Pendukung (PDF/Gambar)
+                        </span>
+                        <span className="text-[10px] font-mono text-outline/60 bg-surface-container-high px-2 py-0.5 rounded">
+                            {(activeBusiness?.knowledgeFiles || []).length} / {
+                                typeof gate.numericLimit("knowledgeDocuments") === "number"
+                                    ? gate.numericLimit("knowledgeDocuments")
+                                    : "Tak terbatas"
+                            } dokumen
+                        </span>
+                    </div>
+                    {!gate.canAddMore("knowledgeDocuments", (activeBusiness?.knowledgeFiles || []).length) && (
+                        <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                            <p className="text-[12px] text-destructive font-medium">
+                                Batas dokumen tercapai — upgrade paket untuk menambah lebih banyak
+                            </p>
+                        </div>
+                    )}
                     
                     <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border border-dashed border-outline-variant/20 rounded-lg p-8 flex flex-col items-center justify-center text-center gap-3 bg-surface-container/20 hover:bg-surface-container/40 transition-all cursor-pointer group"
+                        onClick={() => {
+                            if (gate.canAddMore("knowledgeDocuments", (activeBusiness?.knowledgeFiles || []).length)) {
+                                fileInputRef.current?.click();
+                            }
+                        }}
+                        className={`border border-dashed border-outline-variant/20 rounded-lg p-8 flex flex-col items-center justify-center text-center gap-3 transition-all group ${
+                            gate.canAddMore("knowledgeDocuments", (activeBusiness?.knowledgeFiles || []).length)
+                                ? "bg-surface-container/20 hover:bg-surface-container/40 cursor-pointer"
+                                : "bg-surface-container/10 cursor-not-allowed opacity-50"
+                        }`}
                     >
                         <input 
                             type="file" 
@@ -148,6 +175,7 @@ export function KnowledgeBase() {
                             className="hidden" 
                             multiple 
                             accept="application/pdf,image/*"
+                            disabled={!gate.canAddMore("knowledgeDocuments", (activeBusiness?.knowledgeFiles || []).length)}
                         />
                         <div className="bg-surface-container p-3 rounded-xl group-hover:scale-105 transition-transform shadow-md border border-outline-variant/5">
                             <UploadCloud className="w-5 h-5 text-secondary-fixed" />

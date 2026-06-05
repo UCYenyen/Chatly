@@ -51,11 +51,16 @@ export function CreateBusinessModal({ children, onCreated }: CreateBusinessModal
     });
 
     const onSubmit = async (values: FormValues): Promise<void> => {
-        const created = await createBusiness({
-            name: values.name,
-            description: values.description,
-        });
-        if (!created) return;
+        let created;
+        try {
+            created = await createBusiness({
+                name: values.name,
+                description: values.description,
+            });
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Gagal membuat bisnis");
+            return;
+        }
 
         toast.success("Bisnis baru berhasil dibuat!", {
             description: `${created.name} telah ditambahkan ke profil Anda.`,

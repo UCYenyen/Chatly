@@ -1,13 +1,16 @@
 "use client";
 
-import { MessageSquareText } from "lucide-react"
+import { MessageSquareText, Lock } from "lucide-react"
 import { useBusinessContext } from "@/components/features/business/BusinessProvider"
 import { useUpdateBusiness } from "@/hooks/use-update-business"
+import { usePlanGate } from "@/hooks"
+import { DEFAULT_AI_TONE } from "@/lib/utils/payment-gateway/plan-limits"
 import { toast } from "sonner"
 
 export function AiPersonality() {
   const { activeBusiness, refresh } = useBusinessContext();
   const { updateBusiness, isPending } = useUpdateBusiness(activeBusiness?.id ?? null);
+  const gate = usePlanGate();
 
   const tones = [
     { id: 'professional', name: 'Profesional', desc: 'Formal, presisi, dan fokus pada bisnis' },
@@ -20,6 +23,11 @@ export function AiPersonality() {
 
   const handleSelect = async (toneId: string) => {
     if (toneId === currentTone || isPending) return;
+    
+    if (!gate.hasFeature("customPersonality") && toneId !== DEFAULT_AI_TONE) {
+      toast.error("Kepribadian AI kustom tersedia di paket Starter");
+      return;
+    }
     
     const updated = await updateBusiness({ aiTone: toneId });
     if (updated) {
@@ -45,11 +53,14 @@ export function AiPersonality() {
         <div className="flex flex-col gap-3">
           {tones.map((tone) => {
             const isSelected = tone.id === currentTone;
+            const isLocked = !gate.hasFeature("customPersonality") && tone.id !== DEFAULT_AI_TONE;
             return (
               <div 
                 key={tone.id} 
                 onClick={() => handleSelect(tone.id)}
-                className={`flex flex-col p-4 rounded-md border cursor-pointer transition-all shadow-sm ${
+                className={`flex flex-col p-4 rounded-md border transition-all shadow-sm relative ${
+                  isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                } ${
                   isSelected 
                     ? 'bg-surface-container-high border-secondary-fixed/50 border-l-[3px] border-l-secondary-fixed ring-1 ring-secondary-fixed/10' 
                     : 'bg-[#08111d] border-outline-variant/15 hover:border-outline-variant/30 hover:bg-surface-container/10'
@@ -61,6 +72,12 @@ export function AiPersonality() {
                   </span>
                   {isSelected && (
                     <div className="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_5px_rgba(164,215,48,0.8)]"></div>
+                  )}
+                  {isLocked && (
+                    <div className="flex items-center gap-1 bg-surface-container-high/50 px-2 py-1 rounded text-[10px] text-outline">
+                      <Lock className="w-3 h-3" />
+                      <span>Starter</span>
+                    </div>
                   )}
                 </div>
                 <span className="text-[11px] text-outline mt-1 leading-relaxed">{tone.desc}</span>

@@ -1,10 +1,14 @@
 "use client"
 
 import SpotlightCard from "@/components/personal/SpotlightCard"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRef } from "react"
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal"
+import { PLANS } from "@/lib/utils/payment-gateway/plans"
+import { describePlanFeatures } from "@/lib/utils/payment-gateway/plan-limits"
+import { formatIDR } from "@/components/features/billing/billing-format"
+import type { SubscriptionPlan } from "@prisma/client"
 
 export function PricingSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
@@ -14,40 +18,28 @@ export function PricingSection() {
     fade: true,
   })
 
-  const plans = [
-    {
-      name: "STARTER",
-      price: "Rp 149rb",
-      description: "Individu & Proyek Kecil",
-      features: ["300 sesi", "3.000 pesan", "Analitik Dasar"],
-      buttonText: "Mulai Sekarang",
-      isPopular: false
-    },
-    {
-      name: "GROWTH",
-      price: "Rp 349rb",
-      description: "Tim yang Berkembang",
-      features: ["1.000 sesi", "10.000 pesan", "Basis Pengetahuan Kustom"],
-      buttonText: "Skala Sekarang",
-      isPopular: true
-    },
-    {
-      name: "PRO",
-      price: "Rp 749rb",
-      description: "Perusahaan Volume Tinggi",
-      features: ["3.000 sesi", "30.000 pesan", "Akses API"],
-      buttonText: "Jadi Pro",
-      isPopular: false
-    },
-    {
-      name: "ENTERPRISE",
-      price: "Kustom",
-      description: "Skala Global",
-      features: ["Sesi Tanpa Batas", "Pelatihan LLM Kustom", "Dukungan Khusus"],
-      buttonText: "Hubungi Penjualan",
-      isPopular: false
+  const PLAN_IDS: SubscriptionPlan[] = ["STARTER", "GROWTH", "PRO", "ENTERPRISE"]
+
+  const plans = PLAN_IDS.map((planId) => {
+    const plan = PLANS[planId]
+    const features = describePlanFeatures(planId)
+    const includedFeatures = features.filter((f) => f.included).slice(0, 5)
+    const notableLockedFeatures = features.filter((f) => !f.included).slice(0, 2)
+
+    return {
+      id: planId,
+      name: plan.name,
+      price: plan.amount === 0 ? "Kustom" : formatIDR(plan.amount),
+      description: plan.description,
+      features: [...includedFeatures, ...notableLockedFeatures],
+      buttonText:
+        planId === "STARTER" ? "Mulai Sekarang" :
+        planId === "GROWTH" ? "Skala Sekarang" :
+        planId === "PRO" ? "Jadi Pro" :
+        "Hubungi Penjualan",
+      isPopular: planId === "GROWTH"
     }
-  ]
+  })
 
   return (
     <section ref={sectionRef} id="pricing" className="container mx-auto px-10 xl:px-16 mt-32 lg:mt-40 flex flex-col items-center scroll-mt-32">
@@ -60,8 +52,8 @@ export function PricingSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full">
         {plans.map((plan) => (
-          <SpotlightCard 
-            key={plan.name} 
+          <SpotlightCard
+            key={plan.id}
             className={`bg-surface-container-low border flex flex-col p-8 rounded-sm shadow-xl relative ${
               plan.isPopular ? 'border-outline-variant/30 scale-[1.02] bg-surface-container-low/90 z-10' : 'border-outline-variant/15'
             }`}
@@ -71,7 +63,7 @@ export function PricingSection() {
                 Paling Populer
               </div>
             )}
-            
+
             <div className="mb-8">
               <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold block mb-4">
                 {plan.name}
@@ -86,18 +78,22 @@ export function PricingSection() {
             </div>
 
             <div className="flex flex-col gap-4 mb-10 flex-1">
-              {plan.features.map((feat, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-primary-fixed fill-[#3545d6]" />
-                  <span className="text-[13px] text-outline">{feat}</span>
+              {plan.features.map((feat) => (
+                <div key={feat.label} className="flex items-center gap-3">
+                  {feat.included ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary-fixed fill-[#3545d6] shrink-0" />
+                  ) : (
+                    <X className="w-3.5 h-3.5 text-outline shrink-0" />
+                  )}
+                  <span className={`text-[13px] ${feat.included ? "text-on-surface" : "text-outline line-through"}`}>{feat.label}</span>
                 </div>
               ))}
             </div>
 
-            <Button 
+            <Button
               className={`relative z-10 w-full font-bold text-[12px] h-11 transition-transform active:scale-95 border rounded-sm mt-auto shadow-sm ${
-                plan.isPopular 
-                  ? 'bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] border-[#a4d730]' 
+                plan.isPopular
+                  ? 'bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] border-[#a4d730]'
                   : 'bg-[#bff44c] text-[#141f00] hover:bg-[#a4d730] border-outline-variant/20 tracking-wide'
               }`}
             >

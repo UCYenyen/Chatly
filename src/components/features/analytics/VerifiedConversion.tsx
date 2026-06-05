@@ -1,7 +1,19 @@
+"use client"
+
 import { TrendingUp } from "lucide-react"
+import { usePlanGate } from "@/hooks"
+import { FeatureLock } from "@/components/features/subscription/FeatureLock"
 
 export function VerifiedConversion() {
+  const gate = usePlanGate()
+  const locked = !gate.isLoading && !gate.hasFeature("advancedAnalytics")
+
   return (
+    <FeatureLock
+      locked={locked}
+      requiredPlan={gate.requiredPlanForFeature("advancedAnalytics")}
+      featureName="Konversi Niat Terverifikasi"
+    >
     <div className="bg-surface-container-low border border-outline-variant/15 p-10 rounded-xl flex flex-col justify-center h-[280px] shadow-2xl">
       <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold mb-4">
         Konversi Niat Terverifikasi
@@ -14,5 +26,6 @@ export function VerifiedConversion() {
         <span>+12.4% dari periode lalu</span>
       </div>
     </div>
+    </FeatureLock>
   )
 }

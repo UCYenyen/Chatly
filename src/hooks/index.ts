@@ -11,3 +11,5 @@ export { useWhatsAppAuth } from "./use-whatsapp-auth";
 export { useContactIgnoreList } from "./use-contact-ignore-list";
 export { useGsapScrollReveal } from "./use-gsap-scroll-reveal";
 export { useSubscription } from "./use-subscription";
+export { usePlanGate } from "./use-plan-gate";
+export type { PlanGate } from "./use-plan-gate";
