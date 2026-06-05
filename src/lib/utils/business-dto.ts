@@ -14,6 +14,9 @@ export function toBusinessDTO(b: Business): BusinessDTO {
     timezone: b.timezone,
     businessHours: isWeeklyHours(b.businessHours) ? b.businessHours : null,
     notificationPhone: b.notificationPhone,
+    monthlyReportEnabled: b.monthlyReportEnabled,
+    monthlyReportEmail: b.monthlyReportEmail,
+    monthlyReportFormat: b.monthlyReportFormat,
     createdAt: b.createdAt.toISOString(),
     updatedAt: b.updatedAt.toISOString(),
   };

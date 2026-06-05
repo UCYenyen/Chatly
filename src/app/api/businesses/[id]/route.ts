@@ -120,6 +120,39 @@ export async function PATCH(
       }
     }
 
+    if (typeof body.monthlyReportEnabled === "boolean") {
+      data.monthlyReportEnabled = body.monthlyReportEnabled;
+    }
+    if (body.monthlyReportEmail !== undefined) {
+      if (
+        body.monthlyReportEmail === null ||
+        body.monthlyReportEmail.trim().length === 0
+      ) {
+        data.monthlyReportEmail = null;
+      } else {
+        const email = body.monthlyReportEmail.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          return NextResponse.json(
+            { message: "Email laporan tidak valid" },
+            { status: 400 },
+          );
+        }
+        data.monthlyReportEmail = email;
+      }
+    }
+    if (body.monthlyReportFormat !== undefined) {
+      if (
+        body.monthlyReportFormat !== "CSV" &&
+        body.monthlyReportFormat !== "XLSX"
+      ) {
+        return NextResponse.json(
+          { message: "Format laporan tidak valid" },
+          { status: 400 },
+        );
+      }
+      data.monthlyReportFormat = body.monthlyReportFormat;
+    }
+
     console.log("[PATCH /api/businesses/:id] data:", JSON.stringify(data, null, 2));
     const updated = await prisma.business.update({ where: { id }, data });
     return NextResponse.json(toBusinessDTO(updated));
