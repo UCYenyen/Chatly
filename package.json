@@ -69,15 +69,5 @@
     "prisma": "^7.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/engines",
-      "better-sqlite3",
-      "msw",
-      "prisma",
-      "sharp",
-      "unrs-resolver"
-    ]
   }
 }
