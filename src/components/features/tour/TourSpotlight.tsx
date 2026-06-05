@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useTourTarget } from "@/hooks/use-tour-target";
@@ -22,7 +23,9 @@ export function TourSpotlight() {
     isActive && hasTarget,
   );
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  const content = (
     <AnimatePresence>
       {isActive && currentStep ? (
         rect ? (
@@ -58,4 +61,6 @@ export function TourSpotlight() {
       ) : null}
     </AnimatePresence>
   );
+
+  return createPortal(content, document.body);
 }
