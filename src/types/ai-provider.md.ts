@@ -1,4 +1,4 @@
-export type AIProvider = "gemini" | "groq";
+export type AIProvider = "gemini" | "groq" | "deepseek";
 
 export type EmbeddingProvider = "jina" | "gemini";
 

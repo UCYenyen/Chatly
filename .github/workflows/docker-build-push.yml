@@ -43,7 +43,8 @@ jobs:
           echo "NEXT_PUBLIC_XENDIT_KEY=${{ secrets.NEXT_PUBLIC_XENDIT_KEY }}" >> .env.production
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env.production
           echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env.production
-          echo "AI_PROVIDER=groq" >> .env.production
+          echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> .env.production
+          echo "AI_PROVIDER=gemini" >> .env.production
           echo "JINA_API_KEY=${{ secrets.JINA_API_KEY }}" >> .env.production
           echo "EMBEDDING_PROVIDER=jina" >> .env.production
           echo "GOWA_API_BASE=${{ secrets.GOWA_API_BASE }}" >> .env.production
@@ -73,7 +74,7 @@ jobs:
       - name: Apply Prisma migrations
         run: |
           corepack enable pnpm
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --config.strict-dep-builds=false
           pnpm prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -123,6 +124,14 @@ jobs:
               sed -i "s|^EMBEDDING_PROVIDER=.*|EMBEDDING_PROVIDER=jina|" .env
             else
               echo "EMBEDDING_PROVIDER=jina" >> .env
+            fi
+            DEEPSEEK_KEY="${{ secrets.DEEPSEEK_API_KEY }}"
+            if [ -n "$DEEPSEEK_KEY" ]; then
+              if grep -q '^DEEPSEEK_API_KEY=' .env; then
+                sed -i "s|^DEEPSEEK_API_KEY=.*|DEEPSEEK_API_KEY=$DEEPSEEK_KEY|" .env
+              else
+                echo "DEEPSEEK_API_KEY=$DEEPSEEK_KEY" >> .env
+              fi
             fi
 
             # Login to GHCR on the VPS

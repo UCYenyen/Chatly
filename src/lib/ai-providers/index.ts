@@ -5,28 +5,44 @@ import type {
 } from "@/types/ai-provider.md";
 import { generateWithGemini, isGeminiConfigured } from "./gemini";
 import { generateWithGroq, isGroqConfigured } from "./groq";
+import { generateWithDeepSeek, isDeepSeekConfigured } from "./deepseek";
 
 function resolvePrimaryProvider(): AIProvider {
-  return process.env.AI_PROVIDER?.toLowerCase() === "groq" ? "groq" : "gemini";
+  const env = process.env.AI_PROVIDER?.toLowerCase();
+  if (env === "groq") return "groq";
+  if (env === "deepseek") return "deepseek";
+  return "gemini";
 }
 
 function buildProviderOrder(): AIProvider[] {
   const primary = resolvePrimaryProvider();
-  const fallback: AIProvider = primary === "groq" ? "gemini" : "groq";
-  return [primary, fallback];
+  const all: AIProvider[] = ["gemini", "groq", "deepseek"];
+  return [primary, ...all.filter((p) => p !== primary)];
 }
 
 function isProviderConfigured(provider: AIProvider): boolean {
-  return provider === "groq" ? isGroqConfigured() : isGeminiConfigured();
+  switch (provider) {
+    case "groq":
+      return isGroqConfigured();
+    case "deepseek":
+      return isDeepSeekConfigured();
+    default:
+      return isGeminiConfigured();
+  }
 }
 
 async function runProvider(
   provider: AIProvider,
   request: ChatGenerationRequest,
 ): Promise<string> {
-  return provider === "groq"
-    ? generateWithGroq(request)
-    : generateWithGemini(request);
+  switch (provider) {
+    case "groq":
+      return generateWithGroq(request);
+    case "deepseek":
+      return generateWithDeepSeek(request);
+    default:
+      return generateWithGemini(request);
+  }
 }
 
 export async function generateChatCompletion(
@@ -36,7 +52,7 @@ export async function generateChatCompletion(
 
   if (order.length === 0) {
     throw new Error(
-      "No AI provider is configured. Set GEMINI_API_KEY and/or GROQ_API_KEY.",
+      "No AI provider is configured. Set GEMINI_API_KEY, GROQ_API_KEY, and/or DEEPSEEK_API_KEY.",
     );
   }
 
