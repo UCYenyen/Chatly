@@ -8,6 +8,9 @@ import { canonicalizePhone } from "@/lib/utils/phone";
 
 const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
 
+const HUMAN_MODE_TIMEOUT_MINUTES = Number(process.env.HUMAN_MODE_TIMEOUT_MINUTES) || 30;
+const HUMAN_MODE_TIMEOUT_MS = HUMAN_MODE_TIMEOUT_MINUTES * 60 * 1000;
+
 function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!WEBHOOK_SECRET) {
     console.error(
@@ -363,10 +366,36 @@ export async function POST(request: Request) {
     where: {
       businessId_phone: { businessId: whatsappAuth.businessId, phone: from },
     },
-    select: { mode: true },
+    select: { mode: true, updatedAt: true },
   });
-  const currentMode: "AI" | "HUMAN" = convState?.mode === "HUMAN" ? "HUMAN" : "AI";
+  let currentMode: "AI" | "HUMAN" = convState?.mode === "HUMAN" ? "HUMAN" : "AI";
   console.log(`[webhook] Conversation mode for ${from}: ${currentMode}`);
+
+  // ── HUMAN mode is authoritative: bot stays silent until a human resolves it ──
+  // The AI engine no longer decides when to resume — control returns to AI only
+  // after the handover has been idle for HUMAN_MODE_TIMEOUT_MINUTES.
+  if (currentMode === "HUMAN" && convState) {
+    const handoverAgeMs = Date.now() - convState.updatedAt.getTime();
+    const handoverAgeMinutes = Math.round(handoverAgeMs / 60000);
+
+    if (handoverAgeMs < HUMAN_MODE_TIMEOUT_MS) {
+      console.log(
+        `[webhook] HUMAN mode active for ${from} (${handoverAgeMinutes}min / ${HUMAN_MODE_TIMEOUT_MINUTES}min). Bot stays silent — admin is handling this conversation.`,
+      );
+      return NextResponse.json({ ok: true, mode: "HUMAN" });
+    }
+
+    await prisma.conversationState.update({
+      where: {
+        businessId_phone: { businessId: whatsappAuth.businessId, phone: from },
+      },
+      data: { mode: "AI" },
+    });
+    currentMode = "AI";
+    console.log(
+      `[webhook] HUMAN mode for ${from} timed out after ${handoverAgeMinutes}min → reverting to AI.`,
+    );
+  }
 
   try {
     // ── Run AI Engine ──────────────────────────────────────────────────────────

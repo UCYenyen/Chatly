@@ -1,15 +1,8 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import prisma from "@/lib/utils/prisma";
 import { composeSystemPrompt } from "@/lib/system-prompts/composer";
 import { retrieveRelevantChunks } from "@/lib/rag-retrieval";
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-if (!GEMINI_API_KEY) {
-  console.warn("[ai-engine] GEMINI_API_KEY is not set");
-}
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY ?? "");
+import { generateChatCompletion } from "@/lib/ai-providers";
+import type { AISchema } from "@/types/ai-provider.md";
 
 /**
  * The structured result returned by the AI engine.
@@ -39,6 +32,16 @@ export interface ChatlyAIResult {
 interface HistoryRow {
   role: "USER" | "AI";
   content: string;
+}
+
+interface ParsedAIResponse {
+  response?: unknown;
+  intent_analytics?: Record<string, unknown>;
+  generate_transaction?: ChatlyAIResult["generate_transaction"];
+  escalate_to_human?: unknown;
+  end_conversation?: unknown;
+  should_respond?: unknown;
+  next_mode?: unknown;
 }
 
 /**
@@ -171,54 +174,54 @@ export async function runChatlyAIEngine(
 
   // 4. Build the dynamic intent_analytics schema properties using safe keys
   console.log("[ai-engine] Step 5: Building schema...");
-  const intentProperties: Record<string, { type: typeof SchemaType.BOOLEAN; description: string }> = {};
+  const intentProperties: Record<string, AISchema> = {};
   for (const [key, intentName] of Object.entries(keyToIntent)) {
     intentProperties[key] = {
-      type: SchemaType.BOOLEAN,
+      type: "boolean",
       description: `Apakah pesan terakhir pelanggan mengindikasikan minat terhadap "${intentName}" (explicit atau implicit: tanya harga, fitur, cara kerja, ketersediaan, proses order, dll)?`,
     };
   }
 
-  const responseSchema = {
-    type: SchemaType.OBJECT,
+  const responseSchema: AISchema = {
+    type: "object",
     properties: {
       response: {
-        type: SchemaType.STRING,
+        type: "string",
         description: "Pesan balasan untuk dikirim ke pelanggan via WhatsApp.",
       },
       intent_analytics: {
-        type: SchemaType.OBJECT,
+        type: "object",
         description: "Evaluasi niat pelanggan berdasarkan pesan terakhir. PENTING: Deteksi implicit intent juga (misal: bertanya tentang produk = minat produk, tanya harga = minat beli), bukan hanya explicit statement.",
         properties: intentNames.length > 0 ? intentProperties : {
           _empty: {
-            type: SchemaType.BOOLEAN,
+            type: "boolean",
             description: "Placeholder — tidak ada niat yang dilacak.",
           },
         },
-        required: intentNames.length > 0 ? Object.keys(keyToIntent) : [],
+        required: intentNames.length > 0 ? Object.keys(keyToIntent) : ["_empty"],
       },
       generate_transaction: {
-        type: SchemaType.OBJECT,
+        type: "object",
         nullable: true,
         description: "Isi jika pelanggan ingin membeli/membayar sesuatu. null jika tidak.",
         properties: {
           name: {
-            type: SchemaType.STRING,
+            type: "string",
             description: "Nama item atau layanan yang dibeli.",
           },
           description: {
-            type: SchemaType.STRING,
+            type: "string",
             description: "Deskripsi singkat transaksi.",
           },
           amount: {
-            type: SchemaType.NUMBER,
+            type: "number",
             description: "Harga dalam Rupiah (angka bulat).",
           },
         },
         required: ["name", "description", "amount"],
       },
       escalate_to_human: {
-        type: SchemaType.BOOLEAN,
+        type: "boolean",
         description:
           `Set true HANYA jika pelanggan secara eksplisit minta dialihkan ke admin/manusia/CS karena masalah yang TIDAK BISA kamu selesaikan sendiri. Contoh true: "tolong sambungkan ke admin", "saya mau bicara dengan orang langsung", "saya tidak puas, mau komplain ke admin", "ini urgent, panggil CS-nya".
 
@@ -231,12 +234,12 @@ JANGAN set true untuk:
 Pertimbangkan keseluruhan kalimat dan niat sebenarnya — jangan asal trigger.`,
       },
       end_conversation: {
-        type: SchemaType.BOOLEAN,
+        type: "boolean",
         description:
           "Set true HANYA jika pelanggan secara eksplisit menyatakan ingin mengakhiri percakapan (mis. 'sudah cukup, terima kasih', 'sampai sini saja', 'selesai'). JANGAN true untuk salam pamit biasa di tengah percakapan ('ok thanks') jika konteks belum tuntas.",
       },
       should_respond: {
-        type: SchemaType.BOOLEAN,
+        type: "boolean",
         description:
           `Apakah balasanmu (\`response\`) harus dikirim ke pelanggan?
 - Mode saat ini: ${currentMode}.
@@ -244,8 +247,7 @@ Pertimbangkan keseluruhan kalimat dan niat sebenarnya — jangan asal trigger.`,
 - Jika mode = HUMAN: pelanggan sedang ditangani admin manusia. Set false (diam) jika pesan pelanggan masih ditujukan ke admin atau merupakan kelanjutan obrolan dengan admin (mis. balasan, klarifikasi, terima kasih ke admin). Set true HANYA jika pelanggan jelas-jelas mulai topik/pertanyaan baru yang ingin dijawab bot (mis. tanya produk lain, tanya harga, tanya jam buka) — bukan masih nyambung dengan admin.`,
       },
       next_mode: {
-        type: SchemaType.STRING,
-        format: "enum",
+        type: "string",
         enum: ["AI", "HUMAN"],
         description:
           `Mode percakapan SETELAH giliran ini.
@@ -259,6 +261,7 @@ Pertimbangkan keseluruhan kalimat dan niat sebenarnya — jangan asal trigger.`,
     required: [
       "response",
       "intent_analytics",
+      "generate_transaction",
       "escalate_to_human",
       "end_conversation",
       "should_respond",
@@ -268,49 +271,23 @@ Pertimbangkan keseluruhan kalimat dan niat sebenarnya — jangan asal trigger.`,
 
   console.log("[ai-engine] Step 5 OK: Schema built. intent_analytics keys:", Object.keys(intentProperties));
 
-  // 5. Configure Gemini model
-  console.log("[ai-engine] Step 6: Creating Gemini model instance...");
-  let chatModel;
-  try {
-    chatModel = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
-      systemInstruction,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: responseSchema as any,
-      },
-    });
-    console.log("[ai-engine] Step 6 OK: Model created");
-  } catch (err) {
-    console.error("[ai-engine] Step 6 FAILED: getGenerativeModel error:", err);
-    return {
-      response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
-      intent_analytics: {},
-      generate_transaction: null,
-      escalate_to_human: false,
-      end_conversation: false,
-      should_respond: true,
-      next_mode: "AI",
-    };
-  }
-
-  // 6. Build user prompt with conversation history
   const userPrompt = buildUserPrompt(history, incomingMessage);
-  console.log("[ai-engine] Step 7: User prompt built, length =", userPrompt.length);
+  console.log("[ai-engine] Step 6: User prompt built, length =", userPrompt.length);
 
-  // 7. Call Gemini
-  console.log("[ai-engine] Step 8: Calling Gemini generateContent...");
+  console.log("[ai-engine] Step 7: Calling AI provider...");
   try {
-    const result = await chatModel.generateContent(userPrompt);
-    console.log("[ai-engine] Step 8 OK: Got response from Gemini");
+    const { rawText, provider } = await generateChatCompletion({
+      systemInstruction,
+      userPrompt,
+      schemaName: "chatly_response",
+      responseSchema,
+    });
+    console.log(`[ai-engine] Step 7 OK: response from provider="${provider}"`);
+    console.log("[ai-engine] Step 8: Raw response text:", rawText);
 
-    const raw = result.response.text();
-    console.log("[ai-engine] Step 9: Raw response text:", raw);
+    const parsed = JSON.parse(rawText) as ParsedAIResponse;
+    console.log("[ai-engine] Step 9: Parsed JSON OK:", JSON.stringify(parsed, null, 2));
 
-    const parsed = JSON.parse(raw);
-    console.log("[ai-engine] Step 10: Parsed JSON OK:", JSON.stringify(parsed, null, 2));
-
-    // Map sanitized keys back to real intent names
     const intentAnalytics: Record<string, boolean> = {};
     if (parsed.intent_analytics && typeof parsed.intent_analytics === "object") {
       for (const [key, value] of Object.entries(parsed.intent_analytics)) {
@@ -321,10 +298,10 @@ Pertimbangkan keseluruhan kalimat dan niat sebenarnya — jangan asal trigger.`,
         }
       }
     }
-    console.log("[ai-engine] Step 11: Mapped intent analytics:", JSON.stringify(intentAnalytics));
+    console.log("[ai-engine] Step 10: Mapped intent analytics:", JSON.stringify(intentAnalytics));
 
     const finalResult: ChatlyAIResult = {
-      response: parsed.response || "",
+      response: typeof parsed.response === "string" ? parsed.response : "",
       intent_analytics: intentAnalytics,
       generate_transaction: parsed.generate_transaction ?? null,
       escalate_to_human: parsed.escalate_to_human === true,
@@ -335,10 +312,11 @@ Pertimbangkan keseluruhan kalimat dan niat sebenarnya — jangan asal trigger.`,
     console.log("[ai-engine] ====== DONE (success) ======");
     return finalResult;
   } catch (error) {
-    console.error("[ai-engine] Step 8-10 FAILED: Gemini API Error:", error);
-    console.error("[ai-engine] Error name:", (error as any)?.name);
-    console.error("[ai-engine] Error message:", (error as any)?.message);
-    console.error("[ai-engine] Error stack:", (error as any)?.stack);
+    console.error("[ai-engine] Step 7-9 FAILED: AI provider error:", error);
+    console.error(
+      "[ai-engine] Error message:",
+      error instanceof Error ? error.message : String(error),
+    );
     return {
       response: "Maaf, sistem kami sedang mengalami gangguan. Silakan coba sesaat lagi.",
       intent_analytics: {},
