@@ -17,3 +17,4 @@ export type { PlanGate } from "./use-plan-gate";
 export { useTour } from "./use-tour";
 export { useOnboardingStatus } from "./use-onboarding-status";
 export { useTourTarget } from "./use-tour-target";
+export { useSendReport } from "./use-send-report";
