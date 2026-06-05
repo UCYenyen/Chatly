@@ -261,7 +261,7 @@ export function downloadReceipt(payment: PaymentDTO): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Receipt-${payment.xenditExternalId}.html`;
+  link.download = `Receipt-chatly-${payment.xenditExternalId}.html`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
