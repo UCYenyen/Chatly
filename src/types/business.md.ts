@@ -1,4 +1,5 @@
 import type { WeeklyHours } from "@/types/business-hours.md";
+import type { ReportFormat } from "@/types/report.md";
 
 export interface BusinessDTO {
   id: string;
@@ -13,6 +14,9 @@ export interface BusinessDTO {
   timezone: string | null;
   businessHours: WeeklyHours | null;
   notificationPhone: string | null;
+  monthlyReportEnabled: boolean;
+  monthlyReportEmail: string | null;
+  monthlyReportFormat: ReportFormat;
 }
 
 export interface CreateBusinessRequest {
@@ -30,6 +34,9 @@ export interface UpdateBusinessRequest {
   timezone?: string | null;
   businessHours?: WeeklyHours | null;
   notificationPhone?: string | null;
+  monthlyReportEnabled?: boolean;
+  monthlyReportEmail?: string | null;
+  monthlyReportFormat?: ReportFormat;
 }
 
 export interface BusinessListResponse {
