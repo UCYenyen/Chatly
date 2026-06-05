@@ -241,53 +241,63 @@ export async function handleXenditCallback(
                 await prisma.$transaction(async (tx) => {
                     const currentPayment = await tx.payment.findUnique({
                         where: { id: payment.id },
+                        select: { id: true, status: true, amount: true, userId: true },
                     });
 
                     if (!currentPayment || currentPayment.status === "PAID") {
-                        console.log(`[handleXenditCallback] Top-up ${payment.id} already processed.`);
+                        console.log(`[handleXenditCallback] Top-up ${payment.id} already processed. Current status: ${currentPayment?.status}`);
                         return;
                     }
 
-                    await tx.payment.update({
+                    const updatedPayment = await tx.payment.update({
                         where: { id: payment.id },
                         data: { status: "PAID", paidAt },
+                        select: { id: true, status: true },
                     });
 
-                    await tx.user.update({
-                        where: { id: payment.userId },
-                        data: { balance: { increment: payment.amount } },
-                    });
+                    if (updatedPayment.status === "PAID") {
+                        await tx.user.update({
+                            where: { id: currentPayment.userId },
+                            data: { balance: { increment: currentPayment.amount } },
+                        });
+                        console.log(`[handleXenditCallback] Top-up ${payment.id} credited ${currentPayment.amount} to user ${currentPayment.userId}`);
+                    }
                 });
             } else if (payment.type === "SUBSCRIPTION" && payment.businessId) {
                 await prisma.$transaction(async (tx) => {
                     const currentPayment = await tx.payment.findUnique({
                         where: { id: payment.id },
+                        select: { id: true, status: true, plan: true, businessId: true },
                     });
 
                     if (!currentPayment || currentPayment.status === "PAID") {
-                        console.log(`[handleXenditCallback] Subscription ${payment.id} already processed.`);
+                        console.log(`[handleXenditCallback] Subscription ${payment.id} already processed. Current status: ${currentPayment?.status}`);
                         return;
                     }
 
-                    const plan = getPlan(payment.plan);
+                    const plan = getPlan(currentPayment.plan);
                     const periodEnd = new Date(now.getTime() + plan.intervalDays * 86_400_000);
 
-                    await tx.payment.update({
+                    const updatedPayment = await tx.payment.update({
                         where: { id: payment.id },
                         data: { status: "PAID", paidAt },
+                        select: { id: true, status: true },
                     });
 
-                    await tx.subscription.update({
-                        where: { businessId: payment.businessId! },
-                        data: {
-                            plan: payment.plan,
-                            status: "ACTIVE",
-                            currentPeriodStart: now,
-                            currentPeriodEnd: periodEnd,
-                            cancelAtPeriodEnd: false,
-                            canceledAt: null,
-                        },
-                    });
+                    if (updatedPayment.status === "PAID") {
+                        await tx.subscription.update({
+                            where: { businessId: currentPayment.businessId! },
+                            data: {
+                                plan: currentPayment.plan,
+                                status: "ACTIVE",
+                                currentPeriodStart: now,
+                                currentPeriodEnd: periodEnd,
+                                cancelAtPeriodEnd: false,
+                                canceledAt: null,
+                            },
+                        });
+                        console.log(`[handleXenditCallback] Subscription ${payment.id} activated for business ${currentPayment.businessId}`);
+                    }
                 });
             }
         }
