@@ -7,6 +7,7 @@ import { useWalletContext } from "./WalletProvider";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { formatIDR, formatShortDateID } from "./billing-format";
 import { useCancelPayment } from "@/hooks/use-cancel-payment";
+import { downloadReceipt } from "@/lib/utils/receipt-generator";
 import type { PaymentDTO, WalletStateResponse } from "@/types/wallet.md";
 import type { PaymentStatus } from "@prisma/client";
 
@@ -49,6 +50,16 @@ export function TransactionHistory() {
       await refresh();
     } else {
       toast.error("Gagal membatalkan transaksi.");
+    }
+  };
+
+  const handleDownloadReceipt = (payment: PaymentDTO): void => {
+    try {
+      downloadReceipt(payment);
+      toast.success("Receipt berhasil diunduh");
+    } catch (error) {
+      console.error("Failed to download receipt:", error);
+      toast.error("Gagal mengunduh receipt");
     }
   };
 
@@ -153,8 +164,9 @@ export function TransactionHistory() {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      onClick={() => handleDownloadReceipt(tx)}
                       className="text-outline hover:text-on-surface transition-colors"
-                      aria-label="Unduh invoice"
+                      aria-label="Unduh receipt"
                     >
                       <Download className="w-[18px] h-[18px]" />
                     </Button>
