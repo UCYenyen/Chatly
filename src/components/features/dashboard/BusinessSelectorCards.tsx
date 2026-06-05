@@ -1,12 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     ArrowRight,
-    CheckCircle2,
+    Lock,
     Plus,
-    Settings2,
     Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +15,7 @@ import { DeleteBusinessModal } from "@/components/personal/DeleteBusinessModal";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { cn } from "@/lib/utils";
 import type { BusinessDTO } from "@/types/business.md";
+import type { SubscriptionPlan } from "@prisma/client";
 
 export function BusinessSelectorCards() {
     const router = useRouter();
@@ -25,11 +25,57 @@ export function BusinessSelectorCards() {
         setActiveBusinessId,
         isLoading,
     } = useBusinessContext();
+    const [hasPaidSubscription, setHasPaidSubscription] = useState<boolean>(false);
+    const [checkingSubscription, setCheckingSubscription] = useState<boolean>(true);
+
+    useEffect(() => {
+        const checkSubscriptions = async (): Promise<void> => {
+            setCheckingSubscription(true);
+            try {
+                const paidSubscriptions = await Promise.all(
+                    businesses.map(async (biz) => {
+                        try {
+                            const res = await fetch(`/api/businesses/${biz.id}/subscription`, {
+                                method: "GET",
+                                cache: "no-store",
+                            });
+                            if (!res.ok) return false;
+                            const data = await res.json() as { subscription: { plan: SubscriptionPlan } | null };
+                            const plan = data.subscription?.plan;
+                            return plan && plan !== "FREE";
+                        } catch {
+                            return false;
+                        }
+                    })
+                );
+                setHasPaidSubscription(paidSubscriptions.some((hasPaid) => hasPaid));
+            } catch {
+                setHasPaidSubscription(false);
+            } finally {
+                setCheckingSubscription(false);
+            }
+        };
+
+        if (businesses.length > 0) {
+            void checkSubscriptions();
+        } else {
+            setCheckingSubscription(false);
+        }
+    }, [businesses]);
 
     const handleSelect = (business: BusinessDTO): void => {
         setActiveBusinessId(business.id);
         router.push(`/business/${business.id}/ringkasan`);
         toast.success(`Beralih ke ${business.name}`);
+    };
+
+    const handleAddBusinessClick = (): void => {
+        if (!hasPaidSubscription) {
+            toast.error("Anda harus berlangganan untuk membuat bisnis baru", {
+                description: "Upgrade ke paket berbayar untuk membuka fitur ini",
+            });
+            router.push("/billing");
+        }
     };
 
     return (
@@ -103,23 +149,43 @@ export function BusinessSelectorCards() {
                     );
                 })}
 
-                <CreateBusinessModal>
+                {hasPaidSubscription ? (
+                    <CreateBusinessModal>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 hover:bg-surface-container/50 hover:border-secondary-fixed/50 p-6 rounded-xl flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 min-h-55 w-full"
+                        >
+                            <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-secondary-fixed group-hover:border-secondary-fixed transition-colors shadow-sm">
+                                <Plus className="w-6 h-6 text-outline group-hover:text-on-secondary-fixed transition-colors" />
+                            </div>
+                            <span className="font-bold text-[15px] text-on-surface mb-2 text-center line-clamp-2 px-2 leading-snug">
+                                Tambahkan Bisnis Baru
+                            </span>
+                            <span className="text-[12px] text-outline text-center px-3 line-clamp-3 leading-relaxed">
+                                Buka instans baru untuk divisi atau merek lain.
+                            </span>
+                        </Button>
+                    </CreateBusinessModal>
+                ) : (
                     <Button
                         type="button"
                         variant="outline"
-                        className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 hover:bg-surface-container/50 hover:border-secondary-fixed/50 p-6 rounded-xl flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 min-h-[220px] w-full"
+                        onClick={handleAddBusinessClick}
+                        disabled={checkingSubscription}
+                        className="border-2 border-dashed border-outline-variant/30 bg-surface-container/20 p-6 rounded-xl flex flex-col items-center justify-center cursor-not-allowed group transition-all duration-300 min-h-55 w-full opacity-60 disabled:opacity-60"
                     >
-                        <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4 group-hover:bg-secondary-fixed group-hover:border-secondary-fixed transition-colors shadow-sm">
-                            <Plus className="w-6 h-6 text-outline group-hover:text-on-secondary-fixed transition-colors" />
+                        <div className="w-14 h-14 rounded-full bg-surface-container border border-outline-variant/20 flex items-center justify-center mb-4">
+                            <Lock className="w-6 h-6 text-outline" />
                         </div>
                         <span className="font-bold text-[15px] text-on-surface mb-2 text-center line-clamp-2 px-2 leading-snug">
-                            Tambahkan Bisnis Baru
+                            Upgrade Diperlukan
                         </span>
                         <span className="text-[12px] text-outline text-center px-3 line-clamp-3 leading-relaxed">
-                            Buka instans baru untuk divisi atau merek lain.
+                            Berlangganan ke paket berbayar untuk membuat bisnis baru.
                         </span>
                     </Button>
-                </CreateBusinessModal>
+                )}
             </div>
         </div>
     );
