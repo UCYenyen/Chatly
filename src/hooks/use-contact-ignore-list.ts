@@ -18,6 +18,15 @@ interface UseContactIgnoreListResult {
   refetch: () => Promise<void>;
 }
 
+async function parseJsonResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
+  const raw = await res.text();
+  const data = raw ? (JSON.parse(raw) as T & { error?: string }) : ({} as T & { error?: string });
+  if (!res.ok) {
+    throw new Error(data.error || `${fallbackMessage} (HTTP ${res.status})`);
+  }
+  return data;
+}
+
 export function useContactIgnoreList(
   businessId: string
 ): UseContactIgnoreListResult {
@@ -39,19 +48,16 @@ export function useContactIgnoreList(
         }),
       ]);
 
-      if (!ignoreRes.ok) {
-        const data = await ignoreRes.json();
-        throw new Error(data.error || "Gagal memuat daftar abaikan");
-      }
-      if (!chattersRes.ok) {
-        const data = await chattersRes.json();
-        throw new Error(data.error || "Gagal memuat kontak terbaru");
-      }
-
-      const ignoreData: IgnoreListResponse = await ignoreRes.json();
-      const chattersData: RecentChattersResponse = await chattersRes.json();
-      setIgnoreList(ignoreData.ignoreList);
-      setRecentChatters(chattersData.recentChatters);
+      const ignoreData = await parseJsonResponse<IgnoreListResponse>(
+        ignoreRes,
+        "Gagal memuat daftar abaikan"
+      );
+      const chattersData = await parseJsonResponse<RecentChattersResponse>(
+        chattersRes,
+        "Gagal memuat kontak terbaru"
+      );
+      setIgnoreList(ignoreData.ignoreList ?? []);
+      setRecentChatters(chattersData.recentChatters ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -70,10 +76,7 @@ export function useContactIgnoreList(
           credentials: "include",
         }
       );
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Gagal menambahkan kontak");
-      }
+      await parseJsonResponse(res, "Gagal menambahkan kontak");
       await fetchAll();
     },
     [businessId, fetchAll]
@@ -90,10 +93,7 @@ export function useContactIgnoreList(
           credentials: "include",
         }
       );
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Gagal menghapus kontak");
-      }
+      await parseJsonResponse(res, "Gagal menghapus kontak");
       await fetchAll();
     },
     [businessId, fetchAll]
