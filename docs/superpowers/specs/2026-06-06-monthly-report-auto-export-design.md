@@ -40,7 +40,7 @@ Migration: `add_monthly_report_settings`. Because the shadow DB can't replay a p
 
 ## 3. Settings UI
 
-`src/components/features/training/MonthlyReport.tsx` — a shadcn `Card` rendered on the training page (`src/app/(dashboard)/business/[businessId]/training/page.tsx`), placed near `BusinessHours`:
+`src/components/features/analytics/MonthlyReport.tsx` — a shadcn `Card` rendered on the **Analitik (analytics) page** (`src/app/(dashboard)/business/[businessId]/analytics/page.tsx`), placed after the Conversion Rate / Intent sections:
 - `Switch` — "Aktifkan laporan bulanan otomatis".
 - `Input type="email"` — destination email (placeholder makes clear it is independent of the login email).
 - `Select` — CSV / XLSX.
@@ -82,7 +82,7 @@ Extract the inline Gmail transporter from `src/lib/utils/auth/auth.ts` into `src
 
 ## 7. Tutorial integration
 
-- Add a step to `src/components/features/tour/tour-steps.ts` after `training-notification-phone` (same `/business/:id/training` route), `targetSelector: '[data-tour="monthly-report"]'`, copy: *"Atur laporan bulanan otomatis: pilih email tujuan dan format (CSV atau XLSX). Sistem mengirim laporan transaksi bulan sebelumnya secara otomatis setiap bulan, lalu menghapus data transaksi bulan tersebut dari sistem (file email menjadi arsipnya)."* The settings UI also shows this same warning inline near the toggle.
+- Add a centered informational step to `src/components/features/tour/tour-steps.ts` after `sidebar-analitik` (`route: null`, `targetSelector: null` — the analytics page is not navigated to during the tour, so it tells rather than spotlights), copy: *"Atur laporan bulanan otomatis: pilih email tujuan dan format (CSV atau XLSX). Sistem mengirim laporan transaksi bulan sebelumnya secara otomatis setiap bulan, lalu menghapus data transaksi bulan tersebut dari sistem (file email menjadi arsipnya)."* The settings UI also shows this same warning inline near the toggle.
 - No other tour changes needed (step count derives from the array).
 
 ## New dependency
