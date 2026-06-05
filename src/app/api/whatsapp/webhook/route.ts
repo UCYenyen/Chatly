@@ -1,15 +1,25 @@
 import { NextResponse } from "next/server";
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHmac, timingSafeEqual, randomBytes } from "crypto";
 import prisma from "@/lib/utils/prisma";
 import { sendGowaMessage } from "@/lib/utils/whatsapp";
 import { runChatlyAIEngine } from "@/lib/ai-engine";
 import { createCustomerTransactionInvoice } from "@/lib/utils/payment-gateway/billing-service";
 import { canonicalizePhone } from "@/lib/utils/phone";
+import { getBusinessHoursStatus } from "@/lib/business-hours";
+import {
+  notifyHandoverEscalation,
+  notifyHandoverReminder,
+  notifyHandoverTimeout,
+  sendCustomerHandoverAck,
+} from "@/lib/utils/handover-notifications";
 
 const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
 
 const HUMAN_MODE_TIMEOUT_MINUTES = Number(process.env.HUMAN_MODE_TIMEOUT_MINUTES) || 30;
 const HUMAN_MODE_TIMEOUT_MS = HUMAN_MODE_TIMEOUT_MINUTES * 60 * 1000;
+
+const HANDOVER_REMINDER_MINUTES = Number(process.env.HANDOVER_REMINDER_MINUTES) || 5;
+const HANDOVER_REMINDER_MS = HANDOVER_REMINDER_MINUTES * 60 * 1000;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!WEBHOOK_SECRET) {
@@ -360,20 +370,92 @@ export async function POST(request: Request) {
     );
     return NextResponse.json({ ok: true });
   }
+  const instanceKey = whatsappAuth.instanceKey;
 
-  // ── Load conversation mode (AI / HUMAN) for this customer ──────────────
-  const convState = await prisma.conversationState.findUnique({
-    where: {
-      businessId_phone: { businessId: whatsappAuth.businessId, phone: from },
-    },
-    select: { mode: true, updatedAt: true },
-  });
+  // ── Load conversation mode (AI / HUMAN) + business-hours config ────────
+  const [convState, businessHoursConfig] = await Promise.all([
+    prisma.conversationState.findUnique({
+      where: {
+        businessId_phone: { businessId: whatsappAuth.businessId, phone: from },
+      },
+      select: { mode: true, updatedAt: true },
+    }),
+    prisma.business.findUnique({
+      where: { id: whatsappAuth.businessId },
+      select: {
+        name: true,
+        notificationPhone: true,
+        handoverHoursEnabled: true,
+        timezone: true,
+        businessHours: true,
+      },
+    }),
+  ]);
   let currentMode: "AI" | "HUMAN" = convState?.mode === "HUMAN" ? "HUMAN" : "AI";
   console.log(`[webhook] Conversation mode for ${from}: ${currentMode}`);
+
+  const hoursStatus = getBusinessHoursStatus(
+    {
+      handoverHoursEnabled: businessHoursConfig?.handoverHoursEnabled ?? false,
+      timezone: businessHoursConfig?.timezone ?? null,
+      businessHours: businessHoursConfig?.businessHours ?? null,
+    },
+    new Date(),
+  );
+  console.log(
+    `[webhook] Business hours status: ${hoursStatus.isOpen ? "OPEN" : "CLOSED"}${
+      hoursStatus.nextOpenLabel ? ` (reopens ${hoursStatus.nextOpenLabel})` : ""
+    }`,
+  );
+
+  const businessName = businessHoursConfig?.name ?? "";
+  const notificationPhone = businessHoursConfig?.notificationPhone ?? null;
+
+  let activeHandover =
+    currentMode === "HUMAN"
+      ? await prisma.handover.findFirst({
+          where: {
+            businessId: whatsappAuth.businessId,
+            phone: from,
+            status: "PENDING",
+          },
+        })
+      : null;
 
   // ── HUMAN mode is authoritative: bot stays silent until a human resolves it ──
   // The AI engine no longer decides when to resume — control returns to AI only
   // after the handover has been idle for HUMAN_MODE_TIMEOUT_MINUTES.
+  if (currentMode === "HUMAN" && convState) {
+    if (!hoursStatus.isOpen) {
+      await prisma.conversationState.update({
+        where: {
+          businessId_phone: { businessId: whatsappAuth.businessId, phone: from },
+        },
+        data: { mode: "AI" },
+      });
+      currentMode = "AI";
+      console.log(
+        `[webhook] Business closed — reverting active HUMAN handover for ${from} back to AI.`,
+      );
+
+      if (activeHandover) {
+        try {
+          await prisma.handover.update({
+            where: { id: activeHandover.id },
+            data: {
+              status: "CLOSED",
+              resolvedAt: new Date(),
+              resolvedBy: "BUSINESS_CLOSED",
+            },
+          });
+        } catch (err) {
+          console.error("[handover] Failed to close handover on business-closed revert:", err);
+        }
+        activeHandover = null;
+      }
+    }
+  }
+
   if (currentMode === "HUMAN" && convState) {
     const handoverAgeMs = Date.now() - convState.updatedAt.getTime();
     const handoverAgeMinutes = Math.round(handoverAgeMs / 60000);
@@ -382,6 +464,31 @@ export async function POST(request: Request) {
       console.log(
         `[webhook] HUMAN mode active for ${from} (${handoverAgeMinutes}min / ${HUMAN_MODE_TIMEOUT_MINUTES}min). Bot stays silent — admin is handling this conversation.`,
       );
+
+      if (
+        activeHandover &&
+        !activeHandover.reminderSentAt &&
+        Date.now() - activeHandover.escalatedAt.getTime() > HANDOVER_REMINDER_MS
+      ) {
+        try {
+          await prisma.handover.update({
+            where: { id: activeHandover.id },
+            data: { reminderSentAt: new Date() },
+          });
+          await notifyHandoverReminder({
+            businessName,
+            customerPhone: from,
+            lastMessage: text,
+            instanceKey,
+            notificationPhone,
+            resolveToken: activeHandover.resolveToken,
+          });
+          console.log(`[handover] Sent reminder for ${from}`);
+        } catch (err) {
+          console.error("[handover] Failed to send reminder:", err);
+        }
+      }
+
       return NextResponse.json({ ok: true, mode: "HUMAN" });
     }
 
@@ -395,12 +502,44 @@ export async function POST(request: Request) {
     console.log(
       `[webhook] HUMAN mode for ${from} timed out after ${handoverAgeMinutes}min → reverting to AI.`,
     );
+
+    if (activeHandover) {
+      try {
+        await prisma.handover.update({
+          where: { id: activeHandover.id },
+          data: {
+            status: "TIMED_OUT",
+            resolvedAt: new Date(),
+            resolvedBy: "TIMEOUT",
+          },
+        });
+        await notifyHandoverTimeout({
+          businessName,
+          customerPhone: from,
+          lastMessage: text,
+          instanceKey,
+          notificationPhone,
+          resolveToken: activeHandover.resolveToken,
+        });
+      } catch (err) {
+        console.error("[handover] Failed to mark/notify timeout:", err);
+      }
+      activeHandover = null;
+    }
   }
 
   try {
     // ── Run AI Engine ──────────────────────────────────────────────────────────
     console.log(`[webhook] >>> Calling runChatlyAIEngine for from=${from} businessId=${whatsappAuth.businessId}`);
-    const ai = await runChatlyAIEngine(text, from, whatsappAuth.businessId, currentMode);
+    const ai = await runChatlyAIEngine(text, from, whatsappAuth.businessId, currentMode, hoursStatus);
+
+    if (!hoursStatus.isOpen && ai.next_mode === "HUMAN") {
+      ai.next_mode = "AI";
+      ai.escalate_to_human = false;
+      console.log(
+        `[webhook] Handover blocked for ${from}: business closed. Forcing next_mode=AI.`,
+      );
+    }
     console.log(`[webhook] <<< AI engine returned. response length=${ai.response?.length}, intents=${JSON.stringify(ai.intent_analytics)}, transaction=${JSON.stringify(ai.generate_transaction)}`);
 
     let finalReply = ai.response;
@@ -478,6 +617,42 @@ export async function POST(request: Request) {
         console.log(`[webhook] Conversation mode: ${currentMode} → ${ai.next_mode}`);
       } catch (err) {
         console.error("[webhook] Failed to upsert conversation mode:", err);
+      }
+    }
+
+    if (currentMode === "AI" && ai.next_mode === "HUMAN") {
+      try {
+        const existingHandover = await prisma.handover.findFirst({
+          where: {
+            businessId: whatsappAuth.businessId,
+            phone: from,
+            status: "PENDING",
+          },
+          select: { id: true },
+        });
+
+        if (!existingHandover) {
+          const resolveToken = randomBytes(24).toString("hex");
+          await prisma.handover.create({
+            data: {
+              businessId: whatsappAuth.businessId,
+              phone: from,
+              resolveToken,
+            },
+          });
+          await notifyHandoverEscalation({
+            businessName,
+            customerPhone: from,
+            lastMessage: text,
+            instanceKey,
+            notificationPhone,
+            resolveToken,
+          });
+          await sendCustomerHandoverAck(from, instanceKey);
+          console.log(`[handover] Escalation notified for ${from}`);
+        }
+      } catch (err) {
+        console.error("[handover] Failed to create/notify escalation:", err);
       }
     }
 

@@ -10,7 +10,7 @@ import {
   planLimitResponse,
 } from "@/lib/utils/payment-gateway/plan-guard";
 import type { BusinessDTO } from "@/types/business.md";
-import type { Business } from "@prisma/client";
+import { toBusinessDTO } from "@/lib/utils/business-dto";
 
 interface ApiErrorResponse {
   message: string;
@@ -28,19 +28,6 @@ const ALLOWED_MIME = new Set([
   "image/jpg",
   "image/webp",
 ]);
-
-function toDTO(b: Business): BusinessDTO {
-  return {
-    id: b.id,
-    name: b.name,
-    description: b.description,
-    knowledgeBase: b.knowledgeBase,
-    aiTone: b.aiTone,
-    knowledgeFiles: b.knowledgeFiles,
-    createdAt: b.createdAt.toISOString(),
-    updatedAt: b.updatedAt.toISOString(),
-  };
-}
 
 export async function POST(
   request: Request,
@@ -113,7 +100,7 @@ export async function POST(
       data: { knowledgeFiles: merged },
     });
 
-    return NextResponse.json(toDTO(updated));
+    return NextResponse.json(toBusinessDTO(updated));
   } catch (error) {
     if (error instanceof PlanLimitError) {
       return planLimitResponse(error);

@@ -33,6 +33,7 @@
     "next-transition-router": "^0.2.11",
     "nodemailer": "^8.0.5",
     "ogl": "^1.0.11",
+    "pdf-parse": "^2.4.5",
     "pg": "^8.20.0",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",

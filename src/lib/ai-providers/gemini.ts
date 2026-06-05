@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import type { Schema } from "@google/generative-ai";
 import type { AISchema, ChatGenerationRequest } from "@/types/ai-provider.md";
+import { withRetry } from "./retry";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_CHAT_MODEL = process.env.GEMINI_CHAT_MODEL ?? "gemini-2.5-flash-lite";
@@ -64,6 +65,11 @@ export async function generateWithGemini(
     },
   });
 
-  const result = await model.generateContent(request.userPrompt);
-  return result.response.text();
+  return withRetry(
+    async () => {
+      const result = await model.generateContent(request.userPrompt);
+      return result.response.text();
+    },
+    { label: "gemini-chat", retries: 1 },
+  );
 }

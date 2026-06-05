@@ -1,4 +1,5 @@
 import type { AISchema, ChatGenerationRequest } from "@/types/ai-provider.md";
+import { withRetry } from "./retry";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_CHAT_MODEL = process.env.GROQ_CHAT_MODEL ?? "openai/gpt-oss-120b";
@@ -46,41 +47,48 @@ export function isGroqConfigured(): boolean {
 export async function generateWithGroq(
   request: ChatGenerationRequest,
 ): Promise<string> {
-  const response = await fetch(GROQ_ENDPOINT, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: GROQ_CHAT_MODEL,
-      temperature: 0.6,
-      messages: [
-        { role: "system", content: request.systemInstruction },
-        { role: "user", content: request.userPrompt },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: request.schemaName,
-          strict: true,
-          schema: toJsonSchema(request.responseSchema),
+  return withRetry(
+    async () => {
+      const response = await fetch(GROQ_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${GROQ_API_KEY}`,
+          "Content-Type": "application/json",
         },
-      },
-    }),
-  });
+        body: JSON.stringify({
+          model: GROQ_CHAT_MODEL,
+          temperature: 0.6,
+          messages: [
+            { role: "system", content: request.systemInstruction },
+            { role: "user", content: request.userPrompt },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: request.schemaName,
+              strict: true,
+              schema: toJsonSchema(request.responseSchema),
+            },
+          },
+        }),
+      });
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Groq API error ${response.status}: ${body.slice(0, 500)}`);
-  }
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(
+          `Groq API error ${response.status}: ${body.slice(0, 500)}`,
+        );
+      }
 
-  const data = (await response.json()) as GroqChatResponse;
-  const content = data.choices?.[0]?.message?.content;
+      const data = (await response.json()) as GroqChatResponse;
+      const content = data.choices?.[0]?.message?.content;
 
-  if (!content) {
-    throw new Error("Groq API returned an empty response");
-  }
+      if (!content) {
+        throw new Error("Groq API returned an empty response");
+      }
 
-  return content;
+      return content;
+    },
+    { label: "groq-chat", retries: 1 },
+  );
 }

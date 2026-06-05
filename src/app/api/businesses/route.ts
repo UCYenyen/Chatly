@@ -13,23 +13,10 @@ import type {
   BusinessListResponse,
   CreateBusinessRequest,
 } from "@/types/business.md";
-import type { Business } from "@prisma/client";
+import { toBusinessDTO } from "@/lib/utils/business-dto";
 
 interface ApiErrorResponse {
   message: string;
-}
-
-function toDTO(b: Business): BusinessDTO {
-  return {
-    id: b.id,
-    name: b.name,
-    description: b.description,
-    knowledgeBase: b.knowledgeBase,
-    aiTone: b.aiTone,
-    knowledgeFiles: b.knowledgeFiles,
-    createdAt: b.createdAt.toISOString(),
-    updatedAt: b.updatedAt.toISOString(),
-  };
 }
 
 export async function GET(): Promise<
@@ -45,7 +32,7 @@ export async function GET(): Promise<
     orderBy: { createdAt: "asc" },
   });
 
-  return NextResponse.json({ businesses: businesses.map(toDTO) });
+  return NextResponse.json({ businesses: businesses.map(toBusinessDTO) });
 }
 
 export async function POST(
@@ -84,7 +71,7 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(toDTO(created), { status: 201 });
+    return NextResponse.json(toBusinessDTO(created), { status: 201 });
   } catch (error) {
     if (error instanceof PlanLimitError) {
       return planLimitResponse(error);

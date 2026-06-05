@@ -1,5 +1,9 @@
 export type AIProvider = "gemini" | "groq";
 
+export type EmbeddingProvider = "jina" | "gemini";
+
+export type EmbeddingTask = "query" | "passage";
+
 export type AISchemaType =
   | "object"
   | "string"

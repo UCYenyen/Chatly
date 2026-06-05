@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   output: "standalone",
   allowedDevOrigins: ["*"],
+  serverExternalPackages: ["pdf-parse"],
 };
 
 export default nextConfig;

@@ -44,6 +44,8 @@ jobs:
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env.production
           echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env.production
           echo "AI_PROVIDER=groq" >> .env.production
+          echo "JINA_API_KEY=${{ secrets.JINA_API_KEY }}" >> .env.production
+          echo "EMBEDDING_PROVIDER=jina" >> .env.production
           echo "GOWA_API_BASE=${{ secrets.GOWA_API_BASE }}" >> .env.production
           echo "GOWA_BASIC_AUTH_USER=${{ secrets.GOWA_BASIC_AUTH_USER }}" >> .env.production
           echo "GOWA_BASIC_AUTH_PASS=${{ secrets.GOWA_BASIC_AUTH_PASS }}" >> .env.production
@@ -100,6 +102,19 @@ jobs:
               sed -i "s|^AI_PROVIDER=.*|AI_PROVIDER=groq|" .env
             else
               echo "AI_PROVIDER=groq" >> .env
+            fi
+            JINA_KEY="${{ secrets.JINA_API_KEY }}"
+            if [ -n "$JINA_KEY" ]; then
+              if grep -q '^JINA_API_KEY=' .env; then
+                sed -i "s|^JINA_API_KEY=.*|JINA_API_KEY=$JINA_KEY|" .env
+              else
+                echo "JINA_API_KEY=$JINA_KEY" >> .env
+              fi
+            fi
+            if grep -q '^EMBEDDING_PROVIDER=' .env; then
+              sed -i "s|^EMBEDDING_PROVIDER=.*|EMBEDDING_PROVIDER=jina|" .env
+            else
+              echo "EMBEDDING_PROVIDER=jina" >> .env
             fi
 
             # Login to GHCR on the VPS

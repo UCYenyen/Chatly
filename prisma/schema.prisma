@@ -40,6 +40,10 @@ model Business {
   knowledgeBase  String?
   knowledgeFiles String[]         @default([])
   ignoreAllContacts Boolean       @default(false)
+  handoverHoursEnabled Boolean    @default(false)
+  timezone       String?
+  businessHours  Json?
+  notificationPhone String?
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   intents        BusinessIntent[]
   payments       Payment[]
@@ -51,6 +55,7 @@ model Business {
   conversationStates ConversationState[]
   analyticsEvents AnalyticsEvent[]
   ignoredContacts IgnoredContact[]
+  handovers      Handover[]
 
   @@index([userId])
   @@map("business")
@@ -318,6 +323,37 @@ enum ConversationMode {
 enum ChatLogRole {
   USER
   AI
+}
+
+enum HandoverStatus {
+  PENDING
+  RESOLVED
+  TIMED_OUT
+  CLOSED
+}
+
+enum HandoverResolver {
+  ADMIN
+  TIMEOUT
+  BUSINESS_CLOSED
+}
+
+model Handover {
+  id             String            @id @default(cuid())
+  businessId     String
+  phone          String
+  status         HandoverStatus    @default(PENDING)
+  resolveToken   String            @unique
+  escalatedAt    DateTime          @default(now())
+  reminderSentAt DateTime?
+  resolvedAt     DateTime?
+  resolvedBy     HandoverResolver?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  business       Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, phone, status])
+  @@map("handover")
 }
 
 enum WhatsAppAuthStatus {

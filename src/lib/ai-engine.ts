@@ -3,6 +3,18 @@ import { composeSystemPrompt } from "@/lib/system-prompts/composer";
 import { retrieveRelevantChunks } from "@/lib/rag-retrieval";
 import { generateChatCompletion } from "@/lib/ai-providers";
 import type { AISchema } from "@/types/ai-provider.md";
+import type { BusinessHoursStatus } from "@/types/business-hours.md";
+
+function buildClosedHandoverPrompt(status: BusinessHoursStatus): string {
+  const returnLabel = status.nextOpenLabel ?? "pada jam operasional berikutnya";
+  return `STATUS LAYANAN ADMIN: TUTUP.
+Saat ini di luar jam operasional bisnis, sehingga admin manusia TIDAK tersedia.
+Jika pelanggan meminta berbicara dengan admin/manusia/CS:
+- JANGAN set escalate_to_human=true.
+- JANGAN set next_mode="HUMAN".
+- Minta maaf dengan sopan, jelaskan bahwa admin sedang tidak tersedia di luar jam operasional, dan beri tahu bahwa admin akan tersedia kembali ${returnLabel}.
+Tetap bantu pelanggan semampumu dalam mode AI menggunakan informasi yang kamu miliki.`;
+}
 
 /**
  * The structured result returned by the AI engine.
@@ -53,6 +65,7 @@ export async function runChatlyAIEngine(
   incomingPhone: string,
   businessId: string,
   currentMode: "AI" | "HUMAN" = "AI",
+  hoursStatus?: BusinessHoursStatus,
 ): Promise<ChatlyAIResult> {
   console.log(`[ai-engine] ====== START ======`);
   console.log(`[ai-engine] message="${incomingMessage}" phone=${incomingPhone} businessId=${businessId}`);
@@ -134,6 +147,10 @@ export async function runChatlyAIEngine(
       intentNames,
       intentKeyMap: intentToKey,
     });
+    if (hoursStatus && !hoursStatus.isOpen) {
+      systemInstruction += `\n\n---\n\n${buildClosedHandoverPrompt(hoursStatus)}`;
+      console.log("[ai-engine] Business closed — injected off-hours handover guard into prompt.");
+    }
     console.log(`[ai-engine] Step 3 OK: system prompt length = ${systemInstruction.length} chars`);
   } catch (err) {
     console.error("[ai-engine] Step 3 FAILED: Compose error:", err);

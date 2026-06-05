@@ -1,29 +1,10 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { randomUUID } from "crypto";
 import prisma from "@/lib/utils/prisma";
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-if (!GEMINI_API_KEY) {
-  console.warn("[rag-ingestion] GEMINI_API_KEY is not set");
-}
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY ?? "");
-
-const EXTRACTION_PROMPT = `You are extracting a knowledge base for a customer-service AI from the attached document.
-
-Produce rich, descriptive paragraphs that fully describe products, services, policies, FAQs, prices, and any operational details that a customer service agent would need.
-
-Rules:
-- Output paragraphs separated by ONE blank line (\\n\\n) — no bullet lists, no headings, no markdown.
-- Each paragraph must be self-contained and stand on its own (a customer should be able to understand it without reading the others).
-- If a product or service is mentioned, describe it together with its price, variants, and use cases in the same paragraph.
-- Preserve the source language; do not translate.
-- Do not invent information that is not present in the document.`;
+import { embedTexts } from "@/lib/ai-providers/embeddings";
+import { extractDocumentText } from "@/lib/ai-providers/extraction";
 
 export interface IngestInput {
-  fileUri?: string;
-  buffer?: Buffer;
+  buffer: Buffer;
   mimeType: string;
 }
 
@@ -32,27 +13,7 @@ export async function processAndSaveKnowledgeBase(
   input: IngestInput,
   { append = false }: { append?: boolean } = {},
 ): Promise<{ chunkCount: number }> {
-  const extractionModel = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
-
-  const filePart = input.fileUri
-    ? {
-        fileData: {
-          fileUri: input.fileUri,
-          mimeType: input.mimeType,
-        },
-      }
-    : {
-        inlineData: {
-          data: (input.buffer ?? Buffer.alloc(0)).toString("base64"),
-          mimeType: input.mimeType,
-        },
-      };
-
-  const extractionResult = await extractionModel.generateContent([
-    { text: EXTRACTION_PROMPT },
-    filePart,
-  ]);
-  const extractedText = extractionResult.response.text();
+  const extractedText = await extractDocumentText(input.buffer, input.mimeType);
 
   const chunks = extractedText
     .split(/\n\s*\n/)
@@ -63,25 +24,14 @@ export async function processAndSaveKnowledgeBase(
     return { chunkCount: 0 };
   }
 
-  const embeddingModel = genAI.getGenerativeModel({
-    model: "gemini-embedding-001",
-  });
-
   // Build all embeddings BEFORE touching the database.
-  // This way, if Gemini fails mid-way, the existing knowledge base is untouched.
-  const rows: Array<{ id: string; chunk: string; vectorLiteral: string }> = [];
-  for (const chunk of chunks) {
-    const embedRes = await embeddingModel.embedContent({
-      content: { role: "user", parts: [{ text: chunk }] },
-      outputDimensionality: 768,
-    } as unknown as Parameters<typeof embeddingModel.embedContent>[0]);
-    const vector = embedRes.embedding.values;
-    rows.push({
-      id: randomUUID(),
-      chunk,
-      vectorLiteral: `[${vector.join(",")}]`,
-    });
-  }
+  // This way, if embedding fails mid-way, the existing knowledge base is untouched.
+  const vectors = await embedTexts(chunks, "passage");
+  const rows = chunks.map((chunk, i) => ({
+    id: randomUUID(),
+    chunk,
+    vectorLiteral: `[${vectors[i].join(",")}]`,
+  }));
 
   // All embeddings are ready — now atomically replace (or append) in the DB.
   if (!append) {

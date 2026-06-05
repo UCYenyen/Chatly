@@ -128,7 +128,7 @@ export function ConversionRateCard() {
         </div>
 
         {/* Detail Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Chat Button Card */}
           <button
             onClick={() => setDetailView("chat")}
@@ -150,7 +150,7 @@ export function ConversionRateCard() {
           </button>
 
           {/* Buyers Button Card */}
-          <button
+          {/* <button
             onClick={() => setDetailView("buyers")}
             className="bg-surface-container-low border-2 border-outline-variant/30 hover:border-secondary-fixed p-6 rounded-xl relative overflow-hidden group transition-all hover:shadow-lg text-left"
           >
@@ -167,7 +167,7 @@ export function ConversionRateCard() {
             <p className="text-[32px] font-bold text-secondary-fixed">
               {data.totalBuyingCustomers}
             </p>
-          </button>
+          </button> */}
 
           {/* Transactions Button Card */}
           <button

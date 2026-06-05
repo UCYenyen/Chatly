@@ -3,6 +3,7 @@
 import { TrainingHeader } from "@/components/features/training/TrainingHeader";
 import { KnowledgeBase } from "@/components/features/training/KnowledgeBase";
 import { AiPersonality } from "@/components/features/training/AiPersonality";
+import { BusinessHours } from "@/components/features/training/BusinessHours";
 import { TrainingPreview } from "@/components/features/training/TrainingPreview";
 import { TrainingFooter } from "@/components/features/training/TrainingFooter";
 import { ActiveBusinessBanner } from "@/components/features/business/ActiveBusinessBanner";
@@ -35,6 +36,9 @@ export default function TrainingPage() {
 
                     <div className="col-span-1 xl:col-span-5 flex flex-col">
                         <AiPersonality />
+                        <div className="mt-8">
+                            <BusinessHours />
+                        </div>
                         {/* <TrainingPreview /> */}
                     </div>
                 </div>

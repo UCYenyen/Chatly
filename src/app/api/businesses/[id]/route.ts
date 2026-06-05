@@ -13,7 +13,12 @@ import type {
   BusinessDTO,
   UpdateBusinessRequest,
 } from "@/types/business.md";
-import type { Business } from "@prisma/client";
+import { toBusinessDTO } from "@/lib/utils/business-dto";
+import {
+  isWeeklyHours,
+  SUPPORTED_TIMEZONES,
+} from "@/types/business-hours.md";
+import { Prisma } from "@prisma/client";
 
 interface ApiErrorResponse {
   message: string;
@@ -25,19 +30,6 @@ interface DeleteResponse {
 
 interface RouteContext {
   params: Promise<{ id: string }>;
-}
-
-function toDTO(b: Business): BusinessDTO {
-  return {
-    id: b.id,
-    name: b.name,
-    description: b.description,
-    knowledgeBase: b.knowledgeBase,
-    aiTone: b.aiTone,
-    knowledgeFiles: b.knowledgeFiles,
-    createdAt: b.createdAt.toISOString(),
-    updatedAt: b.updatedAt.toISOString(),
-  };
 }
 
 export async function PATCH(
@@ -57,7 +49,7 @@ export async function PATCH(
     }
 
     const body = (await request.json()) as Partial<UpdateBusinessRequest>;
-    const data: UpdateBusinessRequest = {};
+    const data: Prisma.BusinessUpdateInput = {};
 
     if (typeof body.name === "string") {
       const trimmed = body.name.trim();
@@ -88,10 +80,49 @@ export async function PATCH(
     if (Array.isArray(body.knowledgeFiles)) {
       data.knowledgeFiles = body.knowledgeFiles;
     }
+    if (typeof body.handoverHoursEnabled === "boolean") {
+      data.handoverHoursEnabled = body.handoverHoursEnabled;
+    }
+    if (body.timezone !== undefined) {
+      if (body.timezone !== null && !SUPPORTED_TIMEZONES.includes(body.timezone)) {
+        return NextResponse.json(
+          { message: "Zona waktu tidak valid" },
+          { status: 400 },
+        );
+      }
+      data.timezone = body.timezone;
+    }
+    if (body.businessHours !== undefined) {
+      if (body.businessHours !== null && !isWeeklyHours(body.businessHours)) {
+        return NextResponse.json(
+          { message: "Format jam buka tidak valid" },
+          { status: 400 },
+        );
+      }
+      data.businessHours =
+        body.businessHours === null
+          ? Prisma.JsonNull
+          : (body.businessHours as unknown as Prisma.InputJsonValue);
+    }
+
+    if (body.notificationPhone !== undefined) {
+      if (body.notificationPhone === null || body.notificationPhone.trim().length === 0) {
+        data.notificationPhone = null;
+      } else {
+        const normalized = body.notificationPhone.replace(/[^\d+]/g, "");
+        if (normalized.replace(/\D/g, "").length < 8) {
+          return NextResponse.json(
+            { message: "Nomor WhatsApp notifikasi tidak valid" },
+            { status: 400 },
+          );
+        }
+        data.notificationPhone = normalized;
+      }
+    }
 
     console.log("[PATCH /api/businesses/:id] data:", JSON.stringify(data, null, 2));
     const updated = await prisma.business.update({ where: { id }, data });
-    return NextResponse.json(toDTO(updated));
+    return NextResponse.json(toBusinessDTO(updated));
   } catch (error) {
     if (error instanceof PlanLimitError) {
       return planLimitResponse(error);

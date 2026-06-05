@@ -1,3 +1,5 @@
+import type { WeeklyHours } from "@/types/business-hours.md";
+
 export interface BusinessDTO {
   id: string;
   name: string;
@@ -7,6 +9,10 @@ export interface BusinessDTO {
   knowledgeBase: string | null;
   aiTone: string | null;
   knowledgeFiles: string[];
+  handoverHoursEnabled: boolean;
+  timezone: string | null;
+  businessHours: WeeklyHours | null;
+  notificationPhone: string | null;
 }
 
 export interface CreateBusinessRequest {
@@ -20,6 +26,10 @@ export interface UpdateBusinessRequest {
   knowledgeBase?: string | null;
   aiTone?: string | null;
   knowledgeFiles?: string[];
+  handoverHoursEnabled?: boolean;
+  timezone?: string | null;
+  businessHours?: WeeklyHours | null;
+  notificationPhone?: string | null;
 }
 
 export interface BusinessListResponse {
