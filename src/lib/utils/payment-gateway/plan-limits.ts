@@ -27,7 +27,6 @@ export const DEFAULT_AI_TONE = "professional";
 
 export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
   FREE: {
-    businesses: 1,
     channels: 1,
     knowledgeDocuments: 5,
     ignoredContacts: 10,
@@ -39,7 +38,6 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     slaSupport: false,
   },
   STARTER: {
-    businesses: 1,
     channels: 5,
     knowledgeDocuments: 50,
     ignoredContacts: 50,
@@ -51,7 +49,6 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     slaSupport: false,
   },
   GROWTH: {
-    businesses: 3,
     channels: 15,
     knowledgeDocuments: 200,
     ignoredContacts: "unlimited",
@@ -63,7 +60,6 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     slaSupport: false,
   },
   PRO: {
-    businesses: 10,
     channels: "unlimited",
     knowledgeDocuments: "unlimited",
     ignoredContacts: "unlimited",
@@ -75,7 +71,6 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     slaSupport: true,
   },
   ENTERPRISE: {
-    businesses: "unlimited",
     channels: "unlimited",
     knowledgeDocuments: "unlimited",
     ignoredContacts: "unlimited",
@@ -144,7 +139,6 @@ export function formatLimit(limit: LimitValue): string {
 }
 
 const NUMERIC_FEATURE_LABELS: Record<NumericLimitKey, (value: string) => string> = {
-  businesses: (value) => `${value} bisnis`,
   channels: (value) => `${value} channel WhatsApp`,
   knowledgeDocuments: (value) => `${value} dokumen pelatihan`,
   ignoredContacts: (value) =>
@@ -166,7 +160,6 @@ const NUMERIC_FEATURE_ORDER: ReadonlyArray<NumericLimitKey> = [
   "channels",
   "knowledgeDocuments",
   "ignoredContacts",
-  "businesses",
 ];
 
 const BOOLEAN_FEATURE_ORDER: ReadonlyArray<BooleanFeatureKey> = [
