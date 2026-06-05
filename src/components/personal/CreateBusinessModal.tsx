@@ -71,10 +71,10 @@ export function CreateBusinessModal({ children, onCreated }: CreateBusinessModal
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] bg-surface-container-low/90 backdrop-blur-xl border-outline-variant/20 shadow-2xl p-0 overflow-hidden ring-1 ring-white/5">
+            <DialogContent className="sm:max-w-[480px] bg-surface-container-low/90 backdrop-blur-xl border-outline-variant/20 shadow-2xl p-0 overflow-hidden ring-1 ring-white/5 flex flex-col max-h-[90vh]">
                 <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent pointer-events-none" />
 
-                <DialogHeader className="p-8 pb-4">
+                <DialogHeader className="sticky top-0 z-10 p-8 pb-4 bg-surface-container-low/80 backdrop-blur-sm border-b border-outline-variant/10">
                     <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary mb-4 ring-1 ring-secondary/20">
                         <Rocket className="w-6 h-6" />
                     </div>
@@ -86,42 +86,44 @@ export function CreateBusinessModal({ children, onCreated }: CreateBusinessModal
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-8 pt-2">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name" className="text-[11px] uppercase tracking-widest text-secondary font-bold ml-1">
-                                Nama Bisnis
-                            </Label>
-                            <Input
-                                id="name"
-                                placeholder="Contoh: Chatly Global Corp"
-                                {...form.register("name")}
-                                className={cn(
-                                    "bg-surface-container-high/50 border-outline-variant/10 focus:border-secondary focus:ring-secondary/20 h-11 px-4 transition-all",
-                                    form.formState.errors.name && "border-destructive focus:border-destructive focus:ring-destructive/20",
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-y-auto space-y-6 p-8">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name" className="text-[11px] uppercase tracking-widest text-secondary font-bold ml-1">
+                                    Nama Bisnis
+                                </Label>
+                                <Input
+                                    id="name"
+                                    placeholder="Contoh: Chatly Global Corp"
+                                    {...form.register("name")}
+                                    className={cn(
+                                        "bg-surface-container-high/50 border-outline-variant/10 focus:border-secondary focus:ring-secondary/20 h-11 px-4 transition-all",
+                                        form.formState.errors.name && "border-destructive focus:border-destructive focus:ring-destructive/20",
+                                    )}
+                                />
+                                {form.formState.errors.name && (
+                                    <p className="text-[10px] text-destructive mt-1 ml-1">{form.formState.errors.name.message}</p>
                                 )}
-                            />
-                            {form.formState.errors.name && (
-                                <p className="text-[10px] text-destructive mt-1 ml-1">{form.formState.errors.name.message}</p>
-                            )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="description" className="text-[11px] uppercase tracking-widest text-secondary font-bold ml-1">
+                                    Deskripsi Singkat (Opsional)
+                                </Label>
+                                <Textarea
+                                    id="description"
+                                    placeholder="Ceritakan sedikit tentang bisnis Anda..."
+                                    {...form.register("description")}
+                                    className="bg-surface-container-high/50 border-outline-variant/10 focus:border-secondary focus:ring-secondary/20 min-h-25 max-h-50 p-4 transition-all resize-none"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="description" className="text-[11px] uppercase tracking-widest text-secondary font-bold ml-1">
-                                Deskripsi Singkat (Opsional)
-                            </Label>
-                            <Textarea
-                                id="description"
-                                placeholder="Ceritakan sedikit tentang bisnis Anda..."
-                                {...form.register("description")}
-                                className="bg-surface-container-high/50 border-outline-variant/10 focus:border-secondary focus:ring-secondary/20 min-h-[100px] p-4 transition-all resize-none"
-                            />
-                        </div>
+                        {error && <p className="text-[12px] text-destructive ml-1">{error}</p>}
                     </div>
 
-                    {error && <p className="text-[12px] text-destructive ml-1">{error}</p>}
-
-                    <DialogFooter className="pt-4 gap-3 sm:gap-0">
+                    <DialogFooter className="sticky bottom-0 z-10 p-8 pt-4 bg-surface-container-low/80 backdrop-blur-sm border-t border-outline-variant/10 gap-3 sm:gap-0">
                         <Button
                             type="button"
                             variant="ghost"
