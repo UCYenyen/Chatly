@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Plus, Download, CheckCircle2, Trash2, Loader2, AlertTriangle, MessageSquare, Users } from "lucide-react"
+import { useState, useEffect, useCallback, useMemo } from "react"
+import { Plus, Download, CheckCircle2, Trash2, Loader2, AlertTriangle, MessageSquare, Users, ChevronDown, Search } from "lucide-react"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -54,13 +54,22 @@ export function IntentDashboard() {
   const [stats, setStats] = useState<IntentStats | null>(null)
   
   const [inputValue, setInputValue] = useState("")
+  const [filterValue, setFilterValue] = useState("")
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isEventsLoading, setIsEventsLoading] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
-  
+
   // Deletion state
   const [intentToDelete, setIntentToDelete] = useState<BusinessIntent | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Filtered intents for dropdown
+  const filteredIntents = useMemo(() => {
+    return trackedIntents.filter(intent =>
+      intent.name.toLowerCase().includes(filterValue.toLowerCase())
+    )
+  }, [trackedIntents, filterValue])
 
   const fetchIntents = useCallback(async () => {
     if (!businessId) return
@@ -131,12 +140,24 @@ export function IntentDashboard() {
     e.preventDefault()
     if (!inputValue.trim()) return
 
+    const trimmedInput = inputValue.trim()
+
+    // Validation: Check if intent already exists (case-insensitive)
+    const isDuplicate = trackedIntents.some(intent =>
+      intent.name.toLowerCase() === trimmedInput.toLowerCase()
+    )
+
+    if (isDuplicate) {
+      toast.error(`Niat "${trimmedInput}" sudah dilacak sebelumnya`)
+      return
+    }
+
     setIsAdding(true)
     try {
       const res = await fetch(`/api/businesses/${businessId}/intents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: inputValue.trim() }),
+        body: JSON.stringify({ name: trimmedInput }),
       })
 
       const data = await res.json().catch(() => null)
@@ -144,7 +165,7 @@ export function IntentDashboard() {
       if (!res.ok) {
         throw new Error(data?.message || `Gagal menambah niat (Status ${res.status})`)
       }
-      
+
       setTrackedIntents(prev => [...prev, data])
       setActiveIntent(data)
       setInputValue("")
@@ -191,7 +212,7 @@ export function IntentDashboard() {
   return (
     <div className="flex flex-col w-full gap-8">
       {/* Top Section: Intent Input and Selection */}
-      <div className="bg-surface-container-low border border-outline-variant/15 p-8 xl:p-10 rounded-xl shadow-2xl flex flex-col gap-8 relative overflow-hidden">
+      <div className="bg-surface-container-low border border-outline-variant/15 p-8 xl:p-10 rounded-xl shadow-2xl flex flex-col gap-8 relative overflow-visible">
         <div className="absolute inset-0 bg-linear-to-br from-secondary/5 via-transparent to-transparent pointer-events-none" />
         
         <div className="relative z-10">
@@ -218,43 +239,87 @@ export function IntentDashboard() {
           </Button>
         </form>
 
-        <div className="flex flex-col gap-3 relative z-10">
-          <span className="text-[11px] font-mono text-secondary uppercase tracking-widest font-bold ml-1">Niat Terlacak Saya</span>
-          <div className="flex items-center gap-3 flex-wrap">
-            {isLoading ? (
-              <div className="flex items-center gap-2 text-outline text-[13px] ml-1">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Memuat niat...</span>
-              </div>
-            ) : trackedIntents.length === 0 ? (
-              <span className="text-[13px] text-outline italic ml-1 opacity-60">Belum ada niat yang dilacak.</span>
-            ) : (
-              trackedIntents.map((intent) => (
-                <div
-                  key={intent.id}
-                  onClick={() => setActiveIntent(intent)}
-                  className={`group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer border ${
-                    activeIntent?.id === intent.id 
-                      ? "bg-secondary text-secondary-foreground border-secondary shadow-[0_8px_20px_rgba(191,244,76,0.2)] scale-105" 
-                      : "bg-surface-container-high/40 hover:bg-surface-container-high text-outline hover:text-on-surface border-outline-variant/10"
-                  }`}
-                >
-                  {intent.name}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setIntentToDelete(intent)
-                    }}
-                    className={`transition-all ml-1 p-0.5 rounded-md hover:bg-destructive/20 hover:text-destructive ${
-                       activeIntent?.id === intent.id ? "text-secondary-foreground/80 hover:text-secondary-foreground" : "text-outline/60 hover:text-on-surface"
-                    }`}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+        <div className="flex flex-col gap-4 relative z-10">
+          <span className="text-[11px] font-mono text-secondary uppercase tracking-widest font-bold ml-1">Pilih Niat untuk Dilihat</span>
+
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-outline text-[13px]">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Memuat niat...</span>
+            </div>
+          ) : trackedIntents.length === 0 ? (
+            <span className="text-[13px] text-outline italic opacity-60">Belum ada niat yang dilacak.</span>
+          ) : (
+            <div className="relative w-full max-w-sm overflow-visible z-40">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDropdownOpen(!isDropdownOpen)
+                  if (!isDropdownOpen) {
+                    setFilterValue("")
+                  }
+                }}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-outline-variant/15 bg-surface-container-high/40 hover:bg-surface-container-high text-on-surface text-[13px] font-medium transition-all relative z-40"
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Search className="w-4 h-4 text-outline shrink-0" />
+                  <span className="truncate">
+                    {activeIntent ? activeIntent.name : "Cari atau pilih niat..."}
+                  </span>
                 </div>
-              ))
-            )}
-          </div>
+                <ChevronDown className={`w-4 h-4 text-outline shrink-0 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-2xl z-50 overflow-hidden max-w-sm">
+                  <Input
+                    placeholder="Cari niat..."
+                    value={filterValue}
+                    onChange={(e) => setFilterValue(e.target.value)}
+                    className="bg-surface-container-high/50 border-none rounded-none text-[13px] px-4 py-3 focus:bg-surface-container-high focus:outline-none"
+                    autoFocus
+                  />
+
+                  <div className="max-h-64 overflow-y-auto">
+                    {filteredIntents.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-outline text-[13px]">
+                        Niat tidak ditemukan
+                      </div>
+                    ) : (
+                      filteredIntents.map((intent) => (
+                        <div
+                          key={intent.id}
+                          onClick={() => {
+                            setActiveIntent(intent)
+                            setIsDropdownOpen(false)
+                            setFilterValue("")
+                          }}
+                          className={`flex items-center justify-between gap-2 px-4 py-3 text-[13px] cursor-pointer transition-colors border-b border-outline-variant/5 last:border-b-0 ${
+                            activeIntent?.id === intent.id
+                              ? "bg-secondary/20 text-on-surface font-bold"
+                              : "bg-surface-container-low hover:bg-surface-container text-on-surface"
+                          }`}
+                        >
+                          <span className="truncate flex-1">{intent.name}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setIntentToDelete(intent)
+                              setIsDropdownOpen(false)
+                            }}
+                            className="p-1.5 rounded-md text-outline hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -300,7 +365,7 @@ export function IntentDashboard() {
             <div className="p-8 flex items-center justify-between border-b border-outline-variant/10 bg-surface-container-low/50 backdrop-blur-sm relative z-10">
               <div>
                 <h2 className="text-xl font-headline font-bold text-on-surface mb-2 flex items-center gap-2">
-                  Log Percakapan: <span className="text-secondary tracking-tight">"{activeIntent.name}"</span>
+                  Log Percakapan: <span className="text-secondary tracking-tight">&quot;{activeIntent.name}&quot;</span>
                 </h2>
                 <p className="text-[13px] text-outline">Percakapan pengguna yang sesuai dengan niat ini</p>
               </div>
@@ -387,7 +452,7 @@ export function IntentDashboard() {
               Hapus Niat Pelacakan?
             </DialogTitle>
             <DialogDescription className="text-outline text-sm leading-relaxed mt-1">
-              Anda akan berhenti melacak niat <span className="text-on-surface font-bold">"{intentToDelete?.name}"</span>. Data log yang sudah ada tidak akan hilang, namun analisis baru untuk niat ini akan dihentikan.
+              Anda akan berhenti melacak niat <span className="text-on-surface font-bold">&quot;{intentToDelete?.name}&quot;</span>. Data log yang sudah ada tidak akan hilang, namun analisis baru untuk niat ini akan dihentikan.
             </DialogDescription>
           </DialogHeader>
 

@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { PlanCard } from "./PlanCard";
 import { useSubscriptionContext } from "./SubscriptionProvider";
@@ -16,48 +26,50 @@ export function PlansDialog() {
     data?.subscription?.status === "ACTIVE" ? data.subscription.plan : "FREE";
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="bg-[#3545d6] text-white hover:bg-[#2c3ab5] font-bold text-[13px] h-11 px-6 rounded-md shadow-lg transition-transform active:scale-95"
-      >
-        Ubah Paket
-      </button>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          className="bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90 font-bold text-[13px] h-11 px-6 rounded-md shadow-lg transition-transform"
+        >
+          Ubah Paket
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="w-full max-w-[calc(100vw-2rem)] sm:max-w-2xl md:max-w-4xl bg-surface-container-low/95 backdrop-blur-xl border-outline-variant/20 shadow-2xl p-0 overflow-y-auto max-h-[90vh]">
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent pointer-events-none" />
 
-      {open && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-5xl rounded-2xl bg-surface-container-low/90 backdrop-blur-xl border border-outline-variant/20 p-8 shadow-2xl ring-1 ring-white/5 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent pointer-events-none" />
-
-            <button
+        <DialogHeader className="px-4 py-4 sm:px-6 sm:py-6 pb-3 sm:pb-4 z-20 sticky top-0 bg-surface-container-low/80 flex items-start justify-between">
+          <div className="flex-1">
+            <DialogTitle className="text-lg sm:text-xl md:text-2xl font-headline font-bold text-on-surface">
+              Pilih Paket Berlangganan
+            </DialogTitle>
+            <DialogDescription className="text-outline text-xs sm:text-sm leading-relaxed mt-1 sm:mt-2">
+              Pembayaran diproses lewat Xendit (kartu, VA, e-wallet).
+            </DialogDescription>
+          </div>
+          <DialogClose asChild className="absolute right-4 top-4">
+            <Button
               type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Tutup"
-              className="absolute right-4 top-4 rounded-full p-2 text-outline hover:bg-surface-container hover:text-on-surface"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 p-0 text-outline hover:text-on-surface hover:bg-surface-container"
             >
               <X className="h-5 w-5" />
-            </button>
-            <div className="mb-6 flex flex-col gap-1">
-              <h2 className="text-2xl font-headline font-bold text-on-surface">
-                Pilih Paket Berlangganan
-              </h2>
-              <p className="text-[13px] text-outline">
-                Pembayaran diproses lewat Xendit (kartu, VA, e-wallet).
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {PLAN_ORDER.map((id) => (
-                <PlanCard
-                  key={id}
-                  plan={PLANS[id]}
-                  isCurrent={id === currentPlan}
-                />
-              ))}
-            </div>
-          </div>
+              <span className="sr-only">Tutup</span>
+            </Button>
+          </DialogClose>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 px-4 py-4 sm:px-6 sm:py-6 pt-2 relative z-10">
+          {PLAN_ORDER.map((id) => (
+            <PlanCard
+              key={id}
+              plan={PLANS[id]}
+              isCurrent={id === currentPlan}
+            />
+          ))}
         </div>
-      )}
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }
