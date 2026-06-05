@@ -2,12 +2,6 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
-import {
-  PlanLimitError,
-  enforceNumericLimit,
-  getUserPlan,
-  planLimitResponse,
-} from "@/lib/utils/payment-gateway/plan-guard";
 import type {
   BusinessDTO,
   BusinessListResponse,
@@ -57,12 +51,6 @@ export async function POST(
         ? body.description.trim()
         : null;
 
-    const plan = await getUserPlan(session.user.id);
-    const businessCount = await prisma.business.count({
-      where: { userId: session.user.id },
-    });
-    enforceNumericLimit(plan, "businesses", businessCount, "bisnis");
-
     const created = await prisma.business.create({
       data: {
         userId: session.user.id,
@@ -73,9 +61,6 @@ export async function POST(
 
     return NextResponse.json(toBusinessDTO(created), { status: 201 });
   } catch (error) {
-    if (error instanceof PlanLimitError) {
-      return planLimitResponse(error);
-    }
     const message = error instanceof Error ? error.message : "Kesalahan tidak diketahui";
     console.error("[POST /api/businesses]", error);
     return NextResponse.json({ message }, { status: 500 });
