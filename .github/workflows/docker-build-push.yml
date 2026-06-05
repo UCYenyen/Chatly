@@ -73,7 +73,7 @@ jobs:
       - name: Apply Prisma migrations
         run: |
           corepack enable pnpm
-          pnpm install --frozen-lockfile --config.strict-dep-builds=false
+          pnpm install --frozen-lockfile
           pnpm prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
