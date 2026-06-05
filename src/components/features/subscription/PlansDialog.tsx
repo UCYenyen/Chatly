@@ -95,7 +95,7 @@ export function PlansDialog() {
           </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 px-4 py-4 sm:px-6 sm:py-6 pt-2 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4 px-4 py-4 sm:px-6 sm:py-6 pt-2 relative z-10">
           {PLAN_ORDER.map((id) => {
             const plan = isYearly ? PLANS_YEARLY[id] : PLANS[id];
             if (!plan) return null;
