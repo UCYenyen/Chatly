@@ -3,6 +3,8 @@ import { createHmac, timingSafeEqual, randomBytes } from "crypto";
 import prisma from "@/lib/utils/prisma";
 import { sendGowaMessage } from "@/lib/utils/whatsapp";
 import { runChatlyAIEngine } from "@/lib/ai-engine";
+import { getBusinessPlan } from "@/lib/utils/payment-gateway/plan-guard";
+import { isPaidPlan } from "@/lib/utils/payment-gateway/plans";
 import { createCustomerTransactionInvoice } from "@/lib/utils/payment-gateway/billing-service";
 import { canonicalizePhone } from "@/lib/utils/phone";
 import { getBusinessHoursStatus } from "@/lib/business-hours";
@@ -296,6 +298,14 @@ export async function POST(request: Request) {
 
   if (!from || !text) {
     console.log(`[webhook] Early return: empty from or text. from=${from}, text=${text}`);
+    return NextResponse.json({ ok: true });
+  }
+
+  const activePlan = await getBusinessPlan(whatsappAuth.businessId);
+  if (!isPaidPlan(activePlan)) {
+    console.log(
+      `[webhook] No active paid plan for business ${whatsappAuth.businessId} — staying silent, nothing persisted.`,
+    );
     return NextResponse.json({ ok: true });
   }
 
