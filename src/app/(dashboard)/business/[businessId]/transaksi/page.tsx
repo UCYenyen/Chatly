@@ -1,10 +1,11 @@
 "use client"
 
 import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter";
+import { MonthlyReport } from "@/components/features/analytics/MonthlyReport";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { CustomerTransactionTable } from "@/components/features/business/CustomerTransactionTable";
 import { FeatureLockOverlay } from "@/components/features/business/FeatureLockOverlay";
-import { useBusinessSubscription } from "@/hooks";
+import { useBusinessSubscription, usePlanGate } from "@/hooks";
 import { useParams } from "next/navigation";
 import { ActiveBusinessBanner } from "@/components/features/business/ActiveBusinessBanner";
 import Link from "next/link";
@@ -14,6 +15,8 @@ export default function TransactionsPage() {
     const params = useParams();
     const businessId = params.businessId as string;
     const { isPaid, isLoading } = useBusinessSubscription(businessId);
+    const gate = usePlanGate();
+    const exportLocked = !gate.hasFeature("dataExport");
 
     return (
         <div className="flex flex-1 flex-col gap-4 p-4 pt-6 md:p-8 md:pt-8 lg:p-10 w-full mx-auto max-w-[1600px] min-h-full">
@@ -39,6 +42,16 @@ export default function TransactionsPage() {
                 businessId={businessId}
             >
                 <CustomerTransactionTable businessId={businessId} />
+
+                <div className="mt-8 w-full">
+                    <FeatureLockOverlay
+                        isLocked={exportLocked}
+                        featureName="Ekspor Data"
+                        businessId={businessId}
+                    >
+                        <MonthlyReport />
+                    </FeatureLockOverlay>
+                </div>
 
                 <div className="mt-auto pt-8">
                     <AnalyticsFooter />

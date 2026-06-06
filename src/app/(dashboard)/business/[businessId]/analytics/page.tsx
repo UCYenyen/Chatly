@@ -4,7 +4,6 @@ import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter
 import { IntentDashboard } from "@/components/features/analytics/IntentDashboard";
 import { ConversionRateCard } from "@/components/features/analytics/ConversionRateCard";
 import { PerformanceFunnel } from "@/components/features/analytics/PerformanceFunnel";
-import { MonthlyReport } from "@/components/features/analytics/MonthlyReport";
 import { ActiveBusinessBanner } from "@/components/features/business/ActiveBusinessBanner";
 import { FeatureLockOverlay } from "@/components/features/business/FeatureLockOverlay";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,10 +83,6 @@ export default function AnalyticsPage() {
             </>
           )}
         </FeatureLockOverlay>
-
-        <div className="mb-8 w-full">
-          <MonthlyReport />
-        </div>
 
         <div className="mt-auto pt-4">
           <AnalyticsFooter />
