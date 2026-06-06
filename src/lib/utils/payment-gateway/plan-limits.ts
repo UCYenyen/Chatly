@@ -169,6 +169,10 @@ export const ALWAYS_INCLUDED_FEATURES: ReadonlyArray<string> = [
 ];
 
 export function describePlanFeatures(plan: SubscriptionPlan): PlanFeature[] {
+  if (plan === "ENTERPRISE") {
+    return [{ label: "Silakan hubungi penjual untuk kebutuhan khusus yang dipersonalisasikan untuk usaha anda", included: true }];
+  }
+
   const numeric = NUMERIC_FEATURE_ORDER.map<PlanFeature>((key) => ({
     label: NUMERIC_FEATURE_LABELS[key](formatLimit(getNumericLimit(plan, key))),
     included: true,

@@ -46,7 +46,7 @@ export function PricingSection() {
         planId === "STARTER" ? "Mulai Sekarang" :
         planId === "GROWTH" ? "Skala Sekarang" :
         planId === "PRO" ? "Jadi Pro" :
-        "Hubungi Penjualan",
+        "Hubungi kami",
       isPopular: planId === "GROWTH"
     }
   })
