@@ -5,6 +5,7 @@ import { ExternalLink, ListFilter, RefreshCcw, Search, CheckCircle2, Clock, Aler
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -107,11 +108,12 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
   }
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-2xl flex flex-col overflow-hidden w-full">
+    <div data-tour="customer-transactions" className="bg-surface-container-low border border-outline-variant/15 rounded-xl shadow-2xl flex flex-col overflow-hidden w-full">
       <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between border-b border-outline-variant/10 gap-6 bg-linear-to-r from-surface-container/50 to-transparent">
         <div>
           <h2 className="text-[18px] font-headline font-bold text-on-surface flex items-center gap-2">
             Transaksi Pelanggan
+            <FeatureHelpButton topic="customerTransactions" />
           </h2>
           <p className="text-[13px] text-outline mt-1.5 font-inter">Kelola dan pantau pembayaran dari pelanggan Anda secara real-time.</p>
         </div>

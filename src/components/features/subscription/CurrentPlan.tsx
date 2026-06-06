@@ -5,6 +5,7 @@ import { useSubscriptionContext } from "./SubscriptionProvider";
 import { PlansDialog } from "./PlansDialog";
 import { CurrentPlanSkeleton } from "./CurrentPlanSkeleton";
 import { useCancelSubscription } from "@/hooks/use-cancel-subscription";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import { PLANS } from "@/lib/utils/payment-gateway/plans";
 import { formatIDR, formatDateID } from "../billing/billing-format";
 import type { SubscriptionPlan } from "@prisma/client";
@@ -31,12 +32,15 @@ export function CurrentPlan() {
   }
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant/15 border-t-4 border-t-secondary-fixed p-5 sm:p-8 xl:p-10 w-full rounded-xl flex flex-col gap-6 sm:gap-8 shadow-2xl relative overflow-hidden h-full">
+    <div data-tour="current-plan" className="bg-surface-container-low border border-outline-variant/15 border-t-4 border-t-secondary-fixed p-5 sm:p-8 xl:p-10 w-full rounded-xl flex flex-col gap-6 sm:gap-8 shadow-2xl relative overflow-hidden h-full">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 relative z-10 w-full">
         <div className="flex flex-col gap-2 w-full md:w-auto min-w-0">
-          <span className="text-[10px] font-mono text-secondary-fixed uppercase tracking-widest font-bold">
-            Paket Saat Ini
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono text-secondary-fixed uppercase tracking-widest font-bold">
+              Paket Saat Ini
+            </span>
+            <FeatureHelpButton topic="currentPlan" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-headline font-bold text-on-surface tracking-tight wrap-break-word">
             Paket {plan.name}
           </h2>

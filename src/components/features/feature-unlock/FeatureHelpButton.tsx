@@ -3,12 +3,11 @@
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFeatureUnlockControls } from "./FeatureUnlockProvider";
-import type { BooleanFeatureKey } from "@/types/plan-limits.md";
 
-export function FeatureHelpButton({ feature }: { feature: BooleanFeatureKey }) {
-  const { openTutorial, availableFeatureKeys } = useFeatureUnlockControls();
+export function FeatureHelpButton({ topic }: { topic: string }) {
+  const { openTutorial, isTutorialAvailable } = useFeatureUnlockControls();
 
-  if (!availableFeatureKeys.includes(feature)) return null;
+  if (!isTutorialAvailable(topic)) return null;
 
   return (
     <Button
@@ -17,7 +16,7 @@ export function FeatureHelpButton({ feature }: { feature: BooleanFeatureKey }) {
       size="icon"
       aria-label="Lihat tutorial fitur ini"
       title="Lihat tutorial fitur ini"
-      onClick={() => openTutorial(feature)}
+      onClick={() => openTutorial(topic)}
       className="size-7 shrink-0 rounded-full text-outline hover:text-on-surface hover:bg-surface-container-high"
     >
       <HelpCircle className="size-4" />

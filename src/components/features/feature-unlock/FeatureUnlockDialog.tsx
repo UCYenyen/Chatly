@@ -4,6 +4,7 @@ import {
   BarChart2,
   BellRing,
   FileSpreadsheet,
+  GraduationCap,
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { BooleanFeatureKey } from "@/types/plan-limits.md";
-import type { FeatureTutorial } from "@/types/feature-tutorial.md";
+import type { Tutorial } from "@/types/feature-tutorial.md";
 
 const FEATURE_ICON: Record<BooleanFeatureKey, LucideIcon> = {
   customPersonality: Sparkles,
@@ -30,7 +31,7 @@ const FEATURE_ICON: Record<BooleanFeatureKey, LucideIcon> = {
 interface FeatureUnlockDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tutorials: FeatureTutorial[];
+  tutorials: Tutorial[];
   manual?: boolean;
   onShowGuide: () => void;
   onDismiss: () => void;
@@ -60,9 +61,11 @@ export function FeatureUnlockDialog({
 
         <ul className="flex flex-col gap-3 py-2">
           {tutorials.map((tutorial) => {
-            const Icon = FEATURE_ICON[tutorial.feature];
+            const Icon = tutorial.feature
+              ? FEATURE_ICON[tutorial.feature]
+              : GraduationCap;
             return (
-              <li key={tutorial.feature} className="flex items-start gap-3">
+              <li key={tutorial.id} className="flex items-start gap-3">
                 <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary-fixed/15 text-secondary-fixed">
                   <Icon className="size-4" />
                 </div>

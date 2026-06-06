@@ -5,16 +5,15 @@ import { toast } from "sonner";
 import { useFeatureUnlock } from "@/hooks/use-feature-unlock";
 import { useTour } from "@/components/features/tour/TourProvider";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
-import { guideStepsFor } from "@/lib/feature-tutorials";
+import { guideStepsFor, getTutorialById } from "@/lib/feature-tutorials";
 import { FeatureUnlockDialog } from "./FeatureUnlockDialog";
 import { FeatureGuide } from "./FeatureGuide";
-import type { BooleanFeatureKey } from "@/types/plan-limits.md";
-import type { FeatureGuideStep, FeatureTutorial } from "@/types/feature-tutorial.md";
+import type { FeatureGuideStep, Tutorial } from "@/types/feature-tutorial.md";
 
 interface FeatureUnlockControls {
-  openTutorial: (feature?: BooleanFeatureKey) => void;
+  openTutorial: (tutorialId?: string) => void;
   hasFeatureTutorials: boolean;
-  availableFeatureKeys: BooleanFeatureKey[];
+  isTutorialAvailable: (id: string) => boolean;
 }
 
 const FeatureUnlockContext = createContext<FeatureUnlockControls | null>(null);
@@ -36,7 +35,7 @@ function applyGates(
   monthlyReportEmail: string,
 ): FeatureGuideStep[] {
   return steps.map((step) =>
-    step.feature === "dataExport"
+    step.id === "dataExport"
       ? {
           ...step,
           canAdvance: monthlyReportEmail.trim().length > 0,
@@ -48,20 +47,26 @@ function applyGates(
 }
 
 export function FeatureUnlockProvider({ children }: { children: ReactNode }) {
-  const { businessId, unlockedTutorials, availableTutorials, isLoading, markDone } =
-    useFeatureUnlock();
+  const {
+    businessId,
+    unlockedTutorials,
+    availableTutorials,
+    isLoading,
+    isTutorialAvailable,
+    markDone,
+  } = useFeatureUnlock();
   const { isActive, state } = useTour();
   const { activeBusiness } = useBusinessContext();
 
   const [dismissedSignature, setDismissedSignature] = useState("");
   const [guideSignature, setGuideSignature] = useState("");
   const [manualPhase, setManualPhase] = useState<ManualPhase>("idle");
-  const [manualTutorials, setManualTutorials] = useState<FeatureTutorial[]>([]);
+  const [manualTutorials, setManualTutorials] = useState<Tutorial[]>([]);
   const [stepIndex, setStepIndex] = useState(0);
 
   const tourBusy = isActive || state.phase === "congrats";
   const autoSignature = unlockedTutorials
-    .map((tutorial) => tutorial.feature)
+    .map((tutorial) => tutorial.id)
     .sort()
     .join(",");
 
@@ -87,10 +92,10 @@ export function FeatureUnlockProvider({ children }: { children: ReactNode }) {
     ? applyGates(guideStepsFor(guideTutorials, businessId), monthlyReportEmail)
     : [];
 
-  const openTutorial = (feature?: BooleanFeatureKey): void => {
-    if (feature) {
-      const tutorial = availableTutorials.find((t) => t.feature === feature);
-      if (!tutorial) {
+  const openTutorial = (tutorialId?: string): void => {
+    if (tutorialId) {
+      const tutorial = getTutorialById(tutorialId);
+      if (!tutorial || !isTutorialAvailable(tutorialId)) {
         toast.info("Tutorial fitur ini belum tersedia di paketmu.");
         return;
       }
@@ -146,7 +151,7 @@ export function FeatureUnlockProvider({ children }: { children: ReactNode }) {
       value={{
         openTutorial,
         hasFeatureTutorials: availableTutorials.length > 0,
-        availableFeatureKeys: availableTutorials.map((t) => t.feature),
+        isTutorialAvailable,
       }}
     >
       {children}

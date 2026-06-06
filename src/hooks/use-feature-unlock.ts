@@ -2,10 +2,11 @@
 
 import { useCallback } from "react";
 import { useSubscriptionContext } from "@/components/features/subscription/SubscriptionProvider";
+import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { hasFeature, resolveActivePlan } from "@/lib/utils/payment-gateway/plan-limits";
-import { FEATURE_TUTORIALS } from "@/lib/feature-tutorials";
+import { TUTORIALS, getTutorialById } from "@/lib/feature-tutorials";
 import type { BooleanFeatureKey } from "@/types/plan-limits.md";
-import type { FeatureTutorial } from "@/types/feature-tutorial.md";
+import type { Tutorial } from "@/types/feature-tutorial.md";
 
 const ALL_BOOLEAN_FEATURES: ReadonlyArray<BooleanFeatureKey> = [
   "customPersonality",
@@ -17,25 +18,37 @@ const ALL_BOOLEAN_FEATURES: ReadonlyArray<BooleanFeatureKey> = [
 
 interface UseFeatureUnlockResult {
   businessId: string | null;
-  unlockedTutorials: FeatureTutorial[];
-  availableTutorials: FeatureTutorial[];
+  unlockedTutorials: Tutorial[];
+  availableTutorials: Tutorial[];
   isLoading: boolean;
+  isTutorialAvailable: (id: string) => boolean;
   markDone: () => Promise<void>;
 }
 
 export function useFeatureUnlock(): UseFeatureUnlockResult {
   const { data, isLoading, refresh } = useSubscriptionContext();
+  const { activeBusinessId } = useBusinessContext();
   const subscription = data?.subscription ?? null;
-  const businessId = subscription?.businessId ?? null;
+  const businessId = activeBusinessId ?? subscription?.businessId ?? null;
   const plan = resolveActivePlan(subscription?.plan, subscription?.status);
   const tutorialized = subscription?.tutorializedFeatures ?? [];
 
-  const availableTutorials = FEATURE_TUTORIALS.filter((tutorial) =>
-    hasFeature(plan, tutorial.feature),
+  const availableTutorials = TUTORIALS.filter(
+    (tutorial) => tutorial.feature && hasFeature(plan, tutorial.feature),
   );
 
   const unlockedTutorials = availableTutorials.filter(
-    (tutorial) => !tutorialized.includes(tutorial.feature),
+    (tutorial) => !tutorial.feature || !tutorialized.includes(tutorial.feature),
+  );
+
+  const isTutorialAvailable = useCallback(
+    (id: string): boolean => {
+      const tutorial = getTutorialById(id);
+      if (!tutorial) return false;
+      if (!tutorial.feature) return true;
+      return hasFeature(plan, tutorial.feature);
+    },
+    [plan],
   );
 
   const markDone = useCallback(async (): Promise<void> => {
@@ -56,5 +69,12 @@ export function useFeatureUnlock(): UseFeatureUnlockResult {
     }
   }, [businessId, plan, refresh]);
 
-  return { businessId, unlockedTutorials, availableTutorials, isLoading, markDone };
+  return {
+    businessId,
+    unlockedTutorials,
+    availableTutorials,
+    isLoading,
+    isTutorialAvailable,
+    markDone,
+  };
 }

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton"
 import {
   Table,
   TableBody,
@@ -225,11 +226,14 @@ export function IntentDashboard() {
   return (
     <div className="flex flex-col w-full gap-8">
       {/* Top Section: Intent Input and Selection */}
-      <div className="bg-surface-container-low border border-outline-variant/15 p-8 xl:p-10 rounded-xl shadow-2xl flex flex-col gap-8 relative overflow-visible">
+      <div data-tour="intent-dashboard" className="bg-surface-container-low border border-outline-variant/15 p-8 xl:p-10 rounded-xl shadow-2xl flex flex-col gap-8 relative overflow-visible">
         <div className="absolute inset-0 bg-linear-to-br from-secondary/5 via-transparent to-transparent pointer-events-none" />
-        
+
         <div className="relative z-10">
-          <h2 className="text-2xl font-headline font-bold text-on-surface mb-2 tracking-tight">Pelacakan Niat Pelanggan</h2>
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-2xl font-headline font-bold text-on-surface mb-2 tracking-tight">Pelacakan Niat Pelanggan</h2>
+            <FeatureHelpButton topic="intentDashboard" />
+          </div>
           <p className="text-[14px] text-outline max-w-2xl leading-relaxed">
             Tambahkan pertanyaan niat (intent) yang ingin Anda pantau. Chatly AI akan mengevaluasi setiap pesan pelanggan dan mencatat pesan yang mengindikasikan niat tersebut.
           </p>

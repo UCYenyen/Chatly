@@ -8,6 +8,7 @@ import { useWhatsAppAuth } from "@/hooks/use-whatsapp-auth";
 import { usePlanGate } from "@/hooks/use-plan-gate";
 import { WhatsappChannelCard } from "./WhatsappChannelCard";
 import { WhatsappIgnoreList } from "./WhatsappIgnoreList";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -78,8 +79,11 @@ export function WhatsappAuthContainer({
             Kelola koneksi WhatsApp untuk bisnis Anda
           </p>
         </div>
-        <div className="px-3 py-1 bg-surface-container-high rounded-full border border-outline-variant/20 text-xs font-medium text-on-surface">
-          {channels.length}/{limitString} channel
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1 bg-surface-container-high rounded-full border border-outline-variant/20 text-xs font-medium text-on-surface">
+            {channels.length}/{limitString} channel
+          </div>
+          <FeatureHelpButton topic="whatsappSetup" />
         </div>
       </div>
 

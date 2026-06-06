@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, X, UserX, Loader2, ChevronsUpDown } from "lucide-react";
 import { useContactIgnoreList } from "@/hooks/use-contact-ignore-list";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import {
   Card,
   CardContent,
@@ -117,11 +118,14 @@ export function WhatsappIgnoreList({ businessId }: WhatsappIgnoreListProps) {
   };
 
   return (
-    <Card className="bg-surface-container-low border-outline-variant/20">
+    <Card data-tour="ignored-contacts" className="bg-surface-container-low border-outline-variant/20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-on-surface">
           <UserX className="w-5 h-5" />
           Kontak yang Diabaikan
+          <div className="ml-auto">
+            <FeatureHelpButton topic="ignoredContacts" />
+          </div>
         </CardTitle>
         <CardDescription>
           Bot tidak akan membalas pesan dari kontak ini. Pengaturan tersimpan

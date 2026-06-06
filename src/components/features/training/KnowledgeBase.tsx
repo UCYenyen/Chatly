@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { useUpdateBusiness } from "@/hooks/use-update-business";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import { toast } from "sonner";
 
 export function KnowledgeBase() {
@@ -99,12 +100,13 @@ export function KnowledgeBase() {
     };
 
     return (
-        <div className="bg-surface-container-low border border-outline-variant/15 rounded-xl flex flex-col shadow-xl overflow-hidden">
+        <div data-tour="knowledge-base" className="bg-surface-container-low border border-outline-variant/15 rounded-xl flex flex-col shadow-xl overflow-hidden">
             <div className="p-8 pb-4">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <BookOpen className="w-5 h-5 text-secondary-fixed" fill="currentColor" fillOpacity={0.2} />
                         <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide">Dokumen Pelatihan & Data</h2>
+                        <FeatureHelpButton topic="knowledgeBase" />
                     </div>
                     <Button 
                         onClick={handleSave}

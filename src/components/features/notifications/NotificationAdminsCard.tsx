@@ -104,7 +104,7 @@ export function NotificationAdminsCard() {
           <BellRing className="size-5 text-primary" />
           <CardTitle>Admin notifikasi handover</CardTitle>
           <div className="ml-auto">
-            <FeatureHelpButton feature="adminNotification" />
+            <FeatureHelpButton topic="adminNotification" />
           </div>
         </div>
         <CardDescription>

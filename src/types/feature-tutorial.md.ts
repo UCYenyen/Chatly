@@ -1,7 +1,8 @@
 import type { BooleanFeatureKey } from "@/types/plan-limits.md";
 
-export interface FeatureTutorial {
-  feature: BooleanFeatureKey;
+export interface Tutorial {
+  id: string;
+  feature?: BooleanFeatureKey;
   name: string;
   description: string;
   route: string;
@@ -11,7 +12,7 @@ export interface FeatureTutorial {
 }
 
 export interface FeatureGuideStep {
-  feature: BooleanFeatureKey;
+  id: string;
   route: string;
   selector: string;
   title: string;

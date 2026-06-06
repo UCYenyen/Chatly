@@ -45,7 +45,7 @@ export function AiPersonality() {
         <MessageSquareText className="w-5 h-5 text-secondary-fixed" fill="currentColor" fillOpacity={0.2} />
         <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide">Nada Bicara AI</h2>
         <div className="ml-auto">
-          <FeatureHelpButton feature="customPersonality" />
+          <FeatureHelpButton topic="customPersonality" />
         </div>
       </div>
 

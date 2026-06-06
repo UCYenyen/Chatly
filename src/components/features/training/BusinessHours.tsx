@@ -5,6 +5,7 @@ import { Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { useUpdateBusiness } from "@/hooks/use-update-business";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -82,12 +83,15 @@ export function BusinessHours() {
   };
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant/15 p-5 sm:p-8 rounded-xl flex flex-col shadow-xl h-fit min-w-0">
+    <div data-tour="business-hours" className="bg-surface-container-low border border-outline-variant/15 p-5 sm:p-8 rounded-xl flex flex-col shadow-xl h-fit min-w-0">
       <div className="flex items-center gap-3 mb-6">
         <Clock className="w-5 h-5 shrink-0 text-secondary-fixed" fill="currentColor" fillOpacity={0.2} />
         <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide wrap-break-word min-w-0">
           Jam Operasional Handover
         </h2>
+        <div className="ml-auto">
+          <FeatureHelpButton topic="businessHours" />
+        </div>
       </div>
 
       <div data-tour="notification-phone" className="flex flex-col gap-2 mb-6 min-w-0">

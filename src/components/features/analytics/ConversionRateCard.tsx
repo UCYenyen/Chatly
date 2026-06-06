@@ -13,6 +13,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { ConversionRateCardSkeleton } from "./ConversionRateCardSkeleton"
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton"
 import type { ConversionRateResponse } from "@/types/analytics.md"
 
 type DetailView = null | "chat" | "buyers" | "transactions"
@@ -68,10 +69,13 @@ export function ConversionRateCard() {
     <>
       <div className="space-y-4">
         {/* Main Card */}
-        <div className="bg-surface-container-low border border-outline-variant/15 border-t-4 border-t-secondary-fixed p-8 rounded-xl flex flex-col justify-center h-full shadow-2xl min-h-[220px] relative overflow-hidden">
+        <div data-tour="conversion-rate" className="bg-surface-container-low border border-outline-variant/15 border-t-4 border-t-secondary-fixed p-8 rounded-xl flex flex-col justify-center h-full shadow-2xl min-h-[220px] relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-baseline gap-2 mb-2">
               <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">Conversion Rate</span>
+              <div className="ml-auto">
+                <FeatureHelpButton topic="conversionRate" />
+              </div>
             </div>
             
             <div className="flex items-center justify-between mb-6">

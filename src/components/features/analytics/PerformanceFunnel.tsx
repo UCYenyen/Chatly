@@ -117,7 +117,7 @@ function FunnelHeader({ verdict }: { verdict: string }) {
           {verdict}
         </p>
       </div>
-      <FeatureHelpButton feature="advancedAnalytics" />
+      <FeatureHelpButton topic="advancedAnalytics" />
     </div>
   )
 }

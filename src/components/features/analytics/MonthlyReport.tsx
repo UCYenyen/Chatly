@@ -105,7 +105,7 @@ export function MonthlyReport() {
           Laporan Bulanan Otomatis
         </h2>
         <div className="ml-auto">
-          <FeatureHelpButton feature="dataExport" />
+          <FeatureHelpButton topic="dataExport" />
         </div>
       </div>
 
