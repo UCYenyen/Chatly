@@ -147,7 +147,7 @@ const BOOLEAN_FEATURE_LABELS: Record<BooleanFeatureKey, string> = {
   advancedAnalytics: "Analitik lanjutan (Funnel, Conversion, Intent)",
   dataExport: "Ekspor data CSV",
   slaSupport: "SLA & dukungan prioritas 24/7",
-  adminNotification: "Notifikasi admin via WhatsApp",
+  adminNotification: "Notifikasi admin",
 };
 
 const NUMERIC_FEATURE_ORDER: ReadonlyArray<NumericLimitKey> = [
