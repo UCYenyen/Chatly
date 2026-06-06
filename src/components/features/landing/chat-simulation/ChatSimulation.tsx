@@ -129,7 +129,7 @@ export function ChatSimulation() {
               key={msg.id}
               role={msg.role}
               content={msg.content}
-              time={formatTime(msg.timestamp)}
+              time={"3.00"}
             />
           ))}
 
