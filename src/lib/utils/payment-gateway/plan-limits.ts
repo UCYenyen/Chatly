@@ -44,7 +44,7 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     advancedAnalytics: false,
     dataExport: false,
     slaSupport: false,
-    adminNotification: false,
+    adminNotification: true,
   },
   GROWTH: {
     channels: 15,
@@ -54,7 +54,7 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     advancedAnalytics: false,
     dataExport: true,
     slaSupport: false,
-    adminNotification: false,
+    adminNotification: true,
   },
   PRO: {
     channels: "unlimited",
