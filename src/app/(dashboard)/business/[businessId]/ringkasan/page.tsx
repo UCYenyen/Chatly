@@ -2,6 +2,8 @@
 
 import { AnalyticsFooter } from "@/components/features/analytics/AnalyticsFooter";
 import { WhatsappAuthContainer } from "@/components/features/dashboard/WhatsappAuthContainer";
+import { BusinessHours } from "@/components/features/training/BusinessHours";
+import { NotificationAdminsCard } from "@/components/features/notifications/NotificationAdminsCard";
 import { FeatureLockOverlay } from "@/components/features/business/FeatureLockOverlay";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { useBusinessSubscription } from "@/hooks";
@@ -40,8 +42,14 @@ export default function BusinessDashboardPage() {
                 businessId={businessId}
             >
                 {activeBusiness && (
-                    <div data-tour="whatsapp-setup">
-                        <WhatsappAuthContainer businessId={activeBusiness.id} />
+                    <div className="flex flex-col gap-8">
+                        <div data-tour="whatsapp-setup">
+                            <WhatsappAuthContainer businessId={activeBusiness.id} />
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <BusinessHours />
+                            <NotificationAdminsCard />
+                        </div>
                     </div>
                 )}
 

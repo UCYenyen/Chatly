@@ -48,6 +48,24 @@ export interface HandoverRevokePushPayload {
   tag: string;
 }
 
+export interface HandoverTestPushPayload {
+  type: "test";
+  businessName: string;
+  message: string;
+}
+
+export interface HandoverDeregisterPushPayload {
+  type: "deregister";
+  businessName: string;
+}
+
 export type HandoverPushPayload =
   | HandoverAlertPushPayload
-  | HandoverRevokePushPayload;
+  | HandoverRevokePushPayload
+  | HandoverTestPushPayload
+  | HandoverDeregisterPushPayload;
+
+export interface TestNotificationResponse {
+  delivered: number;
+  pruned: number;
+}

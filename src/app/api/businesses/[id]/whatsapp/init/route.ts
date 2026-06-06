@@ -157,7 +157,7 @@ export async function POST(request: Request, context: RouteContext) {
         await getBusinessPlan(businessId),
         "channels",
         channelCount,
-        "channel WhatsApp",
+        "akun WhatsApp",
       );
     } catch (error) {
       if (error instanceof PlanLimitError) {

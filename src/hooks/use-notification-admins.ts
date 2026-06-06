@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { NotificationAdminDTO } from "@/types/notifications.md";
+import type {
+  NotificationAdminDTO,
+  TestNotificationResponse,
+} from "@/types/notifications.md";
 
 interface UseNotificationAdminsResult {
   admins: NotificationAdminDTO[];
@@ -9,6 +12,7 @@ interface UseNotificationAdminsResult {
   error: string | null;
   addAdmin: (label: string) => Promise<NotificationAdminDTO | null>;
   revokeAdmin: (adminId: string) => Promise<void>;
+  testAdmin: (adminId: string) => Promise<TestNotificationResponse>;
   refetch: () => Promise<void>;
 }
 
@@ -93,5 +97,33 @@ export function useNotificationAdmins(
     [businessId],
   );
 
-  return { admins, isLoading, error, addAdmin, revokeAdmin, refetch };
+  const testAdmin = useCallback(
+    async (adminId: string): Promise<TestNotificationResponse> => {
+      if (!businessId) {
+        throw new Error("Bisnis tidak ditemukan");
+      }
+      const res = await fetch(
+        `/api/businesses/${businessId}/notification-admins/${adminId}/test`,
+        { method: "POST", credentials: "include" },
+      );
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+        throw new Error(data?.message ?? "Gagal mengirim notifikasi uji");
+      }
+      return (await res.json()) as TestNotificationResponse;
+    },
+    [businessId],
+  );
+
+  return {
+    admins,
+    isLoading,
+    error,
+    addAdmin,
+    revokeAdmin,
+    testAdmin,
+    refetch,
+  };
 }

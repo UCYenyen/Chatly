@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, AlertCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useWhatsAppAuth } from "@/hooks/use-whatsapp-auth";
 import { usePlanGate } from "@/hooks/use-plan-gate";
 import { WhatsappChannelCard } from "./WhatsappChannelCard";
@@ -22,7 +21,6 @@ export function WhatsappAuthContainer({
   const { channels, isLoading, error, addChannel, refreshChannelQr, logoutChannel, refetch } =
     useWhatsAppAuth(businessId);
   const { numericLimit, canAddMore } = usePlanGate();
-  const router = useRouter();
 
   const [isAddingChannel, setIsAddingChannel] = useState(false);
 
@@ -120,13 +118,7 @@ export function WhatsappAuthContainer({
           </Button>
           {!canAdd && (
             <p className="text-xs text-warning">
-              Batas {channelLimit} channel untuk paket Anda.{" "}
-              <button
-                onClick={() => router.push(`/business/${businessId}/langganan`)}
-                className="underline text-secondary-fixed hover:text-secondary-fixed/90"
-              >
-                Upgrade paket
-              </button>
+              Satu akun WhatsApp per bisnis.
             </p>
           )}
         </div>
@@ -156,15 +148,7 @@ export function WhatsappAuthContainer({
             {!canAdd && (
               <div className="flex items-center gap-2 text-xs text-warning">
                 <AlertCircle className="w-4 h-4" />
-                <span>
-                  Batas {channelLimit} channel.{" "}
-                  <button
-                    onClick={() => router.push(`/business/${businessId}/langganan`)}
-                    className="underline text-secondary-fixed hover:text-secondary-fixed/90"
-                  >
-                    Upgrade
-                  </button>
-                </span>
+                <span>Satu akun WhatsApp per bisnis.</span>
               </div>
             )}
           </div>

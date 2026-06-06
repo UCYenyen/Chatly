@@ -195,6 +195,15 @@ export async function reassignStaleHandovers(
       const timeoutMs = handover.business.handoverReassignSeconds * 1000;
       if (ageMs < timeoutMs) continue;
 
+      const triedAdminIds = handover.assignments.map(
+        (a) => a.notificationAdminId,
+      );
+      const nextCandidates = await eligibleAdminsOrdered(
+        handover.businessId,
+        triedAdminIds,
+      );
+      if (nextCandidates.length === 0) continue;
+
       await prisma.handoverAssignment.update({
         where: { id: current.id },
         data: { status: "SUPERSEDED" },
@@ -206,7 +215,7 @@ export async function reassignStaleHandovers(
         businessId: handover.businessId,
         businessName: handover.business.name,
         customerPhone: handover.phone,
-        triedAdminIds: handover.assignments.map((a) => a.notificationAdminId),
+        triedAdminIds,
       });
     }
   } catch (error) {

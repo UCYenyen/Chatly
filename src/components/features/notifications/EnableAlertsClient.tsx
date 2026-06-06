@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BellRing, CheckCircle2, MonitorSmartphone, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,13 +20,21 @@ type EnableState =
   | "denied"
   | "error";
 
-function pushSupported(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window &&
-    "Notification" in window
-  );
+function pushUnsupportedReason(): string | null {
+  if (typeof window === "undefined") return "Halaman belum siap.";
+  if (!window.isSecureContext) {
+    return "Halaman ini harus dibuka lewat HTTPS untuk mengaktifkan notifikasi.";
+  }
+  if (!("serviceWorker" in navigator)) {
+    return "Browser ini tidak mendukung service worker.";
+  }
+  if (!("PushManager" in window)) {
+    return "Browser ini tidak mendukung web push. Di iPhone/iPad, web push hanya jalan di Safari setelah situs ditambahkan ke Layar Utama. Sebaiknya gunakan Chrome, Edge, atau Firefox di komputer yang membuka WhatsApp Web.";
+  }
+  if (!("Notification" in window)) {
+    return "Browser ini tidak mendukung Notification API.";
+  }
+  return null;
 }
 
 interface EnableAlertsClientProps {
@@ -53,9 +61,41 @@ export function EnableAlertsClient({
 }: EnableAlertsClientProps) {
   const [state, setState] = useState<EnableState>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [unsupportedReason, setUnsupportedReason] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function detectInitialState(): Promise<void> {
+      const reason = pushUnsupportedReason();
+      if (reason) {
+        await Promise.resolve();
+        if (!cancelled) {
+          setUnsupportedReason(reason);
+          setState("unsupported");
+        }
+        return;
+      }
+      if (Notification.permission === "denied") {
+        await Promise.resolve();
+        if (!cancelled) setState("denied");
+        return;
+      }
+      const registration = await navigator.serviceWorker.getRegistration();
+      const existing = await registration?.pushManager.getSubscription();
+      if (!cancelled && existing && Notification.permission === "granted") {
+        setState("enabled");
+      }
+    }
+    void detectInitialState();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function enableAlerts(): Promise<void> {
-    if (!pushSupported()) {
+    const reason = pushUnsupportedReason();
+    if (reason) {
+      setUnsupportedReason(reason);
       setState("unsupported");
       return;
     }
@@ -102,6 +142,7 @@ export function EnableAlertsClient({
 
       setState("enabled");
     } catch (error) {
+      console.error("[notify] enableAlerts failed:", error);
       setErrorMessage(
         error instanceof Error ? error.message : "Terjadi kesalahan.",
       );
@@ -157,10 +198,10 @@ export function EnableAlertsClient({
         {state === "unsupported" ? (
           <Alert variant="destructive">
             <TriangleAlert />
-            <AlertTitle>Browser tidak mendukung</AlertTitle>
+            <AlertTitle>Tidak bisa diaktifkan di sini</AlertTitle>
             <AlertDescription>
-              Browser ini tidak mendukung web push. Gunakan Chrome, Edge, atau
-              Firefox versi terbaru di desktop.
+              {unsupportedReason ||
+                "Browser ini tidak mendukung web push. Gunakan Chrome, Edge, atau Firefox versi terbaru di desktop."}
             </AlertDescription>
           </Alert>
         ) : null}

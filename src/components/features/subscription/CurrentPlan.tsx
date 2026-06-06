@@ -42,7 +42,7 @@ export function CurrentPlan() {
             <FeatureHelpButton topic="currentPlan" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-headline font-bold text-on-surface tracking-tight wrap-break-word">
-            Paket {plan.name}
+            {isActive ? `Paket ${plan.name}` : "Tidak ada paket aktif"}
           </h2>
         </div>
         <div className="flex flex-col gap-3 w-full md:w-auto items-start md:items-end shrink-0">
@@ -52,44 +52,48 @@ export function CurrentPlan() {
               : "bg-surface-container-high border-outline-variant/20 text-outline"
               }`}
           >
-            {sub?.status ?? "FREE"}
+            {isActive ? sub?.status : "TIDAK AKTIF"}
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl sm:text-4xl font-headline font-bold text-on-surface tracking-tight">
-              {plan.amount === 0 ? "Gratis" : formatIDR(plan.amount)}
-            </span>
-            {plan.amount > 0 && <span className="text-outline text-[14px]">/bln</span>}
-          </div>
+          {isActive && (
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl sm:text-4xl font-headline font-bold text-on-surface tracking-tight">
+                {plan.amount === 0 ? "Gratis" : formatIDR(plan.amount)}
+              </span>
+              {plan.amount > 0 && <span className="text-outline text-[14px]">/bln</span>}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-16 pt-6 border-t border-outline-variant/10 relative z-10">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
-            Tanggal Penagihan Berikutnya
-          </span>
-          <span className="text-[14px] text-on-surface font-bold tracking-wide">
-            {sub?.cancelAtPeriodEnd
-              ? `Berakhir ${formatDateID(sub.currentPeriodEnd)}`
-              : formatDateID(sub?.currentPeriodEnd ?? null)}
-          </span>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
-            Metode Pembayaran
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            {["BCA", "MANDIRI", "BRI", "OVO", "GOPAY", "DLL"].map((m) => (
-              <div
-                key={m}
-                className="bg-surface-container-highest px-2 py-0.5 rounded text-[10px] font-mono text-on-surface font-bold border border-outline-variant/20"
-              >
-                {m}
-              </div>
-            ))}
+      {isActive && (
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-16 pt-6 border-t border-outline-variant/10 relative z-10">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
+              Tanggal Penagihan Berikutnya
+            </span>
+            <span className="text-[14px] text-on-surface font-bold tracking-wide">
+              {sub?.cancelAtPeriodEnd
+                ? `Berakhir ${formatDateID(sub.currentPeriodEnd)}`
+                : formatDateID(sub?.currentPeriodEnd ?? null)}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
+              Metode Pembayaran
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {["BCA", "MANDIRI", "BRI", "OVO", "GOPAY", "DLL"].map((m) => (
+                <div
+                  key={m}
+                  className="bg-surface-container-highest px-2 py-0.5 rounded text-[10px] font-mono text-on-surface font-bold border border-outline-variant/20"
+                >
+                  {m}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 mt-2 relative z-10 *:w-full *:sm:w-auto">
         <PlansDialog />

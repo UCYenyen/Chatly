@@ -6,6 +6,7 @@ import prisma from "@/lib/utils/prisma";
 import {
   PlanLimitError,
   enforceFeature,
+  enforceNumericLimit,
   getBusinessPlan,
   planLimitResponse,
 } from "@/lib/utils/payment-gateway/plan-guard";
@@ -100,6 +101,11 @@ export async function POST(
         { status: 400 },
       );
     }
+
+    const adminCount = await prisma.notificationAdmin.count({
+      where: { businessId: id, status: "ACTIVE" },
+    });
+    enforceNumericLimit(plan, "adminSeats", adminCount, "admin handover");
 
     const admin = await prisma.notificationAdmin.create({
       data: {

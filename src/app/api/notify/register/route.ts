@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/utils/prisma";
+import { sendPushToDevices } from "@/lib/utils/notifications/web-push";
 import type {
   PushSubscriptionInput,
   RegisterDeviceRequest,
@@ -59,6 +60,14 @@ export async function POST(
     const userAgent =
       typeof body.userAgent === "string" ? body.userAgent.slice(0, 255) : null;
 
+    const supersededDevices = await prisma.notificationDevice.findMany({
+      where: {
+        notificationAdminId: admin.id,
+        endpoint: { not: subscription.endpoint },
+      },
+      select: { id: true, endpoint: true, p256dh: true, authKey: true },
+    });
+
     await prisma.notificationDevice.upsert({
       where: { endpoint: subscription.endpoint },
       update: {
@@ -76,6 +85,19 @@ export async function POST(
         userAgent,
       },
     });
+
+    if (supersededDevices.length > 0) {
+      await sendPushToDevices(supersededDevices, {
+        type: "deregister",
+        businessName: admin.business.name,
+      });
+      await prisma.notificationDevice.deleteMany({
+        where: {
+          notificationAdminId: admin.id,
+          endpoint: { not: subscription.endpoint },
+        },
+      });
+    }
 
     return NextResponse.json({ businessName: admin.business.name });
   } catch (error) {

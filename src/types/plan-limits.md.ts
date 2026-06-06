@@ -3,7 +3,8 @@ import type { SubscriptionPlan } from "@prisma/client";
 export type NumericLimitKey =
   | "channels"
   | "knowledgeDocuments"
-  | "ignoredContacts";
+  | "ignoredContacts"
+  | "adminSeats";
 
 export type BooleanFeatureKey =
   | "customPersonality"
@@ -18,6 +19,7 @@ export interface PlanLimits {
   channels: LimitValue;
   knowledgeDocuments: LimitValue;
   ignoredContacts: LimitValue;
+  adminSeats: LimitValue;
   customPersonality: boolean;
   advancedAnalytics: boolean;
   dataExport: boolean;

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { BellRing, Copy, Lock, Trash2 } from "lucide-react";
+import { BellRing, Copy, Lock, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { useNotificationAdmins, usePlanGate } from "@/hooks";
+import { formatLimit } from "@/lib/utils/payment-gateway/plan-limits";
 import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import {
   Card,
@@ -47,14 +48,18 @@ function planLabel(plan: string | null): string {
 export function NotificationAdminsCard() {
   const { activeBusinessId } = useBusinessContext();
   const plan = usePlanGate();
-  const { admins, isLoading, addAdmin, revokeAdmin } =
+  const { admins, isLoading, addAdmin, revokeAdmin, testAdmin } =
     useNotificationAdmins(activeBusinessId);
 
   const [label, setLabel] = useState("");
   const [adding, setAdding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [testingId, setTestingId] = useState<string | null>(null);
 
   const locked = !plan.isLoading && !plan.hasFeature("adminNotification");
+  const seatLimit = plan.numericLimit("adminSeats");
+  const atLimit =
+    !plan.isLoading && !plan.canAddMore("adminSeats", admins.length);
 
   const handleAdd = async () => {
     const trimmed = label.trim();
@@ -83,6 +88,28 @@ export function NotificationAdminsCard() {
       toast.success("Link undangan disalin");
     } catch {
       toast.error("Gagal menyalin link");
+    }
+  };
+
+  const handleTest = async (admin: NotificationAdminDTO) => {
+    setTestingId(admin.id);
+    try {
+      const result = await testAdmin(admin.id);
+      if (result.delivered > 0) {
+        toast.success(
+          `Notifikasi uji terkirim ke ${result.delivered} perangkat`,
+        );
+      } else {
+        toast.error(
+          "Tidak ada perangkat yang menerima. Perangkat mungkin kedaluwarsa.",
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengirim notifikasi uji",
+      );
+    } finally {
+      setTestingId(null);
     }
   };
 
@@ -125,9 +152,22 @@ export function NotificationAdminsCard() {
           </div>
         ) : (
           <>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="w-fit">
+                {admins.length} / {formatLimit(seatLimit)} admin
+              </Badge>
+              {atLimit && (
+                <span className="text-xs text-muted-foreground">
+                  Batas admin paket tercapai. Upgrade untuk menambah lebih
+                  banyak.
+                </span>
+              )}
+            </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="w-fit">Tambah admin</Button>
+                <Button className="w-fit" disabled={atLimit}>
+                  Tambah admin
+                </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -183,6 +223,17 @@ export function NotificationAdminsCard() {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTest(admin)}
+                        disabled={
+                          admin.deviceCount === 0 || testingId === admin.id
+                        }
+                      >
+                        <Send className="size-4" />
+                        {testingId === admin.id ? "Mengirim…" : "Tes"}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

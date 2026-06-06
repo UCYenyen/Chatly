@@ -13,6 +13,22 @@ async function closeByTag(tag) {
   }
 }
 
+async function deregisterDevice(businessName) {
+  const notifications = await self.registration.getNotifications();
+  for (const notification of notifications) {
+    notification.close();
+  }
+  const subscription = await self.registration.pushManager.getSubscription();
+  if (subscription) {
+    await subscription.unsubscribe();
+  }
+  await self.registration.showNotification(businessName, {
+    body: "Notifikasi handover dipindahkan ke perangkat lain. Perangkat ini berhenti menerima notifikasi.",
+    tag: "notify-deregister",
+    requireInteraction: false,
+  });
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -25,6 +41,23 @@ self.addEventListener("push", (event) => {
 
   if (payload.type === "revoke") {
     event.waitUntil(closeByTag(payload.tag));
+    return;
+  }
+
+  if (payload.type === "deregister") {
+    event.waitUntil(deregisterDevice(payload.businessName));
+    return;
+  }
+
+  if (payload.type === "test") {
+    event.waitUntil(
+      self.registration.showNotification(payload.businessName, {
+        body: payload.message,
+        tag: "notify-test",
+        renotify: true,
+        requireInteraction: false,
+      }),
+    );
     return;
   }
 

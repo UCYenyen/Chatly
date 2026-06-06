@@ -30,6 +30,7 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     channels: 1,
     knowledgeDocuments: 5,
     ignoredContacts: 10,
+    adminSeats: 0,
     customPersonality: false,
     advancedAnalytics: false,
     dataExport: false,
@@ -37,9 +38,10 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     adminNotification: false,
   },
   STARTER: {
-    channels: 5,
+    channels: 1,
     knowledgeDocuments: 50,
     ignoredContacts: 50,
+    adminSeats: 1,
     customPersonality: true,
     advancedAnalytics: false,
     dataExport: false,
@@ -47,9 +49,10 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     adminNotification: true,
   },
   GROWTH: {
-    channels: 15,
+    channels: 1,
     knowledgeDocuments: 200,
     ignoredContacts: "unlimited",
+    adminSeats: 3,
     customPersonality: true,
     advancedAnalytics: false,
     dataExport: true,
@@ -57,9 +60,10 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     adminNotification: true,
   },
   PRO: {
-    channels: "unlimited",
+    channels: 1,
     knowledgeDocuments: "unlimited",
     ignoredContacts: "unlimited",
+    adminSeats: "unlimited",
     customPersonality: true,
     advancedAnalytics: true,
     dataExport: true,
@@ -67,9 +71,10 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     adminNotification: true,
   },
   ENTERPRISE: {
-    channels: "unlimited",
+    channels: 1,
     knowledgeDocuments: "unlimited",
     ignoredContacts: "unlimited",
+    adminSeats: "unlimited",
     customPersonality: true,
     advancedAnalytics: true,
     dataExport: true,
@@ -140,6 +145,10 @@ const NUMERIC_FEATURE_LABELS: Record<NumericLimitKey, (value: string) => string>
     value === "Tak terbatas"
       ? "Pilih kontak tanpa batas untuk dikecualikan"
       : `Pilih hingga ${value} kontak untuk dikecualikan`,
+  adminSeats: (value) =>
+    value === "Tak terbatas"
+      ? "Admin handover tanpa batas"
+      : `${value} admin penerima handover`,
 };
 
 const BOOLEAN_FEATURE_LABELS: Record<BooleanFeatureKey, string> = {
@@ -151,7 +160,7 @@ const BOOLEAN_FEATURE_LABELS: Record<BooleanFeatureKey, string> = {
 };
 
 const NUMERIC_FEATURE_ORDER: ReadonlyArray<NumericLimitKey> = [
-  "channels",
+  "adminSeats",
   "knowledgeDocuments",
   "ignoredContacts",
 ];
@@ -161,7 +170,6 @@ const BOOLEAN_FEATURE_ORDER: ReadonlyArray<BooleanFeatureKey> = [
   "advancedAnalytics",
   "dataExport",
   "slaSupport",
-  "adminNotification",
 ];
 
 export const ALWAYS_INCLUDED_FEATURES: ReadonlyArray<string> = [

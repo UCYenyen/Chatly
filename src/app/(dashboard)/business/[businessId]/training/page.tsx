@@ -3,9 +3,6 @@
 import { TrainingHeader } from "@/components/features/training/TrainingHeader";
 import { KnowledgeBase } from "@/components/features/training/KnowledgeBase";
 import { AiPersonality } from "@/components/features/training/AiPersonality";
-import { BusinessHours } from "@/components/features/training/BusinessHours";
-import { NotificationAdminsCard } from "@/components/features/notifications/NotificationAdminsCard";
-import { TrainingPreview } from "@/components/features/training/TrainingPreview";
 import { TrainingFooter } from "@/components/features/training/TrainingFooter";
 import { ActiveBusinessBanner } from "@/components/features/business/ActiveBusinessBanner";
 import { FeatureLockOverlay } from "@/components/features/business/FeatureLockOverlay";
@@ -35,13 +32,6 @@ export default function TrainingPage() {
 
                     <div className="col-span-1 xl:col-span-5 flex flex-col">
                         <AiPersonality />
-                        <div className="mt-8">
-                            <BusinessHours />
-                        </div>
-                        <div className="mt-8">
-                            <NotificationAdminsCard />
-                        </div>
-                        {/* <TrainingPreview /> */}
                     </div>
                 </div>
 
