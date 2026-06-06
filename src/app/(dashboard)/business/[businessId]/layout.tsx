@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { SubscriptionProvider } from "@/components/features/subscription/SubscriptionProvider";
+import { FeatureUnlockProvider } from "@/components/features/feature-unlock/FeatureUnlockProvider";
 
 export default function BusinessLayout({
   children,
@@ -24,5 +25,9 @@ export default function BusinessLayout({
     }
   }, [businessId, activeBusinessId, setActiveBusinessId, businesses, isLoading]);
 
-  return <SubscriptionProvider businessId={businessId}>{children}</SubscriptionProvider>;
+  return (
+    <SubscriptionProvider businessId={businessId}>
+      <FeatureUnlockProvider>{children}</FeatureUnlockProvider>
+    </SubscriptionProvider>
+  );
 }

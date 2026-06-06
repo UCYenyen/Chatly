@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
             </div>
           ) : (
             <>
-              <div className="mb-8 w-full">
+              <div data-tour="advanced-analytics" className="mb-8 w-full">
                 <PerformanceFunnel />
               </div>
 

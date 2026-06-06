@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FileSpreadsheet, AlertTriangle, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -14,9 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import { useUpdateBusiness } from "@/hooks/use-update-business";
 import { useSendReport } from "@/hooks/use-send-report";
 import type { ReportFormat } from "@/types/report.md";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function MonthlyReport() {
   const { activeBusiness, activeBusinessId, refresh } = useBusinessContext();
@@ -24,6 +27,12 @@ export function MonthlyReport() {
   const { sendNow, isPending: isSending } = useSendReport(
     activeBusinessId ?? "",
   );
+  const emailRef = useRef<HTMLInputElement>(null);
+
+  const focusEmail = (): void => {
+    emailRef.current?.focus();
+    emailRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   const [enabled, setEnabled] = useState<boolean>(
     activeBusiness?.monthlyReportEnabled ?? false,
@@ -54,13 +63,34 @@ export function MonthlyReport() {
   };
 
   const handleSendNow = async (): Promise<void> => {
+    const trimmed = email.trim();
+    if (trimmed.length === 0) {
+      toast.error("Masukkan email tujuan dulu untuk menerima file laporan.");
+      focusEmail();
+      return;
+    }
+    if (!EMAIL_REGEX.test(trimmed)) {
+      toast.error("Format email tidak valid.");
+      focusEmail();
+      return;
+    }
+
+    if (trimmed !== (activeBusiness?.monthlyReportEmail ?? "")) {
+      const saved = await updateBusiness({ monthlyReportEmail: trimmed });
+      if (!saved) {
+        toast.error("Gagal menyimpan email tujuan. Coba lagi.");
+        return;
+      }
+      await refresh();
+    }
+
     const result = await sendNow();
     if (result) {
       toast.success(
         `Laporan ${result.period} (${result.rowCount} transaksi) dikirim ke ${result.email}`,
       );
     } else {
-      toast.error("Gagal mengirim laporan. Pastikan email sudah disimpan.");
+      toast.error("Gagal mengirim laporan. Coba lagi sebentar.");
     }
   };
 
@@ -74,6 +104,9 @@ export function MonthlyReport() {
         <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide">
           Laporan Bulanan Otomatis
         </h2>
+        <div className="ml-auto">
+          <FeatureHelpButton feature="dataExport" />
+        </div>
       </div>
 
       <div className="flex items-start justify-between gap-4 p-4 rounded-md border border-outline-variant/15 bg-[#08111d] mb-6">
@@ -90,17 +123,21 @@ export function MonthlyReport() {
 
       <div className="flex flex-col gap-2 mb-6 min-w-0">
         <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">
-          Email Tujuan Laporan
+          Email Tujuan Laporan <span className="text-rose-400">*</span>
         </span>
         <Input
+          ref={emailRef}
           type="email"
           inputMode="email"
+          required
+          aria-required
           placeholder="cth. laporan@perusahaan.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <span className="text-[11px] text-outline leading-relaxed">
-          Email bebas (boleh berbeda dari email akun login Anda).
+          Wajib diisi — file laporan (CSV/Excel) dikirim ke email ini. Boleh
+          berbeda dari email akun login Anda.
         </span>
       </div>
 

@@ -5,6 +5,7 @@ import { TrendingDown, TrendingUp, Wallet } from "lucide-react"
 import { usePerformanceFunnel } from "@/hooks"
 import type { PerformanceFunnelStage } from "@/types/analytics.md"
 import { PerformanceFunnelSkeleton } from "./PerformanceFunnelSkeleton"
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton"
 
 const STAGE_DESCRIPTIONS: Record<string, string> = {
   mengobrol: "Pelanggan yang mengirim pesan ke bot",
@@ -107,13 +108,16 @@ function RevenueRow({ stage }: { stage: PerformanceFunnelStage }) {
 
 function FunnelHeader({ verdict }: { verdict: string }) {
   return (
-    <div className="mb-8">
-      <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">
-        Performa Bot
-      </span>
-      <p className="text-[18px] font-headline font-bold text-on-surface mt-2 leading-snug max-w-[480px]">
-        {verdict}
-      </p>
+    <div className="mb-8 flex items-start justify-between gap-3">
+      <div>
+        <span className="text-[11px] font-mono text-outline uppercase tracking-widest font-bold">
+          Performa Bot
+        </span>
+        <p className="text-[18px] font-headline font-bold text-on-surface mt-2 leading-snug max-w-[480px]">
+          {verdict}
+        </p>
+      </div>
+      <FeatureHelpButton feature="advancedAnalytics" />
     </div>
   )
 }

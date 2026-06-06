@@ -32,6 +32,7 @@ export interface SubscriptionDTO {
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
   canceledAt: string | null;
+  tutorializedFeatures: string[];
 }
 
 

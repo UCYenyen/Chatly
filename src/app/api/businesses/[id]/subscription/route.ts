@@ -39,6 +39,7 @@ export async function GET(
                 currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
                 cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
                 canceledAt: subscription.canceledAt?.toISOString() ?? null,
+                tutorializedFeatures: subscription.tutorializedFeatures,
             } : null
         }
 

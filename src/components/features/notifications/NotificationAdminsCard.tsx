@@ -5,6 +5,7 @@ import { BellRing, Copy, Lock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBusinessContext } from "@/components/features/business/BusinessProvider";
 import { useNotificationAdmins, usePlanGate } from "@/hooks";
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
 import {
   Card,
   CardContent,
@@ -97,11 +98,14 @@ export function NotificationAdminsCard() {
   };
 
   return (
-    <Card>
+    <Card data-tour="notification-admins">
       <CardHeader>
         <div className="flex items-center gap-2">
           <BellRing className="size-5 text-primary" />
           <CardTitle>Admin notifikasi handover</CardTitle>
+          <div className="ml-auto">
+            <FeatureHelpButton feature="adminNotification" />
+          </div>
         </div>
         <CardDescription>
           Tambahkan orang yang menerima notifikasi web saat percakapan dialihkan

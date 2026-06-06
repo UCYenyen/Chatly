@@ -4,6 +4,7 @@ import { MessageSquareText, Lock } from "lucide-react"
 import { useBusinessContext } from "@/components/features/business/BusinessProvider"
 import { useUpdateBusiness } from "@/hooks/use-update-business"
 import { usePlanGate } from "@/hooks"
+import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton"
 import { DEFAULT_AI_TONE } from "@/lib/utils/payment-gateway/plan-limits"
 import { toast } from "sonner"
 
@@ -39,10 +40,13 @@ export function AiPersonality() {
   };
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant/15 p-8 rounded-xl flex flex-col shadow-xl h-fit">
+    <div data-tour="ai-personality" className="bg-surface-container-low border border-outline-variant/15 p-8 rounded-xl flex flex-col shadow-xl h-fit">
       <div className="flex items-center gap-3 mb-8">
         <MessageSquareText className="w-5 h-5 text-secondary-fixed" fill="currentColor" fillOpacity={0.2} />
         <h2 className="text-[17px] font-headline font-bold text-on-surface tracking-wide">Nada Bicara AI</h2>
+        <div className="ml-auto">
+          <FeatureHelpButton feature="customPersonality" />
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">
