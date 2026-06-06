@@ -5,7 +5,7 @@ CREATE TYPE "HandoverStatus" AS ENUM ('PENDING', 'RESOLVED', 'TIMED_OUT', 'CLOSE
 CREATE TYPE "HandoverResolver" AS ENUM ('ADMIN', 'TIMEOUT', 'BUSINESS_CLOSED');
 
 -- DropIndex
-DROP INDEX "document_chunk_embedding_hnsw_idx";
+DROP INDEX IF EXISTS "document_chunk_embedding_hnsw_idx";
 
 -- AlterTable
 ALTER TABLE "business" ADD COLUMN     "notificationPhone" TEXT;
