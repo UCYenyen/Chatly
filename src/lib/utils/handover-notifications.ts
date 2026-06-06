@@ -30,7 +30,7 @@ export async function notifyHandoverEscalation(
     return;
   }
 
-  const message = `🔔 Pelanggan ${ctx.customerPhone} butuh kamu.\n\nPesan terakhir: "${snippet(ctx.lastMessage)}"\n\nKalau sudah selesai ditangani, tandai di sini: ${buildResolveUrl(ctx.resolveToken)}`;
+  const message = `🔔 Pelanggan ${ctx.customerPhone} butuh kamu.\n\nPesan terakhir: "${snippet(ctx.lastMessage)}"`;
   await sendGowaMessage(ctx.notificationPhone, message, ctx.instanceKey);
 }
 
