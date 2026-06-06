@@ -41,6 +41,7 @@ export function BusinessHours() {
   const [notificationPhone, setNotificationPhone] = useState<string>(
     activeBusiness?.notificationPhone ?? "",
   );
+  const [savingTarget, setSavingTarget] = useState<"phone" | "hours" | null>(null);
 
   const setDayClosed = (day: DayKey, closed: boolean) => {
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], closed } }));
@@ -50,12 +51,26 @@ export function BusinessHours() {
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], [field]: value } }));
   };
 
+  const handleSaveNotificationPhone = async () => {
+    setSavingTarget("phone");
+    const updated = await updateBusiness({
+      notificationPhone: notificationPhone.trim() || null,
+    });
+    if (updated) {
+      toast.success("Nomor notifikasi handover disimpan");
+      await refresh();
+    } else {
+      toast.error("Gagal menyimpan nomor notifikasi");
+    }
+    setSavingTarget(null);
+  };
+
   const handleSave = async () => {
+    setSavingTarget("hours");
     const updated = await updateBusiness({
       handoverHoursEnabled: enabled,
       timezone,
       businessHours: hours,
-      notificationPhone: notificationPhone.trim() || null,
     });
     if (updated) {
       toast.success("Jam operasional handover disimpan");
@@ -63,6 +78,7 @@ export function BusinessHours() {
     } else {
       toast.error("Gagal menyimpan jam operasional");
     }
+    setSavingTarget(null);
   };
 
   return (
@@ -88,6 +104,14 @@ export function BusinessHours() {
         <span className="text-[11px] text-outline leading-relaxed">
           Nomor pribadi admin (berbeda dari nomor bot) yang menerima notifikasi saat percakapan dialihkan. Kosongkan untuk menonaktifkan.
         </span>
+        <Button
+          onClick={handleSaveNotificationPhone}
+          disabled={isPending}
+          size="sm"
+          className="self-end mt-1"
+        >
+          {savingTarget === "phone" ? "Menyimpan..." : "Simpan Nomor"}
+        </Button>
       </div>
 
       <div className="flex items-start justify-between gap-4 p-4 rounded-md border border-outline-variant/15 bg-[#08111d] mb-6">
@@ -168,7 +192,7 @@ export function BusinessHours() {
       </div>
 
       <Button onClick={handleSave} disabled={isPending} className="mt-6 self-end">
-        {isPending ? "Menyimpan..." : "Simpan Jam Operasional"}
+        {savingTarget === "hours" ? "Menyimpan..." : "Simpan Jam Operasional"}
       </Button>
     </div>
   );
