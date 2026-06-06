@@ -81,7 +81,9 @@ model CustomerTransaction {
   paidAt           DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+  whatsAppAuthId   String?
   business         Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  whatsAppAuth     WhatsAppAuth? @relation(fields: [whatsAppAuthId], references: [id], onDelete: SetNull)
 
   @@index([businessId])
   @@index([customerPhone])
@@ -275,8 +277,8 @@ model WhatsAppAuth {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   business       Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerTransactions CustomerTransaction[]
 
-  @@unique([businessId, authType])
   @@index([businessId])
   @@map("whatsapp_auth")
 }

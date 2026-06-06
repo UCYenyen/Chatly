@@ -171,6 +171,7 @@ export async function createCustomerTransactionInvoice(
     name: string,
     amount: number,
     description?: string,
+    whatsAppAuthId?: string,
 ): Promise<PaymentInvoiceResult> {
     if (amount < 1000) {
         throw new Error("Minimal transaksi adalah Rp 1.000");
@@ -206,6 +207,7 @@ export async function createCustomerTransactionInvoice(
             xenditExternalId: externalId,
             xenditInvoiceId: response.id,
             invoiceUrl: response.invoiceUrl,
+            whatsAppAuthId: whatsAppAuthId ?? null,
         },
     });
 
@@ -329,13 +331,25 @@ export async function handleXenditCallback(
 
             // Send WhatsApp Confirmation to Customer
             try {
-                const whatsappAuth = await prisma.whatsAppAuth.findFirst({
-                    where: { 
-                        businessId: customerTransaction.businessId,
-                        status: "AUTHENTICATED",
-                        instanceKey: { not: null }
-                    }
-                });
+                const originChannel = customerTransaction.whatsAppAuthId
+                    ? await prisma.whatsAppAuth.findFirst({
+                        where: {
+                            id: customerTransaction.whatsAppAuthId,
+                            status: "AUTHENTICATED",
+                            instanceKey: { not: null },
+                        },
+                    })
+                    : null;
+
+                const whatsappAuth =
+                    originChannel ??
+                    (await prisma.whatsAppAuth.findFirst({
+                        where: {
+                            businessId: customerTransaction.businessId,
+                            status: "AUTHENTICATED",
+                            instanceKey: { not: null },
+                        },
+                    }));
 
                 if (whatsappAuth?.instanceKey) {
                     const amountFormatted = `Rp ${new Intl.NumberFormat("id-ID").format(customerTransaction.amount)}`;

@@ -95,6 +95,26 @@ function normalizePhone(jid: string): string {
   return canonicalizePhone(jid) ?? (jid.split("@")[0]?.split(":")[0] ?? jid);
 }
 
+function extractRecipientPhone(
+  payload: GowaWebhookPayload["payload"],
+): string | null {
+  const chatId = typeof payload.chat_id === "string" ? payload.chat_id : "";
+  const to = typeof payload.to === "string" ? payload.to : "";
+  const target = chatId || to;
+  if (!target || target.includes("@g.us")) return null;
+  return normalizePhone(target);
+}
+
+async function refreshHumanHandoverActivity(
+  businessId: string,
+  phone: string,
+): Promise<void> {
+  await prisma.conversationState.updateMany({
+    where: { businessId, phone, mode: "HUMAN" },
+    data: { mode: "HUMAN" },
+  });
+}
+
 // Gowa can embed the connected phone in several locations inside the payload.
 function extractPhoneFromPayload(
   payload: Record<string, unknown>,
@@ -271,6 +291,14 @@ export async function POST(request: Request) {
   // Guard 1: GoWA sets is_from_me / from_me on outgoing messages.
   const fromMe = 'fromMe' in payload && typeof payload.fromMe === 'boolean' ? (payload.fromMe as boolean) : false;
   if (payload.from_me || payload.is_from_me || fromMe) {
+    const adminReplyRecipient = extractRecipientPhone(payload);
+    if (adminReplyRecipient) {
+      try {
+        await refreshHumanHandoverActivity(whatsappAuth.businessId, adminReplyRecipient);
+      } catch (err) {
+        console.error("[handover] Failed to refresh idle timer on admin reply:", err);
+      }
+    }
     console.log(`[webhook] Ignoring from_me message`);
     return NextResponse.json({ ok: true });
   }
@@ -502,6 +530,12 @@ export async function POST(request: Request) {
         }
       }
 
+      try {
+        await refreshHumanHandoverActivity(whatsappAuth.businessId, from);
+      } catch (err) {
+        console.error("[handover] Failed to refresh idle timer on customer message:", err);
+      }
+
       return NextResponse.json({ ok: true, mode: "HUMAN" });
     }
 
@@ -581,6 +615,7 @@ export async function POST(request: Request) {
           ai.generate_transaction.name,
           ai.generate_transaction.amount,
           ai.generate_transaction.description,
+          whatsappAuth.id,
         );
         invoiceUrl = result.invoiceUrl;
         console.log(`[webhook] Generated transaction link for ${from}: ${invoiceUrl}`);

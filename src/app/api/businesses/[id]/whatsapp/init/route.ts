@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
+import {
+  getBusinessPlan,
+  enforceNumericLimit,
+  PlanLimitError,
+  planLimitResponse,
+} from "@/lib/utils/payment-gateway/plan-guard";
 
 const rawGowaBase = process.env.GOWA_API_BASE || "http://localhost:3001";
 const GOWA_API_BASE = rawGowaBase.replace(/\/+$/, "");
@@ -130,6 +136,22 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   if (!whatsappAuth) {
+    const channelCount = await prisma.whatsAppAuth.count({ where: { businessId } });
+
+    try {
+      enforceNumericLimit(
+        await getBusinessPlan(businessId),
+        "channels",
+        channelCount,
+        "channel WhatsApp",
+      );
+    } catch (error) {
+      if (error instanceof PlanLimitError) {
+        return planLimitResponse(error);
+      }
+      throw error;
+    }
+
     whatsappAuth = await prisma.whatsAppAuth.create({
       data: {
         businessId,
