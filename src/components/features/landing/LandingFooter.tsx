@@ -16,7 +16,7 @@ export function LandingFooter() {
   return (
     <footer ref={footerRef} className="container mx-auto px-10 xl:px-16 flex flex-col sm:flex-row gap-4 items-center justify-between py-8 border-t border-outline-variant/10">
       <span className="text-[9px] text-outline font-mono uppercase tracking-widest font-bold">
-        © 2024 Chatly AI.
+        © {new Date().getFullYear()} Chatly AI.
       </span>
       <div className="flex items-center gap-8">
         <Link href="/syarat-dan-ketentuan" className="text-[9px] text-outline hover:text-on-surface font-mono uppercase tracking-widest transition-colors font-bold">
