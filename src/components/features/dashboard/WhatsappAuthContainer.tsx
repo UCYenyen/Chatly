@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useWhatsAppAuth } from "@/hooks/use-whatsapp-auth";
 import { usePlanGate } from "@/hooks/use-plan-gate";
 import { WhatsappChannelCard } from "./WhatsappChannelCard";
+import { WhatsappConnectMethodDialog } from "./WhatsappConnectMethodDialog";
 import { WhatsappIgnoreList } from "./WhatsappIgnoreList";
 import { FeatureHelpButton } from "@/components/features/feature-unlock/FeatureHelpButton";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface WhatsappAuthContainerProps {
@@ -108,14 +108,12 @@ export function WhatsappAuthContainer({
               Tambahkan channel pertama untuk mulai menerima pesan WhatsApp
             </p>
           </div>
-          <Button
-            onClick={handleAddChannel}
+          <WhatsappConnectMethodDialog
+            triggerLabel={isAddingChannel ? "Menambahkan..." : "Tambah Channel"}
             disabled={!canAdd || isAddingChannel}
-            className="gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            {isAddingChannel ? "Menambahkan..." : "Tambah Channel"}
-          </Button>
+            isAdding={isAddingChannel}
+            onConnectQr={handleAddChannel}
+          />
           {!canAdd && (
             <p className="text-xs text-warning">
               Satu akun WhatsApp per bisnis.
@@ -136,15 +134,13 @@ export function WhatsappAuthContainer({
           ))}
 
           <div className="flex gap-2 pt-2">
-            <Button
-              onClick={handleAddChannel}
+            <WhatsappConnectMethodDialog
+              triggerLabel={isAddingChannel ? "Menambahkan..." : "Tambah Channel"}
+              triggerVariant="outline"
               disabled={!canAdd || isAddingChannel}
-              variant="outline"
-              className="gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              {isAddingChannel ? "Menambahkan..." : "Tambah Channel"}
-            </Button>
+              isAdding={isAddingChannel}
+              onConnectQr={handleAddChannel}
+            />
             {!canAdd && (
               <div className="flex items-center gap-2 text-xs text-warning">
                 <AlertCircle className="w-4 h-4" />

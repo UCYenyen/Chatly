@@ -1,3 +1,5 @@
+const NOTIFICATION_ICON = "/logos/chatly-notification.png";
+
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
@@ -24,6 +26,8 @@ async function deregisterDevice(businessName) {
   }
   await self.registration.showNotification(businessName, {
     body: "Notifikasi handover dipindahkan ke perangkat lain. Perangkat ini berhenti menerima notifikasi.",
+    icon: NOTIFICATION_ICON,
+    badge: NOTIFICATION_ICON,
     tag: "notify-deregister",
     requireInteraction: false,
   });
@@ -53,6 +57,8 @@ self.addEventListener("push", (event) => {
     event.waitUntil(
       self.registration.showNotification(payload.businessName, {
         body: payload.message,
+        icon: NOTIFICATION_ICON,
+        badge: NOTIFICATION_ICON,
         tag: "notify-test",
         renotify: true,
         requireInteraction: false,
@@ -69,6 +75,8 @@ self.addEventListener("push", (event) => {
           payload.customerPhone +
           " butuh dibalas.\n" +
           payload.lastMessage,
+        icon: NOTIFICATION_ICON,
+        badge: NOTIFICATION_ICON,
         tag: payload.tag,
         renotify: true,
         requireInteraction: true,
