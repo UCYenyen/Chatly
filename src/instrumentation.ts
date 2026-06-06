@@ -5,4 +5,8 @@ export async function register(): Promise<void> {
     "@/lib/utils/reports/scheduler"
   );
   startReportScheduler();
+  const { startHandoverReassignScheduler } = await import(
+    "@/lib/utils/notifications/scheduler"
+  );
+  startHandoverReassignScheduler();
 }

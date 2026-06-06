@@ -9,20 +9,13 @@ import { isPaidPlan } from "@/lib/utils/payment-gateway/plans";
 import { createCustomerTransactionInvoice } from "@/lib/utils/payment-gateway/billing-service";
 import { canonicalizePhone } from "@/lib/utils/phone";
 import { getBusinessHoursStatus } from "@/lib/business-hours";
-import {
-  notifyHandoverEscalation,
-  notifyHandoverReminder,
-  notifyHandoverTimeout,
-  sendCustomerHandoverAck,
-} from "@/lib/utils/handover-notifications";
+import { sendCustomerHandoverAck } from "@/lib/utils/handover-notifications";
+import { assignAndPushHandover } from "@/lib/utils/notifications/assignment";
 
 const WEBHOOK_SECRET = process.env.GOWA_WEBHOOK_SECRET;
 
 const HUMAN_MODE_TIMEOUT_MINUTES = Number(process.env.HUMAN_MODE_TIMEOUT_MINUTES) || 30;
 const HUMAN_MODE_TIMEOUT_MS = HUMAN_MODE_TIMEOUT_MINUTES * 60 * 1000;
-
-const HANDOVER_REMINDER_MINUTES = Number(process.env.HANDOVER_REMINDER_MINUTES) || 5;
-const HANDOVER_REMINDER_MS = HANDOVER_REMINDER_MINUTES * 60 * 1000;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!WEBHOOK_SECRET) {
@@ -421,9 +414,6 @@ export async function POST(request: Request) {
     }`,
   );
 
-  const businessName = businessHoursConfig?.name ?? "";
-  const notificationPhone = businessHoursConfig?.notificationPhone ?? null;
-
   let activeHandover =
     currentMode === "HUMAN"
       ? await prisma.handover.findFirst({
@@ -478,32 +468,6 @@ export async function POST(request: Request) {
         `[webhook] HUMAN mode active for ${from} (${handoverAgeMinutes}min / ${HUMAN_MODE_TIMEOUT_MINUTES}min). Bot stays silent — admin is handling this conversation.`,
       );
 
-      if (
-        activeHandover &&
-        !activeHandover.reminderSentAt &&
-        Date.now() - activeHandover.escalatedAt.getTime() > HANDOVER_REMINDER_MS
-      ) {
-        try {
-          await prisma.handover.update({
-            where: { id: activeHandover.id },
-            data: { reminderSentAt: new Date() },
-          });
-          if (hasFeature(activePlan, "adminNotification")) {
-            await notifyHandoverReminder({
-              businessName,
-              customerPhone: from,
-              lastMessage: text,
-              instanceKey,
-              notificationPhone,
-              resolveToken: activeHandover.resolveToken,
-            });
-            console.log(`[handover] Sent reminder for ${from}`);
-          }
-        } catch (err) {
-          console.error("[handover] Failed to send reminder:", err);
-        }
-      }
-
       try {
         await refreshHumanHandoverActivity(whatsappAuth.businessId, from);
       } catch (err) {
@@ -534,18 +498,8 @@ export async function POST(request: Request) {
             resolvedBy: "TIMEOUT",
           },
         });
-        if (hasFeature(activePlan, "adminNotification")) {
-          await notifyHandoverTimeout({
-            businessName,
-            customerPhone: from,
-            lastMessage: text,
-            instanceKey,
-            notificationPhone,
-            resolveToken: activeHandover.resolveToken,
-          });
-        }
       } catch (err) {
-        console.error("[handover] Failed to mark/notify timeout:", err);
+        console.error("[handover] Failed to mark timeout:", err);
       }
       activeHandover = null;
     }
@@ -657,25 +611,19 @@ export async function POST(request: Request) {
 
         if (!existingHandover) {
           const resolveToken = randomBytes(24).toString("hex");
-          await prisma.handover.create({
+          const handover = await prisma.handover.create({
             data: {
               businessId: whatsappAuth.businessId,
               phone: from,
               resolveToken,
             },
+            select: { id: true },
           });
           if (hasFeature(activePlan, "adminNotification")) {
-            await notifyHandoverEscalation({
-              businessName,
-              customerPhone: from,
-              lastMessage: text,
-              instanceKey,
-              notificationPhone,
-              resolveToken,
-            });
+            await assignAndPushHandover(handover.id);
           }
           await sendCustomerHandoverAck(from, instanceKey);
-          console.log(`[handover] Escalation notified for ${from}`);
+          console.log(`[handover] Escalation routed for ${from}`);
         }
       } catch (err) {
         console.error("[handover] Failed to create/notify escalation:", err);
