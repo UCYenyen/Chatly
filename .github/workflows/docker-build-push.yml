@@ -108,9 +108,9 @@ jobs:
               fi
             fi
             if grep -q '^AI_PROVIDER=' .env; then
-              sed -i "s|^AI_PROVIDER=.*|AI_PROVIDER=groq|" .env
+              sed -i "s|^AI_PROVIDER=.*|AI_PROVIDER=gemini|" .env
             else
-              echo "AI_PROVIDER=groq" >> .env
+              echo "AI_PROVIDER=gemini" >> .env
             fi
             JINA_KEY="${{ secrets.JINA_API_KEY }}"
             if [ -n "$JINA_KEY" ]; then
