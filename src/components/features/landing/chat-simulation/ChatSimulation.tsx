@@ -5,6 +5,17 @@ import { ChatBubble } from "./ChatBubble";
 import { SimulationStep } from "@/types/chat-simulation.md";
 import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useRef } from "react";
+import {
+  ArrowLeft,
+  Bot,
+  Camera,
+  Mic,
+  MoreVertical,
+  Paperclip,
+  Phone,
+  Smile,
+  Video,
+} from "lucide-react";
 
 const STEPS: SimulationStep[] = [
   {
@@ -37,9 +48,9 @@ const STEPS: SimulationStep[] = [
     content: (
       <div className="flex flex-col gap-2">
         <p>Pilihan cerdas! Anda bisa melakukan pembayaran melalui Xendit di tautan berikut:</p>
-        <div className="mt-2 p-3 bg-on-surface/5 rounded-lg border border-outline-variant/20 flex items-center justify-between gap-4">
-          <span className="text-xs font-mono text-secondary-fixed truncate">https://checkout.xendit.co/v2/chatly-pro-plan</span>
-          <div className="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold rounded-full uppercase tracking-tighter">
+        <div className="mt-1 flex items-center justify-between gap-3 rounded-lg border border-[#e9edef] bg-[#f5f6f6] p-2.5">
+          <span className="truncate font-mono text-[11px] text-[#027eb5]">https://checkout.xendit.co/v2/chatly-pro-plan</span>
+          <div className="rounded-full bg-[#00a884] px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight text-white">
             Pay Now
           </div>
         </div>
@@ -64,6 +75,16 @@ const STEPS: SimulationStep[] = [
   },
 ];
 
+const CHAT_DOODLE =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cg fill='none' stroke='%23000' stroke-opacity='0.035' stroke-width='1.5'%3E%3Ccircle cx='18' cy='20' r='6'/%3E%3Cpath d='M54 12c5 4 5 10 0 14'/%3E%3Crect x='60' y='54' width='11' height='11' rx='2.5'/%3E%3Cpath d='M12 64h13'/%3E%3Cpath d='M40 46l5 5 5-5'/%3E%3C/g%3E%3C/svg%3E\")";
+
+function formatTime(timestamp: Date): string {
+  return timestamp.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function ChatSimulation() {
   const { messages, isTyping } = useChatSimulation(STEPS);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -72,58 +93,77 @@ export function ChatSimulation() {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   }, [messages, isTyping]);
 
   return (
-    <div className="w-full h-full flex flex-col p-6 bg-surface-container-low/20 backdrop-blur-2xl rounded-[2rem] border border-outline-variant/15 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] overflow-hidden relative group">
-      <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-secondary-fixed/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-primary-fixed/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
-
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-outline-variant/10">
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-secondary-fixed shadow-[0_0_8px_rgba(164,215,48,0.6)]" />
-          <span className="text-[11px] font-mono text-outline uppercase tracking-[0.2em] font-bold">Live Interaction</span>
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-[2rem] border border-black/10 bg-[#efeae2] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.28)]">
+      <div className="flex items-center gap-3 bg-[#075e54] px-3 py-2.5 text-white">
+        <ArrowLeft className="size-5 shrink-0 opacity-90" strokeWidth={2.25} />
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#128c7e]">
+          <Bot className="size-5 text-white" strokeWidth={2} />
         </div>
-        <div className="flex gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-outline-variant/30" />
-          <div className="w-2 h-2 rounded-full bg-outline-variant/30" />
-          <div className="w-2 h-2 rounded-full bg-outline-variant/30" />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-[15px] font-semibold leading-tight">Chatly AI</span>
+          <span className="truncate text-[12px] leading-tight text-white/80">online</span>
         </div>
+        <Video className="size-5 shrink-0 opacity-90" strokeWidth={2} />
+        <Phone className="size-4.5 shrink-0 opacity-90" strokeWidth={2} />
+        <MoreVertical className="size-5 shrink-0 opacity-90" strokeWidth={2} />
       </div>
 
-      <div 
+      <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto pr-2 scrollbar-hide flex flex-col gap-1"
+        className="scrollbar-hide flex flex-1 flex-col overflow-y-auto px-3 py-3"
+        style={{ backgroundColor: "#efeae2", backgroundImage: CHAT_DOODLE }}
       >
+        <div className="mx-auto mb-3 rounded-md bg-[#ffffff]/90 px-3 py-1 text-center text-[12px] text-[#54656f] shadow-sm">
+          Hari ini
+        </div>
+
+        <div className="mx-auto mb-3 flex items-center gap-1.5 rounded-md bg-[#fcf4cb] px-3 py-1.5 text-center text-[12px] text-[#54656f] shadow-sm">
+          <span>🔒</span>
+          <span>Pesan dilindungi enkripsi end-to-end.</span>
+        </div>
+
         <AnimatePresence mode="popLayout" initial={false}>
           {messages.map((msg) => (
-            <ChatBubble key={msg.id} role={msg.role} content={msg.content} />
+            <ChatBubble
+              key={msg.id}
+              role={msg.role}
+              content={msg.content}
+              time={formatTime(msg.timestamp)}
+            />
           ))}
-          
+
           {isTyping && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="flex items-center gap-1.5 bg-surface-container-high/40 backdrop-blur-md border border-outline-variant/20 px-4 py-3 rounded-2xl rounded-tl-none w-fit mb-4"
+              className="relative mb-2 flex w-fit items-center gap-1 rounded-[7.5px] rounded-tl-none bg-white px-3 py-2.5 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
             >
+              <span aria-hidden className="absolute -left-2 top-0 block">
+                <svg viewBox="0 0 8 13" width="8" height="13" className="block">
+                  <path
+                    fill="#ffffff"
+                    d="M2.812,1H8v11.193L1.533,3.568C0.474,2.156,1.042,1,2.812,1z"
+                  />
+                </svg>
+              </span>
               {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
-                  animate={{ 
-                    y: [0, -4, 0],
-                    opacity: [0.4, 1, 0.4]
-                  }}
-                  transition={{ 
-                    repeat: Infinity, 
-                    duration: 0.8, 
+                  animate={{ y: [0, -3, 0], opacity: [0.4, 1, 0.4] }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 0.8,
                     delay: i * 0.15,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                   }}
-                  className="w-1.5 h-1.5 bg-secondary-fixed rounded-full"
+                  className="size-2 rounded-full bg-[#9aa0a6]"
                 />
               ))}
             </motion.div>
@@ -131,26 +171,21 @@ export function ChatSimulation() {
         </AnimatePresence>
       </div>
 
-      <div className="mt-6 pt-5 border-t border-outline-variant/10">
-        <div className="relative group/input">
-          <div className="absolute inset-0 bg-secondary-fixed/5 rounded-full blur-md opacity-0 group-hover/input:opacity-100 transition-opacity" />
-          <div className="relative flex items-center gap-3">
-            <div className="flex-1 h-12 rounded-full bg-surface-container-high/30 border border-outline-variant/20 px-5 flex items-center transition-all group-hover/input:border-outline-variant/40 group-hover/input:bg-surface-container-high/50">
-              <span className="text-outline/50 text-[13px] font-medium tracking-tight">Mengetik pesan...</span>
-            </div>
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 rounded-full bg-[#bff44c] shadow-[0_4px_12px_rgba(191,244,76,0.3)] flex items-center justify-center text-[#141f00] cursor-pointer"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
-              </svg>
-            </motion.div>
-          </div>
+      <div className="flex items-end gap-2 bg-[#f0f2f5] px-2.5 py-2">
+        <div className="flex flex-1 items-center gap-2 rounded-full bg-white px-3 py-2 shadow-sm">
+          <Smile className="size-5 shrink-0 text-[#54656f]" strokeWidth={2} />
+          <span className="flex-1 truncate text-[15px] text-[#8696a0]">Ketik pesan</span>
+          <Paperclip className="size-5 shrink-0 -rotate-45 text-[#54656f]" strokeWidth={2} />
+          <Camera className="size-5 shrink-0 text-[#54656f]" strokeWidth={2} />
         </div>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#00a884] text-white shadow-sm"
+        >
+          <Mic className="size-5" strokeWidth={2} />
+        </motion.div>
       </div>
     </div>
   );
 }
-
