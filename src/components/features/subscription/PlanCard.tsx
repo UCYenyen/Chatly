@@ -70,7 +70,7 @@ export function PlanCard({ plan, isCurrent }: PlanCardProps) {
         <span className="text-2xl sm:text-2xl md:text-3xl font-headline font-bold text-on-surface tracking-tight">
           {isFree ? "Gratis" : isEnterprise ? "Custom" : formatIDR(plan.amount)}
         </span>
-        {!isFree && !isEnterprise && <span className="text-outline text-[11px] sm:text-[12px] md:text-[13px]">/bln</span>}
+        {!isFree && !isEnterprise && <span className="text-outline text-[11px] sm:text-[12px] md:text-[13px]">{plan.interval === "year" ? "/thn" : "/bln"}</span>}
       </div>
 
       <ul className="flex flex-col gap-1.5 sm:gap-2">

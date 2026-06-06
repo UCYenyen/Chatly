@@ -4,9 +4,9 @@ import SpotlightCard from "@/components/personal/SpotlightCard"
 import { CheckCircle2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal"
-import { PLANS } from "@/lib/utils/payment-gateway/plans"
+import { PLANS, PLANS_YEARLY } from "@/lib/utils/payment-gateway/plans"
 import { describePlanFeatures } from "@/lib/utils/payment-gateway/plan-limits"
 import { formatIDR } from "@/components/features/billing/billing-format"
 import { authClient } from "@/lib/utils/auth/auth-client"
@@ -15,6 +15,7 @@ import type { SubscriptionPlan } from "@prisma/client"
 export function PricingSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const { data: session } = authClient.useSession()
+  const [isYearly, setIsYearly] = useState<boolean>(false)
   useGsapScrollReveal(sectionRef, {
     start: "top 84%",
     y: 10,
@@ -27,16 +28,20 @@ export function PricingSection() {
 
   const plans = PLAN_IDS.map((planId) => {
     const plan = PLANS[planId]
+    const yearlyPlan = PLANS_YEARLY[planId]
+    const isCustom = plan.amount === 0
+    const activePlan = isYearly && yearlyPlan ? yearlyPlan : plan
     const features = describePlanFeatures(planId)
-    const includedFeatures = features.filter((f) => f.included).slice(0, 5)
-    const notableLockedFeatures = features.filter((f) => !f.included).slice(0, 2)
+    const includedFeatures = features.filter((f) => f.included)
+    const lockedFeatures = features.filter((f) => !f.included)
 
     return {
       id: planId,
       name: plan.name,
-      price: plan.amount === 0 ? "Kustom" : formatIDR(plan.amount),
+      price: isCustom ? "Kustom" : formatIDR(activePlan.amount),
+      priceSuffix: isCustom ? null : isYearly ? "/thn" : "/bln",
       description: plan.description,
-      features: [...includedFeatures, ...notableLockedFeatures],
+      features: [...includedFeatures, ...lockedFeatures],
       buttonText:
         planId === "STARTER" ? "Mulai Sekarang" :
         planId === "GROWTH" ? "Skala Sekarang" :
@@ -53,6 +58,38 @@ export function PricingSection() {
         <p className="text-[14px] w-full text-start sm:text-center text-outline max-w-lg leading-relaxed">
           Solusi skalabel untuk bisnis dari semua ukuran. Tanpa biaya tersembunyi, hanya performa murni.
         </p>
+      </div>
+
+      <div className="flex items-center gap-2 bg-surface-container-high/50 p-1 rounded-lg w-fit mb-12">
+        <Button
+          type="button"
+          variant={isYearly ? "ghost" : "default"}
+          size="sm"
+          onClick={() => setIsYearly(false)}
+          className={`${
+            isYearly
+              ? "text-outline"
+              : "bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90"
+          } font-bold text-[12px] px-4 py-1.5 h-auto rounded-md transition-all`}
+        >
+          Bulanan
+        </Button>
+        <Button
+          type="button"
+          variant={!isYearly ? "ghost" : "default"}
+          size="sm"
+          onClick={() => setIsYearly(true)}
+          className={`${
+            !isYearly
+              ? "text-outline"
+              : "bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90"
+          } font-bold text-[12px] px-4 py-1.5 h-auto rounded-md transition-all`}
+        >
+          Tahunan
+          <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 bg-success/20 text-success rounded">
+            Hemat 15%
+          </span>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full">
@@ -75,7 +112,7 @@ export function PricingSection() {
               </span>
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-2xl font-headline font-bold text-on-surface leading-none">{plan.price}</span>
-                {plan.price !== "Kustom" && <span className="text-[12px] text-outline">/bln</span>}
+                {plan.priceSuffix && <span className="text-[12px] text-outline">{plan.priceSuffix}</span>}
               </div>
               <span className="text-[11px] font-bold font-mono text-[#a4d730] block">
                 {plan.description}

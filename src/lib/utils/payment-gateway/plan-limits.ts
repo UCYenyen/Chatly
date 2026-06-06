@@ -33,31 +33,28 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     customPersonality: false,
     advancedAnalytics: false,
     dataExport: false,
-    aiInsight: false,
-    apiAccess: false,
     slaSupport: false,
+    adminNotification: false,
   },
   STARTER: {
     channels: 5,
     knowledgeDocuments: 50,
     ignoredContacts: 50,
     customPersonality: true,
-    advancedAnalytics: true,
-    dataExport: true,
-    aiInsight: false,
-    apiAccess: false,
+    advancedAnalytics: false,
+    dataExport: false,
     slaSupport: false,
+    adminNotification: false,
   },
   GROWTH: {
     channels: 15,
     knowledgeDocuments: 200,
     ignoredContacts: "unlimited",
     customPersonality: true,
-    advancedAnalytics: true,
+    advancedAnalytics: false,
     dataExport: true,
-    aiInsight: true,
-    apiAccess: true,
     slaSupport: false,
+    adminNotification: false,
   },
   PRO: {
     channels: "unlimited",
@@ -66,9 +63,8 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     customPersonality: true,
     advancedAnalytics: true,
     dataExport: true,
-    aiInsight: true,
-    apiAccess: true,
     slaSupport: true,
+    adminNotification: true,
   },
   ENTERPRISE: {
     channels: "unlimited",
@@ -77,9 +73,8 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     customPersonality: true,
     advancedAnalytics: true,
     dataExport: true,
-    aiInsight: true,
-    apiAccess: true,
     slaSupport: true,
+    adminNotification: true,
   },
 };
 
@@ -149,11 +144,10 @@ const NUMERIC_FEATURE_LABELS: Record<NumericLimitKey, (value: string) => string>
 
 const BOOLEAN_FEATURE_LABELS: Record<BooleanFeatureKey, string> = {
   customPersonality: "Kepribadian AI kustom",
-  advancedAnalytics: "Analitik lanjutan (Verified Conversion, Token Usage)",
+  advancedAnalytics: "Analitik lanjutan (Funnel, Conversion, Intent)",
   dataExport: "Ekspor data CSV",
-  aiInsight: "AI Insight & rekomendasi",
-  apiAccess: "Akses API & webhook",
   slaSupport: "SLA & dukungan prioritas 24/7",
+  adminNotification: "Notifikasi admin via WhatsApp",
 };
 
 const NUMERIC_FEATURE_ORDER: ReadonlyArray<NumericLimitKey> = [
@@ -166,15 +160,11 @@ const BOOLEAN_FEATURE_ORDER: ReadonlyArray<BooleanFeatureKey> = [
   "customPersonality",
   "advancedAnalytics",
   "dataExport",
-  "aiInsight",
-  "apiAccess",
   "slaSupport",
+  "adminNotification",
 ];
 
 export const ALWAYS_INCLUDED_FEATURES: ReadonlyArray<string> = [
-  "Auto-reply bot dari dokumen pelatihan",
-  "Deteksi niat beli & kirim invoice",
-  "Conversion Rate & Intent Dashboard",
   "Handoff AI / Manusia",
 ];
 
@@ -189,6 +179,11 @@ export function describePlanFeatures(plan: SubscriptionPlan): PlanFeature[] {
     included: hasFeature(plan, key),
   }));
 
-  return [...numeric, ...boolean];
+  const alwaysIncluded = ALWAYS_INCLUDED_FEATURES.map<PlanFeature>((label) => ({
+    label,
+    included: true,
+  }));
+
+  return [...numeric, ...boolean, ...alwaysIncluded];
 }
 

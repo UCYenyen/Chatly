@@ -9,9 +9,8 @@ export type BooleanFeatureKey =
   | "customPersonality"
   | "advancedAnalytics"
   | "dataExport"
-  | "aiInsight"
-  | "apiAccess"
-  | "slaSupport";
+  | "slaSupport"
+  | "adminNotification";
 
 export type LimitValue = number | "unlimited";
 
@@ -22,9 +21,8 @@ export interface PlanLimits {
   customPersonality: boolean;
   advancedAnalytics: boolean;
   dataExport: boolean;
-  aiInsight: boolean;
-  apiAccess: boolean;
   slaSupport: boolean;
+  adminNotification: boolean;
 }
 
 export interface PlanGateResult {
