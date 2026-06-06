@@ -5,7 +5,6 @@ import { useRef } from "react"
 import { useGsapScrollReveal } from "@/hooks/use-gsap-scroll-reveal"
 
 export function LandingFooter() {
-  const links = ["Privasi", "Ketentuan", "Keamanan", "Status"]
   const footerRef = useRef<HTMLElement | null>(null)
 
   useGsapScrollReveal(footerRef, {
@@ -20,11 +19,9 @@ export function LandingFooter() {
         © 2024 Chatly AI.
       </span>
       <div className="flex items-center gap-8">
-        {links.map(link => (
-          <Link key={link} href={`/${link.toLowerCase()}`} className="text-[9px] text-outline hover:text-on-surface font-mono uppercase tracking-widest transition-colors font-bold">
-            {link}
-          </Link>
-        ))}
+        <Link href="/syarat-dan-ketentuan" className="text-[9px] text-outline hover:text-on-surface font-mono uppercase tracking-widest transition-colors font-bold">
+          Syarat dan Ketentuan
+        </Link>
       </div>
     </footer>
   )
