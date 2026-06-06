@@ -5,6 +5,15 @@ import { ExternalLink, ListFilter, RefreshCcw, Search, CheckCircle2, Clock, Aler
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatIDR, formatDateTimeID } from "@/components/features/billing/billing-format";
 import { CustomerTransactionTableSkeleton } from "./CustomerTransactionTableSkeleton";
 import type { PaymentStatus } from "@prisma/client";
@@ -16,6 +25,8 @@ const STATUS_LABEL: Record<PaymentStatus, string> = {
   FAILED: "Gagal",
   EXPIRED: "Kadaluarsa",
 };
+
+const STATUS_ORDER: PaymentStatus[] = ["PAID", "PENDING", "FAILED", "EXPIRED"];
 
 function statusClass(status: PaymentStatus): string {
   switch (status) {
@@ -45,7 +56,16 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
   const [transactions, setTransactions] = useState<CustomerTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<PaymentStatus[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+
+  const toggleStatus = (status: PaymentStatus) => {
+    setStatusFilter((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status],
+    );
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -70,11 +90,17 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
     fetchTransactions();
   }, [fetchTransactions]);
 
-  const filtered = transactions.filter(tx => 
-    tx.name.toLowerCase().includes(search.toLowerCase()) || 
-    tx.customerPhone.includes(search) ||
-    (tx.description && tx.description.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = transactions.filter((tx) => {
+    const matchesSearch =
+      tx.name.toLowerCase().includes(search.toLowerCase()) ||
+      tx.customerPhone.includes(search) ||
+      (tx.description
+        ? tx.description.toLowerCase().includes(search.toLowerCase())
+        : false);
+    const matchesStatus =
+      statusFilter.length === 0 || statusFilter.includes(tx.status);
+    return matchesSearch && matchesStatus;
+  });
 
   if (!isMounted) {
     return <CustomerTransactionTableSkeleton />;
@@ -110,14 +136,43 @@ export function CustomerTransactionTable({ businessId }: { businessId: string })
           >
             <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors text-outline hover:text-on-surface"
-          >
-            <ListFilter className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="relative bg-surface-container border border-outline-variant/15 hover:bg-surface-container-high transition-colors text-outline hover:text-on-surface data-[state=open]:text-on-surface"
+              >
+                <ListFilter className="w-4 h-4" />
+                {statusFilter.length > 0 && (
+                  <span className="absolute -top-1 -right-1 size-2 rounded-full bg-secondary-fixed" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Filter status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {STATUS_ORDER.map((status) => (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  checked={statusFilter.includes(status)}
+                  onCheckedChange={() => toggleStatus(status)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  {STATUS_LABEL[status]}
+                </DropdownMenuCheckboxItem>
+              ))}
+              {statusFilter.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => setStatusFilter([])}>
+                    Reset filter
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
