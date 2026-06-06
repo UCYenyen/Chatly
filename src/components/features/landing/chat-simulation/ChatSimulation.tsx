@@ -99,7 +99,7 @@ export function ChatSimulation() {
   }, [messages, isTyping]);
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-[2rem] border border-black/10 bg-[#efeae2] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.28)]">
+    <div className="flex h-full w-full flex-col overflow-hidden border rounded-2xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.28)]">
       <div className="flex items-center gap-3 bg-[#075e54] px-3 py-2.5 text-white">
         <ArrowLeft className="size-5 shrink-0 opacity-90" strokeWidth={2.25} />
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#128c7e]">
