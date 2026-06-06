@@ -3,15 +3,6 @@ import type { HandoverNotificationContext } from "@/types/handover.md";
 
 const MESSAGE_SNIPPET_LIMIT = 160;
 
-function resolveBaseUrl(): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.BETTER_AUTH_URL ?? "";
-  return base.replace(/\/+$/, "");
-}
-
-export function buildResolveUrl(token: string): string {
-  return `${resolveBaseUrl()}/api/whatsapp/handover/resolve?token=${token}`;
-}
-
 function snippet(message: string): string {
   const trimmed = message.trim();
   if (trimmed.length <= MESSAGE_SNIPPET_LIMIT) {
@@ -41,7 +32,7 @@ export async function notifyHandoverReminder(
     return;
   }
 
-  const message = `⏳ Pengingat: pelanggan ${ctx.customerPhone} masih menunggu dan belum ditandai selesai.\n\nTandai selesai: ${buildResolveUrl(ctx.resolveToken)}`;
+  const message = `⏳ Pengingat: pelanggan ${ctx.customerPhone} masih menunggu dan belum ditandai selesai.`;
   await sendGowaMessage(ctx.notificationPhone, message, ctx.instanceKey);
 }
 

@@ -7,7 +7,14 @@ import type {
   BusinessListResponse,
   CreateBusinessRequest,
 } from "@/types/business.md";
+import type { PlanLimitErrorBody } from "@/types/plan-limits.md";
 import { toBusinessDTO } from "@/lib/utils/business-dto";
+import {
+  getUserPlan,
+  enforceNumericLimit,
+  PlanLimitError,
+  planLimitResponse,
+} from "@/lib/utils/payment-gateway/plan-guard";
 
 interface ApiErrorResponse {
   message: string;
@@ -31,7 +38,7 @@ export async function GET(): Promise<
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<BusinessDTO | ApiErrorResponse>> {
+): Promise<NextResponse<BusinessDTO | ApiErrorResponse | PlanLimitErrorBody>> {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user) {
@@ -50,6 +57,17 @@ export async function POST(
       typeof body.description === "string" && body.description.trim().length > 0
         ? body.description.trim()
         : null;
+
+    const userPlan = await getUserPlan(session.user.id);
+    const existingBusinessCount = await prisma.business.count({
+      where: { userId: session.user.id },
+    });
+    try {
+      enforceNumericLimit(userPlan, "channels", existingBusinessCount, "channel WhatsApp");
+    } catch (error) {
+      if (error instanceof PlanLimitError) return planLimitResponse(error);
+      throw error;
+    }
 
     const created = await prisma.business.create({
       data: {

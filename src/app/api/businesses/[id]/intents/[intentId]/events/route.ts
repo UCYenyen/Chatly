@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/utils/auth/auth";
 import prisma from "@/lib/utils/prisma";
+import {
+  getBusinessPlan,
+  enforceFeature,
+  PlanLimitError,
+  planLimitResponse,
+} from "@/lib/utils/payment-gateway/plan-guard";
 
 interface RouteContext {
   params: Promise<{ id: string; intentId: string }>;
@@ -27,6 +33,14 @@ export async function GET(
 
     if (!business || business.userId !== session.user.id) {
       return NextResponse.json({ message: "Bisnis tidak ditemukan atau akses ditolak" }, { status: 404 });
+    }
+
+    const plan = await getBusinessPlan(businessId);
+    try {
+      enforceFeature(plan, "advancedAnalytics", "Analitik lanjutan");
+    } catch (error) {
+      if (error instanceof PlanLimitError) return planLimitResponse(error);
+      throw error;
     }
 
     // Get the intent to know its name

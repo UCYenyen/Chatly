@@ -7,7 +7,7 @@ import { PerformanceFunnel } from "@/components/features/analytics/PerformanceFu
 import { MonthlyReport } from "@/components/features/analytics/MonthlyReport";
 import { ActiveBusinessBanner } from "@/components/features/business/ActiveBusinessBanner";
 import { FeatureLockOverlay } from "@/components/features/business/FeatureLockOverlay";
-import { useBusinessSubscription } from "@/hooks";
+import { usePlanGate } from "@/hooks";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { BarChart2, Home } from "lucide-react";
@@ -15,7 +15,9 @@ import { BarChart2, Home } from "lucide-react";
 export default function AnalyticsPage() {
   const params = useParams();
   const businessId = params.businessId as string;
-  const { isPaid, isLoading } = useBusinessSubscription(businessId);
+  const gate = usePlanGate();
+  const pageLocked = gate.isLoading ? false : !gate.hasFeature("dataExport");
+  const advancedLocked = gate.isLoading ? false : !gate.hasFeature("advancedAnalytics");
 
   return (
     <div className="p-4 pt-6 md:p-8 md:pt-8 lg:p-10 w-full mx-auto max-w-[1600px] flex flex-col min-h-full">
@@ -43,24 +45,27 @@ export default function AnalyticsPage() {
       </div>
 
       <FeatureLockOverlay
-        isLocked={isLoading ? false : !isPaid}
+        isLocked={pageLocked}
         featureName="Analitik"
         businessId={businessId}
       >
-        {/* Performance Funnel */}
-        <div className="mb-8 w-full">
-          <PerformanceFunnel />
-        </div>
+        <FeatureLockOverlay
+          isLocked={advancedLocked}
+          featureName="Analitik Lanjutan"
+          businessId={businessId}
+        >
+          <div className="mb-8 w-full">
+            <PerformanceFunnel />
+          </div>
 
-        {/* Conversion Rate Card */}
-        <div className="mb-8 w-full">
-          <ConversionRateCard />
-        </div>
+          <div className="mb-8 w-full">
+            <ConversionRateCard />
+          </div>
 
-        {/* Intent Dashboard */}
-        <div className="flex-1 mb-8 w-full">
-          <IntentDashboard />
-        </div>
+          <div className="flex-1 mb-8 w-full">
+            <IntentDashboard />
+          </div>
+        </FeatureLockOverlay>
 
         <div className="mb-8 w-full">
           <MonthlyReport />

@@ -7,6 +7,13 @@ import {
   runReportForBusiness,
 } from "@/lib/utils/reports/scheduler";
 import type { SendReportResponse } from "@/types/report.md";
+import type { PlanLimitErrorBody } from "@/types/plan-limits.md";
+import {
+  getBusinessPlan,
+  enforceFeature,
+  PlanLimitError,
+  planLimitResponse,
+} from "@/lib/utils/payment-gateway/plan-guard";
 
 interface ApiErrorResponse {
   message: string;
@@ -31,7 +38,7 @@ function parsePeriod(
 export async function POST(
   request: Request,
   context: RouteContext,
-): Promise<NextResponse<SendReportResponse | ApiErrorResponse>> {
+): Promise<NextResponse<SendReportResponse | ApiErrorResponse | PlanLimitErrorBody>> {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user) {
@@ -48,6 +55,14 @@ export async function POST(
         { message: "Bisnis tidak ditemukan" },
         { status: 404 },
       );
+    }
+
+    const plan = await getBusinessPlan(id);
+    try {
+      enforceFeature(plan, "dataExport", "Ekspor data CSV");
+    } catch (error) {
+      if (error instanceof PlanLimitError) return planLimitResponse(error);
+      throw error;
     }
     if (!business.monthlyReportEmail) {
       return NextResponse.json(

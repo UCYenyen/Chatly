@@ -4,6 +4,7 @@ import prisma from "@/lib/utils/prisma";
 import { sendGowaMessage } from "@/lib/utils/whatsapp";
 import { runChatlyAIEngine } from "@/lib/ai-engine";
 import { getBusinessPlan } from "@/lib/utils/payment-gateway/plan-guard";
+import { hasFeature } from "@/lib/utils/payment-gateway/plan-limits";
 import { isPaidPlan } from "@/lib/utils/payment-gateway/plans";
 import { createCustomerTransactionInvoice } from "@/lib/utils/payment-gateway/billing-service";
 import { canonicalizePhone } from "@/lib/utils/phone";
@@ -485,15 +486,17 @@ export async function POST(request: Request) {
             where: { id: activeHandover.id },
             data: { reminderSentAt: new Date() },
           });
-          await notifyHandoverReminder({
-            businessName,
-            customerPhone: from,
-            lastMessage: text,
-            instanceKey,
-            notificationPhone,
-            resolveToken: activeHandover.resolveToken,
-          });
-          console.log(`[handover] Sent reminder for ${from}`);
+          if (hasFeature(activePlan, "adminNotification")) {
+            await notifyHandoverReminder({
+              businessName,
+              customerPhone: from,
+              lastMessage: text,
+              instanceKey,
+              notificationPhone,
+              resolveToken: activeHandover.resolveToken,
+            });
+            console.log(`[handover] Sent reminder for ${from}`);
+          }
         } catch (err) {
           console.error("[handover] Failed to send reminder:", err);
         }
@@ -523,14 +526,16 @@ export async function POST(request: Request) {
             resolvedBy: "TIMEOUT",
           },
         });
-        await notifyHandoverTimeout({
-          businessName,
-          customerPhone: from,
-          lastMessage: text,
-          instanceKey,
-          notificationPhone,
-          resolveToken: activeHandover.resolveToken,
-        });
+        if (hasFeature(activePlan, "adminNotification")) {
+          await notifyHandoverTimeout({
+            businessName,
+            customerPhone: from,
+            lastMessage: text,
+            instanceKey,
+            notificationPhone,
+            resolveToken: activeHandover.resolveToken,
+          });
+        }
       } catch (err) {
         console.error("[handover] Failed to mark/notify timeout:", err);
       }
@@ -650,14 +655,16 @@ export async function POST(request: Request) {
               resolveToken,
             },
           });
-          await notifyHandoverEscalation({
-            businessName,
-            customerPhone: from,
-            lastMessage: text,
-            instanceKey,
-            notificationPhone,
-            resolveToken,
-          });
+          if (hasFeature(activePlan, "adminNotification")) {
+            await notifyHandoverEscalation({
+              businessName,
+              customerPhone: from,
+              lastMessage: text,
+              instanceKey,
+              notificationPhone,
+              resolveToken,
+            });
+          }
           await sendCustomerHandoverAck(from, instanceKey);
           console.log(`[handover] Escalation notified for ${from}`);
         }
