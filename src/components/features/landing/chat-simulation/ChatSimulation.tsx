@@ -48,19 +48,14 @@ const STEPS: SimulationStep[] = [
     content: (
       <div className="flex flex-col gap-2">
         <p>Pilihan cerdas! Anda bisa melakukan pembayaran melalui Xendit di tautan berikut:</p>
-        <div className="mt-1 flex items-center justify-between gap-3 rounded-lg border border-[#e9edef] bg-[#f5f6f6] p-2.5">
-          <span className="truncate font-mono text-[11px] text-[#027eb5]">https://checkout.xendit.co/v2/chatly-pro-plan</span>
-          <div className="rounded-full bg-[#00a884] px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight text-white">
-            Pay Now
-          </div>
-        </div>
+        <span className="truncate font-mono text-[#027eb5]">https://checkout.xendit.co/v2/chatly-pro-plan</span>
       </div>
     ),
     delay: 2000,
   },
   {
     role: "ai",
-    content: "Pembayaran terverifikasi! 🎉 Akun Anda telah ditingkatkan ke paket Pro. Selamat menggunakan Chatly!",
+    content: "Pembayaran Berhasil \n\n Terima kasih, pembayaran sebesar Rp.749.000 untuk Paket Chatly PRO telah kami terima.!",
     delay: 2500,
   },
   {

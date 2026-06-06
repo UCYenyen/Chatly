@@ -353,7 +353,7 @@ export async function handleXenditCallback(
 
                 if (whatsappAuth?.instanceKey) {
                     const amountFormatted = `Rp ${new Intl.NumberFormat("id-ID").format(customerTransaction.amount)}`;
-                    const messageText = `✅ *Pembayaran Berhasil*\n\nTerima kasih, pembayaran sebesar *${amountFormatted}* untuk *${customerTransaction.name}* telah kami terima.`;
+                    const messageText = `*Pembayaran Berhasil*\n\nTerima kasih, pembayaran sebesar *${amountFormatted}* untuk *${customerTransaction.name}* telah kami terima.`;
                     
                     await sendGowaMessage(customerTransaction.customerPhone, messageText, whatsappAuth.instanceKey);
                     
