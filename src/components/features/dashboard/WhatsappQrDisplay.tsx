@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWhatsAppQrPolling } from "@/hooks/use-whatsapp-qr-polling";
 
 interface WhatsappQrDisplayProps {
   businessId: string;
+  channelId: string;
   isWaitingForAuth: boolean;
   onAuthSuccess: () => void;
   onRefresh: () => Promise<void>;
@@ -14,6 +15,7 @@ interface WhatsappQrDisplayProps {
 
 export function WhatsappQrDisplay({
   businessId,
+  channelId,
   isWaitingForAuth,
   onAuthSuccess,
   onRefresh,
@@ -23,6 +25,7 @@ export function WhatsappQrDisplay({
 
   useWhatsAppQrPolling({
     businessId,
+    channelId,
     isActive: isWaitingForAuth,
     onQrUpdate: (newQr) => {
       setQrCode(newQr);
@@ -59,6 +62,7 @@ export function WhatsappQrDisplay({
             {qrCode.trim().startsWith("<svg") ? (
               <div dangerouslySetInnerHTML={{ __html: qrCode }} />
             ) : (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={
                   qrCode.startsWith("data:") || qrCode.startsWith("http")

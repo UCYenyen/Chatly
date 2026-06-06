@@ -21,13 +21,13 @@ export interface WhatsAppAuthDTO {
 export interface InitWhatsAppAuthResponse {
   qrCode: string;
   qrCodeExpiry: string;
+  deviceId: string;
+  channelId: string;
   message: string;
 }
 
 export interface WhatsAppStatusResponse {
-  auth: WhatsAppAuthDTO;
-  qrCode?: string;
-  qrCodeExpiry?: string;
+  channels: WhatsAppAuthDTO[];
 }
 
 export interface WhatsAppLogoutResponse {

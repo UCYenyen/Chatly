@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { WhatsAppAuthType } from "@/types/whatsapp.md";
+import { toast } from "sonner";
+import { Plus, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useWhatsAppAuth } from "@/hooks/use-whatsapp-auth";
-import { WhatsappAuthTypeSelector } from "./WhatsappAuthTypeSelector";
-import { WhatsappQrDisplay } from "./WhatsappQrDisplay";
-import { WhatsappAuthStatus } from "./WhatsappAuthStatus";
-import { WhatsappLogoutButton } from "./WhatsappLogoutButton";
+import { usePlanGate } from "@/hooks/use-plan-gate";
+import { WhatsappChannelCard } from "./WhatsappChannelCard";
 import { WhatsappIgnoreList } from "./WhatsappIgnoreList";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WhatsappAuthContainerProps {
   businessId: string;
@@ -18,89 +18,156 @@ interface WhatsappAuthContainerProps {
 export function WhatsappAuthContainer({
   businessId,
 }: WhatsappAuthContainerProps) {
-  const { auth, isLoading, error, initAuth, logout, refetch } =
+  const { channels, isLoading, error, addChannel, refreshChannelQr, logoutChannel, refetch } =
     useWhatsAppAuth(businessId);
-  const [selectedType, setSelectedType] = useState<WhatsAppAuthType | null>(
-    auth?.authType ?? null
-  );
-  const [isWaitingForAuth, setIsWaitingForAuth] = useState(false);
+  const { numericLimit, canAddMore } = usePlanGate();
+  const router = useRouter();
 
-  const handleSelectType = async (type: WhatsAppAuthType) => {
-    setSelectedType(type);
+  const [isAddingChannel, setIsAddingChannel] = useState(false);
+
+  const channelLimit = numericLimit("channels");
+  const canAdd = canAddMore("channels", channels.length);
+  const hasAuthenticatedChannel = channels.some(c => c.status === "AUTHENTICATED");
+
+  const handleAddChannel = async () => {
+    setIsAddingChannel(true);
     try {
-      await initAuth(type);
-      setIsWaitingForAuth(true);
+      const channelId = await addChannel();
+      if (channelId) {
+        void refetch();
+      }
     } catch (err) {
-      console.error("Failed to initialize auth:", err);
+      const message = err instanceof Error ? err.message : "Failed to add channel";
+      toast.error(message);
+    } finally {
+      setIsAddingChannel(false);
+    }
+  };
+
+  const handleDisconnect = async (channelId: string) => {
+    try {
+      await logoutChannel(channelId);
+      toast.success("Channel disconnected successfully");
+    } catch {
+      toast.error("Failed to disconnect channel");
+    }
+  };
+
+  const handleRefreshQr = async (channelId: string) => {
+    try {
+      await refreshChannelQr(channelId);
+    } catch {
+      toast.error("Failed to refresh QR code");
     }
   };
 
   const handleAuthSuccess = () => {
-    setIsWaitingForAuth(false);
     void refetch();
   };
 
-  const handleRefresh = async () => {
-    await initAuth(selectedType || "GOWA");
-  };
-
-  const isAuthenticated = auth?.status === "AUTHENTICATED";
+  const limitString = channelLimit === "unlimited" ? "∞" : String(channelLimit);
 
   return (
     <div className="flex flex-col gap-6 p-6 bg-surface-container rounded-lg border border-outline-variant/20">
-      <div>
-        <h3 className="text-lg font-headline font-bold text-on-surface">
-          Integrasi WhatsApp
-        </h3>
-        <p className="text-sm text-outline mt-1">
-          Kelola koneksi WhatsApp untuk bisnis Anda
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-lg font-headline font-bold text-on-surface">
+            Integrasi WhatsApp
+          </h3>
+          <p className="text-sm text-outline mt-1">
+            Kelola koneksi WhatsApp untuk bisnis Anda
+          </p>
+        </div>
+        <div className="px-3 py-1 bg-surface-container-high rounded-full border border-outline-variant/20 text-xs font-medium text-on-surface">
+          {channels.length}/{limitString} channel
+        </div>
       </div>
 
-      <WhatsappAuthStatus auth={auth} isLoading={isLoading} />
-
-      {isAuthenticated && <WhatsappIgnoreList businessId={businessId} />}
-
-      {error && !isWaitingForAuth && (
+      {error && (
         <div className="flex items-start gap-3 p-4 bg-error-container rounded-lg border border-error">
           <AlertCircle className="w-5 h-5 text-error mt-0.5" />
           <p className="text-sm text-error">{error}</p>
         </div>
       )}
 
-      {!isAuthenticated && !isWaitingForAuth && (
-        <WhatsappAuthTypeSelector
-          selectedType={selectedType}
-          onSelect={handleSelectType}
-          isLoading={isLoading}
-        />
-      )}
-
-      {isWaitingForAuth && (
-        <WhatsappQrDisplay
-          businessId={businessId}
-          isWaitingForAuth={isWaitingForAuth}
-          onAuthSuccess={handleAuthSuccess}
-          onRefresh={handleRefresh}
-        />
-      )}
-
-      <div className="flex gap-2 justify-end flex-wrap">
-        {isWaitingForAuth && (
+      {isLoading ? (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+      ) : channels.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-4 py-8 px-6 rounded-lg border border-outline-variant/20 bg-surface-container-low">
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-on-surface mb-2">
+              Belum ada channel WhatsApp
+            </h4>
+            <p className="text-xs text-outline mb-4">
+              Tambahkan channel pertama untuk mulai menerima pesan WhatsApp
+            </p>
+          </div>
           <Button
-            onClick={() => setIsWaitingForAuth(false)}
-            variant="outline"
-            disabled={isLoading}
+            onClick={handleAddChannel}
+            disabled={!canAdd || isAddingChannel}
+            className="gap-2"
           >
-            Batal
+            <Plus className="w-4 h-4" />
+            {isAddingChannel ? "Menambahkan..." : "Tambah Channel"}
           </Button>
-        )}
-        <WhatsappLogoutButton
-          isAuthenticated={isAuthenticated}
-          isLoading={isLoading}
-          onLogout={logout}
-        />
-      </div>
+          {!canAdd && (
+            <p className="text-xs text-warning">
+              Batas {channelLimit} channel untuk paket Anda.{" "}
+              <button
+                onClick={() => router.push(`/business/${businessId}/langganan`)}
+                className="underline text-secondary-fixed hover:text-secondary-fixed/90"
+              >
+                Upgrade paket
+              </button>
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {channels.map((channel) => (
+            <WhatsappChannelCard
+              key={channel.id}
+              businessId={businessId}
+              channel={channel}
+              onDisconnect={handleDisconnect}
+              onRefreshQr={handleRefreshQr}
+              onAuthSuccess={handleAuthSuccess}
+            />
+          ))}
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              onClick={handleAddChannel}
+              disabled={!canAdd || isAddingChannel}
+              variant="outline"
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              {isAddingChannel ? "Menambahkan..." : "Tambah Channel"}
+            </Button>
+            {!canAdd && (
+              <div className="flex items-center gap-2 text-xs text-warning">
+                <AlertCircle className="w-4 h-4" />
+                <span>
+                  Batas {channelLimit} channel.{" "}
+                  <button
+                    onClick={() => router.push(`/business/${businessId}/langganan`)}
+                    className="underline text-secondary-fixed hover:text-secondary-fixed/90"
+                  >
+                    Upgrade
+                  </button>
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {hasAuthenticatedChannel && <WhatsappIgnoreList businessId={businessId} />}
     </div>
   );
 }

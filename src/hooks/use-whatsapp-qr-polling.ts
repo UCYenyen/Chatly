@@ -2,8 +2,16 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
+interface QrPollingResponse {
+  status: string;
+  qrCode?: string;
+  qrCodeExpiry?: string;
+  phoneNumber?: string;
+}
+
 interface UseWhatsAppQrPollingOptions {
   businessId: string;
+  channelId: string;
   isActive: boolean;
   onQrUpdate: (qrCode: string, expiry: string) => void;
   onAuthenticated: () => void;
@@ -11,15 +19,9 @@ interface UseWhatsAppQrPollingOptions {
   pollInterval?: number;
 }
 
-/**
- * Polls GET /api/businesses/:id/whatsapp/status to detect when the
- * user has scanned the QR code and the device is logged in.
- *
- * This endpoint calls Gowa's /devices/:device_id/status in real-time,
- * so the frontend doesn't need to talk to Gowa directly.
- */
 export function useWhatsAppQrPolling({
   businessId,
+  channelId,
   isActive,
   onQrUpdate,
   onAuthenticated,
@@ -31,10 +33,11 @@ export function useWhatsAppQrPolling({
   const onQrUpdateRef = useRef(onQrUpdate);
   const onExpiredRef = useRef(onExpired);
 
-  // Keep refs current to avoid stale closures in the interval
-  onAuthenticatedRef.current = onAuthenticated;
-  onQrUpdateRef.current = onQrUpdate;
-  onExpiredRef.current = onExpired;
+  useEffect(() => {
+    onAuthenticatedRef.current = onAuthenticated;
+    onQrUpdateRef.current = onQrUpdate;
+    onExpiredRef.current = onExpired;
+  }, [onAuthenticated, onQrUpdate, onExpired]);
 
   const clearPoll = useCallback(() => {
     if (intervalRef.current) {
@@ -52,41 +55,40 @@ export function useWhatsAppQrPolling({
     const poll = async () => {
       try {
         const res = await fetch(
-          `/api/businesses/${businessId}/whatsapp/status`,
+          `/api/businesses/${businessId}/whatsapp/qr?channelId=${channelId}`,
           { credentials: "include" }
         );
         if (!res.ok) return;
 
-        const data = await res.json();
-        const auth = data.auth;
+        const data: QrPollingResponse = await res.json();
 
-        if (!auth) return;
-
-        if (auth.status === "AUTHENTICATED") {
+        if (data.status === "AUTHENTICATED") {
           clearPoll();
           onAuthenticatedRef.current();
           return;
         }
 
-        if (auth.status === "EXPIRED") {
+        if (data.status === "EXPIRED") {
           clearPoll();
           onExpiredRef.current?.();
           return;
         }
 
-        // Still PENDING — pass the QR code to the display
-        if (auth.status === "PENDING" && auth.qrCode && auth.qrCodeExpiry) {
-          onQrUpdateRef.current(auth.qrCode, auth.qrCodeExpiry);
+        if (
+          data.status === "PENDING" &&
+          data.qrCode &&
+          data.qrCodeExpiry
+        ) {
+          onQrUpdateRef.current(data.qrCode, data.qrCodeExpiry);
         }
       } catch (err) {
         console.error("QR polling error:", err);
       }
     };
 
-    // Poll immediately, then every pollInterval
     void poll();
     intervalRef.current = setInterval(poll, pollInterval);
 
     return () => clearPoll();
-  }, [businessId, isActive, pollInterval, clearPoll]);
+  }, [businessId, channelId, isActive, pollInterval, clearPoll]);
 }

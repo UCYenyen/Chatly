@@ -37,7 +37,7 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session?.user) {
@@ -54,36 +54,37 @@ export async function POST(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const whatsappAuth = await prisma.whatsAppAuth.findFirst({
-    where: { businessId },
+  const body = await request.json();
+  const { channelId } = body as { channelId?: string };
+
+  if (!channelId) {
+    return NextResponse.json(
+      { error: "channelId is required" },
+      { status: 400 }
+    );
+  }
+
+  const channel = await prisma.whatsAppAuth.findFirst({
+    where: { id: channelId, businessId },
   });
 
-  if (!whatsappAuth) {
+  if (!channel) {
     return NextResponse.json(
       { error: "No WhatsApp auth found" },
       { status: 404 }
     );
   }
 
-  if (whatsappAuth.instanceKey) {
-    await logoutGowaInstance(whatsappAuth.instanceKey);
+  if (channel.instanceKey) {
+    await logoutGowaInstance(channel.instanceKey);
   }
 
-  await prisma.whatsAppAuth.update({
-    where: { id: whatsappAuth.id },
-    data: {
-      status: "DISCONNECTED",
-      phoneNumber: null,
-      qrCode: null,
-      qrCodeExpiry: null,
-      instanceKey: null,
-      lastConnected: null,
-      disconnectedAt: new Date(),
-    },
+  await prisma.whatsAppAuth.delete({
+    where: { id: channel.id },
   });
 
   return NextResponse.json(
-    { success: true, message: "Logout successful" },
+    { success: true, message: "Channel dihapus" },
     { status: 200 }
   );
 }

@@ -122,7 +122,10 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { authType } = body as { authType: string };
+  const { authType, channelId } = body as {
+    authType: string;
+    channelId?: string;
+  };
 
   if (authType !== "GOWA") {
     return NextResponse.json(
@@ -131,12 +134,23 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  let whatsappAuth = await prisma.whatsAppAuth.findFirst({
-    where: { businessId, authType: "GOWA" },
-  });
+  let whatsappAuth;
 
-  if (!whatsappAuth) {
-    const channelCount = await prisma.whatsAppAuth.count({ where: { businessId } });
+  if (channelId) {
+    whatsappAuth = await prisma.whatsAppAuth.findFirst({
+      where: { id: channelId, businessId },
+    });
+
+    if (!whatsappAuth) {
+      return NextResponse.json(
+        { error: "Channel not found" },
+        { status: 404 }
+      );
+    }
+  } else {
+    const channelCount = await prisma.whatsAppAuth.count({
+      where: { businessId },
+    });
 
     try {
       enforceNumericLimit(
@@ -200,6 +214,7 @@ export async function POST(request: Request, context: RouteContext) {
         qrCode,
         qrCodeExpiry: expiryDate.toISOString(),
         deviceId: whatsappAuth.instanceKey,
+        channelId: whatsappAuth.id,
         message: "QR code generated successfully",
       },
       { status: 200 }

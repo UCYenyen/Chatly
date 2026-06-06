@@ -195,7 +195,7 @@ export async function POST(request: Request) {
 
   const phoneCandidate = device_id.split("@")[0];
 
-  let whatsappAuth = await prisma.whatsAppAuth.findFirst({
+  const whatsappAuth = await prisma.whatsAppAuth.findFirst({
     where: {
       OR: [
         { instanceKey: device_id },
@@ -211,32 +211,6 @@ export async function POST(request: Request) {
       instanceKey: true,
     },
   });
-
-  if (!whatsappAuth) {
-    // Fallback: If we have exactly one authenticated session missing a phone number, assume this webhook belongs to it.
-    const missingPhoneAuths = await prisma.whatsAppAuth.findMany({
-      where: { status: "AUTHENTICATED", phoneNumber: null },
-      select: {
-        id: true,
-        businessId: true,
-        status: true,
-        phoneNumber: true,
-        instanceKey: true,
-      },
-    });
-
-    if (missingPhoneAuths.length === 1) {
-      whatsappAuth = missingPhoneAuths[0];
-      const deviceIdForUpdate = typeof payload.device_id === 'string' ? payload.device_id : device_id;
-      await prisma.whatsAppAuth.update({
-        where: { id: whatsappAuth.id },
-        data: { phoneNumber: deviceIdForUpdate },
-      });
-      whatsappAuth.phoneNumber = device_id;
-      console.log(`[webhook] Auto-linked unknown device_id ${device_id} to missing phone auth ${whatsappAuth.id}`);
-      console.log(body);
-    }
-  }
 
   if (!whatsappAuth) {
     console.warn(`[webhook] Unknown device_id: ${device_id}. Event: ${event}`);

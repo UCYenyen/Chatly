@@ -8,7 +8,7 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,10 +24,21 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const whatsappAuth = await prisma.whatsAppAuth.findFirst({
-    where: { businessId },
-    select: { instanceKey: true, status: true },
-  });
+  const channelId = new URL(request.url).searchParams.get("channelId");
+
+  const whatsappAuth = channelId
+    ? await prisma.whatsAppAuth.findFirst({
+        where: { id: channelId, businessId },
+        select: { instanceKey: true, status: true },
+      })
+    : await prisma.whatsAppAuth.findFirst({
+        where: {
+          businessId,
+          status: "AUTHENTICATED",
+          instanceKey: { not: null },
+        },
+        select: { instanceKey: true, status: true },
+      });
 
   if (!whatsappAuth?.instanceKey || whatsappAuth.status !== "AUTHENTICATED") {
     return NextResponse.json(

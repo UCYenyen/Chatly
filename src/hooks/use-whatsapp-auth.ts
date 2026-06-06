@@ -3,27 +3,33 @@
 import { useCallback, useEffect, useState } from "react";
 import type {
   WhatsAppAuthDTO,
-  WhatsAppAuthType,
   InitWhatsAppAuthResponse,
+  WhatsAppStatusResponse,
 } from "@/types/whatsapp.md";
 
+interface PlanLimitErrorResponse {
+  message: string;
+  code: string;
+}
+
 interface UseWhatsAppAuthResult {
-  auth: WhatsAppAuthDTO | null;
+  channels: WhatsAppAuthDTO[];
   isLoading: boolean;
   error: string | null;
-  initAuth: (authType: WhatsAppAuthType) => Promise<void>;
-  logout: () => Promise<void>;
+  addChannel: () => Promise<string | null>;
+  refreshChannelQr: (channelId: string) => Promise<void>;
+  logoutChannel: (channelId: string) => Promise<void>;
   refetch: () => Promise<void>;
 }
 
 export function useWhatsAppAuth(
   businessId: string
 ): UseWhatsAppAuthResult {
-  const [auth, setAuth] = useState<WhatsAppAuthDTO | null>(null);
+  const [channels, setChannels] = useState<WhatsAppAuthDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAuth = useCallback(async () => {
+  const fetchStatus = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -37,8 +43,8 @@ export function useWhatsAppAuth(
         const errorData = await res.json();
         throw new Error(errorData.message || "Failed to fetch WhatsApp status");
       }
-      const data = await res.json();
-      setAuth(data.auth);
+      const data: WhatsAppStatusResponse = await res.json();
+      setChannels(data.channels);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -46,9 +52,37 @@ export function useWhatsAppAuth(
     }
   }, [businessId]);
 
-  const initAuth = useCallback(
-    async (authType: WhatsAppAuthType) => {
-      setIsLoading(true);
+  const addChannel = useCallback(async (): Promise<string | null> => {
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/businesses/${businessId}/whatsapp/init`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ authType: "GOWA" }),
+          credentials: "include",
+        }
+      );
+      if (!res.ok) {
+        const errorData: PlanLimitErrorResponse = await res.json();
+        const message =
+          errorData.message || "Failed to initialize WhatsApp channel";
+        setError(message);
+        throw new Error(message);
+      }
+      const data: InitWhatsAppAuthResponse = await res.json();
+      await fetchStatus();
+      return data.channelId;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
+      throw err;
+    }
+  }, [businessId, fetchStatus]);
+
+  const refreshChannelQr = useCallback(
+    async (channelId: string) => {
       setError(null);
       try {
         const res = await fetch(
@@ -56,66 +90,63 @@ export function useWhatsAppAuth(
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ authType }),
+            body: JSON.stringify({ authType: "GOWA", channelId }),
             credentials: "include",
           }
         );
         if (!res.ok) {
           const errorData = await res.json();
           throw new Error(
-            errorData.message || "Failed to initialize WhatsApp"
+            errorData.message || "Failed to refresh QR code"
           );
         }
-        const data: InitWhatsAppAuthResponse = await res.json();
-        setAuth((prev) =>
-          prev
-            ? { ...prev, qrCode: data.qrCode, qrCodeExpiry: data.qrCodeExpiry }
-            : null
-        );
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(message);
         throw err;
-      } finally {
-        setIsLoading(false);
       }
     },
     [businessId]
   );
 
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/businesses/${businessId}/whatsapp/logout`,
-        {
-          method: "POST",
-          credentials: "include",
+  const logoutChannel = useCallback(
+    async (channelId: string) => {
+      setError(null);
+      try {
+        const res = await fetch(
+          `/api/businesses/${businessId}/whatsapp/logout`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ channelId }),
+            credentials: "include",
+          }
+        );
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to logout");
         }
-      );
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to logout");
+        await fetchStatus();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(message);
+        throw err;
       }
-      await fetchAuth();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [businessId, fetchAuth]);
+    },
+    [businessId, fetchStatus]
+  );
 
   useEffect(() => {
-    void fetchAuth();
-  }, [fetchAuth]);
+    void fetchStatus();
+  }, [fetchStatus]);
 
   return {
-    auth,
+    channels,
     isLoading,
     error,
-    initAuth,
-    logout,
-    refetch: fetchAuth,
+    addChannel,
+    refreshChannelQr,
+    logoutChannel,
+    refetch: fetchStatus,
   };
 }

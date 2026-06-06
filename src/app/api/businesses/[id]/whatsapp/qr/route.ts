@@ -9,7 +9,7 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session?.user) {
@@ -26,8 +26,17 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const channelId = new URL(request.url).searchParams.get("channelId");
+
+  if (!channelId) {
+    return NextResponse.json(
+      { error: "channelId is required" },
+      { status: 400 }
+    );
+  }
+
   const whatsappAuth = await prisma.whatsAppAuth.findFirst({
-    where: { businessId },
+    where: { id: channelId, businessId },
   });
 
   if (!whatsappAuth) {
