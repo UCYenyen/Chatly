@@ -7,6 +7,7 @@ import { PerformanceFunnel } from "@/components/features/analytics/PerformanceFu
 import { MonthlyReport } from "@/components/features/analytics/MonthlyReport";
 import { ActiveBusinessBanner } from "@/components/features/business/ActiveBusinessBanner";
 import { FeatureLockOverlay } from "@/components/features/business/FeatureLockOverlay";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePlanGate } from "@/hooks";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -16,8 +17,8 @@ export default function AnalyticsPage() {
   const params = useParams();
   const businessId = params.businessId as string;
   const gate = usePlanGate();
-  const pageLocked = gate.isLoading ? false : !gate.hasFeature("dataExport");
-  const advancedLocked = gate.isLoading ? false : !gate.hasFeature("advancedAnalytics");
+  const pageLocked = !gate.hasFeature("dataExport");
+  const advancedLocked = !gate.hasFeature("advancedAnalytics");
 
   return (
     <div className="p-4 pt-6 md:p-8 md:pt-8 lg:p-10 w-full mx-auto max-w-[1600px] flex flex-col min-h-full">
@@ -44,6 +45,13 @@ export default function AnalyticsPage() {
         <ActiveBusinessBanner scopeLabel="Analitik" />
       </div>
 
+      {gate.isLoading ? (
+        <div className="flex flex-col gap-8">
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-96 w-full rounded-xl" />
+        </div>
+      ) : (
       <FeatureLockOverlay
         isLocked={pageLocked}
         featureName="Analitik"
@@ -54,17 +62,27 @@ export default function AnalyticsPage() {
           featureName="Analitik Lanjutan"
           businessId={businessId}
         >
-          <div className="mb-8 w-full">
-            <PerformanceFunnel />
-          </div>
+          {advancedLocked ? (
+            <div className="flex flex-col gap-8">
+              <div className="h-64 w-full rounded-xl bg-surface-container-low" />
+              <div className="h-64 w-full rounded-xl bg-surface-container-low" />
+              <div className="h-96 w-full rounded-xl bg-surface-container-low" />
+            </div>
+          ) : (
+            <>
+              <div className="mb-8 w-full">
+                <PerformanceFunnel />
+              </div>
 
-          <div className="mb-8 w-full">
-            <ConversionRateCard />
-          </div>
+              <div className="mb-8 w-full">
+                <ConversionRateCard />
+              </div>
 
-          <div className="flex-1 mb-8 w-full">
-            <IntentDashboard />
-          </div>
+              <div className="flex-1 mb-8 w-full">
+                <IntentDashboard />
+              </div>
+            </>
+          )}
         </FeatureLockOverlay>
 
         <div className="mb-8 w-full">
@@ -75,6 +93,7 @@ export default function AnalyticsPage() {
           <AnalyticsFooter />
         </div>
       </FeatureLockOverlay>
+      )}
     </div>
   );
 }
