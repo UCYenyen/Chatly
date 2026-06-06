@@ -28,11 +28,13 @@ export function PlanCard({ plan, isCurrent }: PlanCardProps) {
 
   const handleClick = async (): Promise<void> => {
     if (isFree || isCurrent || isEnterprise) return;
-    const ok = await startCheckout(plan.id as Exclude<PlanDefinition["id"], "FREE">);
-    if (ok) {
+    const result = await startCheckout(plan.id as Exclude<PlanDefinition["id"], "FREE">);
+    if (result.ok) {
       toast.success(`Berhasil berlangganan paket ${plan.name}`);
       void refreshSub();
       void refreshWallet();
+    } else {
+      toast.error(result.message);
     }
   };
 

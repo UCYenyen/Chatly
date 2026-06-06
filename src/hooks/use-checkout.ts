@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import type {
   ApiErrorResponse,
+  CheckoutResult,
   CreateSubscriptionRequest,
   CreateSubscriptionResponse,
 } from "@/types/subscription.md";
@@ -11,7 +12,7 @@ import type { SubscriptionPlan } from "@prisma/client";
 interface UseCheckoutResult {
   isPending: boolean;
   error: string | null;
-  startCheckout: (plan: Exclude<SubscriptionPlan, "FREE">) => Promise<boolean>;
+  startCheckout: (plan: Exclude<SubscriptionPlan, "FREE">) => Promise<CheckoutResult>;
 }
 
 export function useCheckout(businessId?: string): UseCheckoutResult {
@@ -19,10 +20,11 @@ export function useCheckout(businessId?: string): UseCheckoutResult {
   const [error, setError] = useState<string | null>(null);
 
   const startCheckout = useCallback(
-    async (plan: Exclude<SubscriptionPlan, "FREE">): Promise<boolean> => {
+    async (plan: Exclude<SubscriptionPlan, "FREE">): Promise<CheckoutResult> => {
       if (!businessId) {
-        setError("Business ID tidak ditemukan");
-        return false;
+        const message = "Business ID tidak ditemukan";
+        setError(message);
+        return { ok: false, message };
       }
       setIsPending(true);
       setError(null);
@@ -38,16 +40,16 @@ export function useCheckout(businessId?: string): UseCheckoutResult {
           throw new Error(body.message);
         }
         const json = (await res.json()) as CreateSubscriptionResponse;
-        
+
         if (json.invoiceUrl) {
           window.location.href = json.invoiceUrl;
-          return true;
         }
 
-        return true;
+        return { ok: true };
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Gagal memulai pembayaran");
-        return false;
+        const message = err instanceof Error ? err.message : "Gagal memulai pembayaran";
+        setError(message);
+        return { ok: false, message };
       } finally {
         setIsPending(false);
       }

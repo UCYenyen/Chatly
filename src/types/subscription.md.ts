@@ -46,6 +46,10 @@ export interface CreateSubscriptionResponse {
   externalId?: string;
 }
 
+export type CheckoutResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
 export interface SubscriptionStateResponse {
   subscription: SubscriptionDTO | null;
 }
