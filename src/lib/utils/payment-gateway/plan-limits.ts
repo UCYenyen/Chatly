@@ -147,8 +147,8 @@ const NUMERIC_FEATURE_LABELS: Record<NumericLimitKey, (value: string) => string>
       : `Pilih hingga ${value} kontak untuk dikecualikan`,
   adminSeats: (value) =>
     value === "Tak terbatas"
-      ? "Admin handover tanpa batas"
-      : `${value} admin penerima handover`,
+      ? "Admin WhatsApp tanpa batas"
+      : `${value} Admin WhatsApp`,
 };
 
 const BOOLEAN_FEATURE_LABELS: Record<BooleanFeatureKey, string> = {
